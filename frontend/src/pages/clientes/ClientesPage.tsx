@@ -17,6 +17,7 @@ import {
 import { useNotifications } from '../../stores/uiStore';
 import { clienteService } from '../../services/clienteService';
 import type { Cliente } from '../../types';
+import type { ClienteEstadisticas } from '../../services/clienteService';
 
 
 
@@ -32,11 +33,11 @@ export const ClientesPage: React.FC = () => {
 
   // Estado para los datos reales
   const [clientes, setClientes] = useState<Cliente[]>([]);
-  const [estadisticas, setEstadisticas] = useState({
+  const [estadisticas, setEstadisticas] = useState<ClienteEstadisticas>({
     total: 0,
-    activos: 0,
-    inactivos: 0,
-    nuevosEsteMes: 0
+    conUsuario: 0,
+    sinUsuario: 0,
+    activos: 0
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -560,16 +561,16 @@ export const ClientesPage: React.FC = () => {
                   <div className="level-left">
                     <div className="level-item">
                       <div>
-                        <p className="heading">Inactivos</p>
-                        <p className="title has-text-danger">
-                          {estadisticas.inactivos}
+                        <p className="heading">Con Usuario</p>
+                        <p className="title has-text-primary">
+                          {estadisticas.conUsuario}
                         </p>
                       </div>
                     </div>
                   </div>
                   <div className="level-right">
                     <div className="level-item">
-                      <div className="icon is-large has-text-danger">
+                      <div className="icon is-large has-text-primary">
                         <Users size={32} />
                       </div>
                     </div>
@@ -586,17 +587,17 @@ export const ClientesPage: React.FC = () => {
                   <div className="level-left">
                     <div className="level-item">
                       <div>
-                        <p className="heading">Este Mes</p>
-                        <p className="title has-text-info">
-                          {estadisticas.nuevosEsteMes}
+                        <p className="heading">Sin Usuario</p>
+                        <p className="title has-text-warning">
+                          {estadisticas.sinUsuario}
                         </p>
                       </div>
                     </div>
                   </div>
                   <div className="level-right">
                     <div className="level-item">
-                      <div className="icon is-large has-text-info">
-                        <Plus size={32} />
+                      <div className="icon is-large has-text-warning">
+                        <Users size={32} />
                       </div>
                     </div>
                   </div>

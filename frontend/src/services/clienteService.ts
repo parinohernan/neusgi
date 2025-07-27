@@ -9,9 +9,9 @@ export interface ClienteFilters extends PaginationQuery {
 
 export interface ClienteEstadisticas {
   total: number;
+  conUsuario: number;
+  sinUsuario: number;
   activos: number;
-  inactivos: number;
-  nuevosEsteMes: number;
 }
 
 // Servicio de clientes
@@ -83,7 +83,7 @@ export const clienteService = {
 
   // Obtener estadísticas de clientes
   async getEstadisticas(): Promise<ClienteEstadisticas> {
-    const response = await api.get<ClienteEstadisticas>('/clientes/estadisticas');
+    const response = await api.get<ClienteEstadisticas>('/clientes/estadisticas/dashboard');
     return response.data!;
   }
 }; 

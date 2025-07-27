@@ -7,6 +7,7 @@ import { useAuth } from '../stores/authStore';
 import { ProtectedRoute } from './ProtectedRoute';
 import { LoginPage } from '../pages/auth/LoginPage';
 import { DashboardPage } from '../pages/dashboard/DashboardPage';
+import { NuevoClientePage } from '../pages/clientes/NuevoClientePage';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 
 // ----------------------------------------------------------------------------
@@ -61,6 +62,15 @@ export const AppRoutes = () => {
       />
       
       {/* Rutas de gestión */}
+      <Route
+        path="/clientes/nuevo"
+        element={
+          <ProtectedRoute>
+            <NuevoClientePage />
+          </ProtectedRoute>
+        }
+      />
+      
       <Route
         path="/clientes/*"
         element={

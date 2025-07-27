@@ -36,7 +36,7 @@ function App() {
       <BrowserRouter>
         <ThemeProvider>
           <AuthProvider>
-            <div className="min-h-screen bg-secondary-50">
+            <div className="min-h-screen bg-slate-50">
               <AppRoutes />
               <Toaster
                 position="top-right"

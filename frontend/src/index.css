@@ -9,7 +9,7 @@
   }
   
   body {
-    @apply bg-secondary-50 text-gray-900 antialiased;
+    @apply bg-slate-50 text-gray-900 antialiased;
   }
 }
 
@@ -28,7 +28,7 @@
   }
   
   .btn-outline {
-    @apply btn border-gray-300 text-gray-700 hover:bg-secondary-50 focus:ring-primary-500;
+    @apply btn border-gray-300 text-gray-700 hover:bg-slate-50 focus:ring-primary-500;
   }
   
   .btn-ghost {

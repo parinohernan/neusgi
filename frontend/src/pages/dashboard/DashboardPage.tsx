@@ -1,6 +1,7 @@
 import React from 'react';
 import { useAuth } from '../../stores/authStore';
 import { useUI } from '../../stores/uiStore';
+import { Sidebar } from '../../components/layout';
 import { 
   Truck, 
   Users, 
@@ -42,14 +43,14 @@ export const DashboardPage: React.FC = () => {
       icon: Receipt,
       color: 'is-warning'
     },
-    {
-      title: 'Ingresos del Mes',
-      value: '$45,230',
-      change: '+15%',
-      isPositive: true,
-      icon: DollarSign,
-      color: 'is-info'
-    }
+    // {
+    //   title: 'Ingresos del Mes',
+    //   value: '$45,230',
+    //   change: '+15%',
+    //   isPositive: true,
+    //   icon: DollarSign,
+    //   color: 'is-info'
+    // }
   ];
 
   const recentActivities = [
@@ -97,61 +98,14 @@ export const DashboardPage: React.FC = () => {
   return (
     <div className="main-container">
       {/* Sidebar */}
-      <aside className="sidebar">
-        <div className="sidebar-header mb-4">
-          <h3 className="title is-4 has-text-primary">NEUSGI</h3>
-          <p className="subtitle is-6 has-text-grey">Panel de Control</p>
-        </div>
-        
-        <nav className="sidebar-menu">
-          <div className="sidebar-item">
-            <a href="/dashboard" className="sidebar-link is-active">
-              <BarChart3 className="sidebar-icon" />
-              Dashboard
-            </a>
-          </div>
-          <div className="sidebar-item">
-            <a href="/presupuestos" className="sidebar-link">
-              <FileText className="sidebar-icon" />
-              Presupuestos
-            </a>
-          </div>
-          <div className="sidebar-item">
-            <a href="/ordenes-compra" className="sidebar-link">
-              <Package className="sidebar-icon" />
-              Órdenes de Compra
-            </a>
-          </div>
-          <div className="sidebar-item">
-            <a href="/clientes" className="sidebar-link">
-              <Users className="sidebar-icon" />
-              Clientes
-            </a>
-          </div>
-          <div className="sidebar-item">
-            <a href="/equipos" className="sidebar-link">
-              <Truck className="sidebar-icon" />
-              Equipos
-            </a>
-          </div>
-          <div className="sidebar-item">
-            <a href="/facturas" className="sidebar-link">
-              <Receipt className="sidebar-icon" />
-              Facturas
-            </a>
-          </div>
-          <div className="sidebar-item">
-            <a href="/pagos" className="sidebar-link">
-              <CreditCard className="sidebar-icon" />
-              Pagos
-            </a>
-          </div>
-        </nav>
-      </aside>
+      <Sidebar 
+        title="NEUSGI" 
+        subtitle="Panel de Control" 
+      />
 
       {/* Contenido principal */}
       <main className="content-area">
-        {/* Header */}
+        {/* Header * / }
         <div className="page-header">
           <div className="level">
             <div className="level-left">
@@ -179,7 +133,7 @@ export const DashboardPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Estadísticas */}
+        {/ * Estadísticas 
         <div className="dashboard-stats">
           {stats.map((stat, index) => {
             const IconComponent = stat.icon;
@@ -208,7 +162,7 @@ export const DashboardPage: React.FC = () => {
               </div>
             );
           })}
-        </div>
+        </div>*/}
 
         <div className="columns">
           {/* Acciones Rápidas */}

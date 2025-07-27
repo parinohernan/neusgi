@@ -17,6 +17,7 @@ import {
 import { useNotifications } from '../../stores/uiStore';
 import { clienteService } from '../../services/clienteService';
 import type { CreateClienteDto } from '../../types';
+import { Sidebar } from '../../components/layout';
 
 // Schema de validación para cliente
 const clienteSchema = z.object({
@@ -95,13 +96,11 @@ export const NuevoClientePage: React.FC = () => {
 
   return (
     <div className="main-container">
-      {/* Sidebar placeholder */}
-      <aside className="sidebar">
-        <div className="sidebar-header mb-4">
-          <h3 className="title is-4 has-text-primary">NEUSGI</h3>
-          <p className="subtitle is-6 has-text-grey">Gestión de Clientes</p>
-        </div>
-      </aside>
+      {/* Sidebar */}
+      <Sidebar 
+        title="NEUSGI" 
+        subtitle="Gestión de Clientes" 
+      />
 
       {/* Contenido principal */}
       <main className="content-area">

@@ -103,7 +103,7 @@ export const DashboardPage = () => {
   // ----------------------------------------------------------------------------
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-secondary-50">
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="flex items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
@@ -168,7 +168,7 @@ export const DashboardPage = () => {
               <h3 className="text-lg font-medium text-gray-900 mb-4">
                 Ventas Mensuales
               </h3>
-              <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
+              <div className="h-64 flex items-center justify-center bg-secondary-50 rounded-lg">
                 <div className="text-center">
                   <TrendingUp className="h-12 w-12 text-gray-400 mx-auto mb-2" />
                   <p className="text-sm text-gray-500">Gráfico de ventas (Pendiente)</p>

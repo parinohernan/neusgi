@@ -4,7 +4,7 @@
 
 import axios from 'axios';
 import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
-import type { ApiResponse, ApiError, PaginatedResponse } from '../types';
+import type { ApiResponse, ApiError } from '../types';
 import { apiConfig } from './config';
 
 // ----------------------------------------------------------------------------

@@ -13,8 +13,7 @@ import {
   Calendar,
   Receipt,
   CreditCard,
-  TrendingUp,
-  AlertCircle
+  TrendingUp
 } from 'lucide-react';
 
 // ----------------------------------------------------------------------------
@@ -23,7 +22,7 @@ import {
 
 export const DashboardPage = () => {
   const { user } = useAuth();
-  const { sidebarOpen, toggleSidebar } = useUI();
+  const { toggleSidebar } = useUI();
 
   // ----------------------------------------------------------------------------
   // DATOS DE EJEMPLO (TEMPORALES)

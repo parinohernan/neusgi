@@ -59,7 +59,7 @@ export const LoginPage = () => {
       } else {
         error('Error de autenticación', 'Credenciales inválidas');
       }
-    } catch (err) {
+    } catch {
       error('Error de conexión', 'No se pudo conectar con el servidor');
     }
   };

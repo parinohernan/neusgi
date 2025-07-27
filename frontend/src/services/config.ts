@@ -118,7 +118,7 @@ export const validationConfig = {
   // Patrones de validación
   patterns: {
     email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-    phone: /^\+?[\d\s\-\(\)]+$/,
+    phone: /^\+?[\d\s\-()]+$/,
     cuit: /^\d{2}-\d{8}-\d$/,
     licensePlate: /^[A-Z]{2}\d{3}[A-Z]{2}$/,
   },

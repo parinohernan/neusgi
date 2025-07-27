@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Users, 
@@ -16,82 +16,30 @@ import {
   FileText
 } from 'lucide-react';
 import { useNotifications } from '../../stores/uiStore';
+import { clienteService } from '../../services/clienteService';
+import type { Cliente } from '../../types';
 
-// Tipo para los datos de cliente
-interface Cliente {
-  id: string;
-  nombreEmpresa: string;
-  rutCuit: string;
-  email?: string;
-  telefono?: string;
-  direccion: string;
-  estado: 'activo' | 'inactivo';
-  fechaCreacion: string;
+// Extender el tipo Cliente del backend con campos adicionales para la UI
+interface ClienteWithUI extends Cliente {
+  estado?: 'activo' | 'inactivo';
+  fechaCreacion?: string;
   ultimaActividad?: string;
 }
 
-// Datos de ejemplo
-const clientesEjemplo: Cliente[] = [
-  {
-    id: '1',
-    nombreEmpresa: 'Constructora ABC S.A.',
-    rutCuit: '20-12345678-9',
-    email: 'contacto@constructoraabc.com',
-    telefono: '+54 11 1234-5678',
-    direccion: 'Av. San Martín 1234, Buenos Aires',
-    estado: 'activo',
-    fechaCreacion: '2024-01-15',
-    ultimaActividad: '2024-07-25'
-  },
-  {
-    id: '2',
-    nombreEmpresa: 'Transportes XYZ Ltda.',
-    rutCuit: '30-87654321-0',
-    email: 'info@transportesxyz.com',
-    telefono: '+54 11 9876-5432',
-    direccion: 'Rivadavia 567, Córdoba',
-    estado: 'activo',
-    fechaCreacion: '2024-02-20',
-    ultimaActividad: '2024-07-20'
-  },
-  {
-    id: '3',
-    nombreEmpresa: 'Obras Públicas DEF',
-    rutCuit: '25-11223344-5',
-    email: 'gerencia@obrasdef.com',
-    telefono: '+54 11 5555-6666',
-    direccion: 'Belgrano 890, Rosario',
-    estado: 'inactivo',
-    fechaCreacion: '2024-03-10',
-    ultimaActividad: '2024-06-15'
-  },
-  {
-    id: '4',
-    nombreEmpresa: 'Minería GHI S.A.',
-    rutCuit: '27-99887766-3',
-    email: 'ventas@mineriaghi.com',
-    telefono: '+54 11 7777-8888',
-    direccion: 'Mitre 456, Mendoza',
-    estado: 'activo',
-    fechaCreacion: '2024-04-05',
-    ultimaActividad: '2024-07-26'
-  },
-  {
-    id: '5',
-    nombreEmpresa: 'Logística JKL',
-    rutCuit: '23-44556677-8',
-    email: 'logistica@jkl.com',
-    telefono: '+54 11 3333-4444',
-    direccion: 'Sarmiento 789, La Plata',
-    estado: 'activo',
-    fechaCreacion: '2024-05-12',
-    ultimaActividad: '2024-07-24'
-  }
-];
+// Estado para los datos reales
+const [clientes, setClientes] = useState<Cliente[]>([]);
+const [estadisticas, setEstadisticas] = useState({
+  total: 0,
+  activos: 0,
+  inactivos: 0,
+  nuevosEsteMes: 0
+});
+const [isLoading, setIsLoading] = useState(true);
+const [error, setError] = useState<string | null>(null);
 
 export const ClientesPage: React.FC = () => {
   const navigate = useNavigate();
-  const { success, error } = useNotifications();
+  const { success, error: notificationError } = useNotifications();
   
   // Estados para filtros y búsqueda
   const [searchTerm, setSearchTerm] = useState('');
@@ -99,14 +47,41 @@ export const ClientesPage: React.FC = () => {
   const [sortBy, setSortBy] = useState<'nombre' | 'fecha' | 'estado'>('nombre');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
+  // Cargar datos al montar el componente
+  useEffect(() => {
+    const cargarDatos = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        // Cargar clientes
+        const response = await clienteService.getAll();
+        setClientes(response.data);
+        
+        // Cargar estadísticas
+        const stats = await clienteService.getEstadisticas();
+        setEstadisticas(stats);
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Error al cargar los datos';
+        setError(errorMessage);
+        notificationError(errorMessage);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    cargarDatos();
+  }, [notificationError]);
+
   // Filtrar y ordenar clientes
   const filteredClientes = useMemo(() => {
-    let filtered = clientesEjemplo.filter(cliente => {
+    let filtered = clientes.filter(cliente => {
       const matchesSearch = cliente.nombreEmpresa.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            cliente.rutCuit.includes(searchTerm) ||
                            cliente.email?.toLowerCase().includes(searchTerm.toLowerCase());
       
-      const matchesStatus = statusFilter === 'todos' || cliente.estado === statusFilter;
+      // Por ahora todos los clientes se consideran activos
+      const matchesStatus = statusFilter === 'todos' || statusFilter === 'activo';
       
       return matchesSearch && matchesStatus;
     });
@@ -122,12 +97,14 @@ export const ClientesPage: React.FC = () => {
           bValue = b.nombreEmpresa;
           break;
         case 'fecha':
-          aValue = a.fechaCreacion;
-          bValue = b.fechaCreacion;
+          // Por ahora usar el ID como fecha de creación
+          aValue = a.id.toString();
+          bValue = b.id.toString();
           break;
         case 'estado':
-          aValue = a.estado;
-          bValue = b.estado;
+          // Por ahora todos son activos
+          aValue = 'activo';
+          bValue = 'activo';
           break;
         default:
           aValue = a.nombreEmpresa;
@@ -142,7 +119,7 @@ export const ClientesPage: React.FC = () => {
     });
 
     return filtered;
-  }, [searchTerm, statusFilter, sortBy, sortOrder]);
+  }, [clientes, searchTerm, statusFilter, sortBy, sortOrder]);
 
   // Acciones
   const handleNuevoCliente = () => {
@@ -157,14 +134,16 @@ export const ClientesPage: React.FC = () => {
     navigate(`/clientes/${id}/editar`);
   };
 
-  const handleEliminarCliente = async (id: string) => {
+  const handleEliminarCliente = async (id: number) => {
     if (confirm('¿Estás seguro de que quieres eliminar este cliente?')) {
       try {
-        // TODO: Implementar llamada a la API
-        console.log('Eliminando cliente:', id);
+        await clienteService.delete(id);
         success('Cliente eliminado exitosamente');
+        // Recargar datos
+        const response = await clienteService.getAll();
+        setClientes(response.data);
       } catch (err) {
-        error('Error al eliminar el cliente');
+        notificationError('Error al eliminar el cliente');
       }
     }
   };
@@ -307,6 +286,30 @@ export const ClientesPage: React.FC = () => {
             </p>
           </div>
           <div className="card-content">
+            {isLoading && (
+              <div className="has-text-centered py-6">
+                <div className="icon is-large has-text-grey-light">
+                  <Users size={64} />
+                </div>
+                <p className="title is-4 has-text-grey-light mt-4">
+                  Cargando clientes...
+                </p>
+              </div>
+            )}
+
+            {error && (
+              <div className="notification is-danger">
+                <p><strong>Error:</strong> {error}</p>
+                <button 
+                  className="button is-small"
+                  onClick={() => window.location.reload()}
+                >
+                  Reintentar
+                </button>
+              </div>
+            )}
+
+            {!isLoading && !error && (
             <div className="table-container">
               <table className="table is-fullwidth is-striped is-hoverable">
                 <thead>
@@ -391,20 +394,20 @@ export const ClientesPage: React.FC = () => {
                         </div>
                       </td>
                       <td>
-                        <span className={`tag ${cliente.estado === 'activo' ? 'is-success' : 'is-danger'}`}>
-                          {cliente.estado === 'activo' ? 'Activo' : 'Inactivo'}
+                        <span className="tag is-success">
+                          Activo
                         </span>
                       </td>
                       <td>
                         <span className="is-size-7">
-                          {new Date(cliente.fechaCreacion).toLocaleDateString('es-AR')}
+                          ID: {cliente.id}
                         </span>
                       </td>
                       <td>
                         <div className="buttons are-small">
                           <button
                             className="button is-info is-light"
-                            onClick={() => handleVerCliente(cliente.id)}
+                            onClick={() => handleVerCliente(cliente.id.toString())}
                             title="Ver detalles"
                           >
                             <span className="icon">
@@ -413,7 +416,7 @@ export const ClientesPage: React.FC = () => {
                           </button>
                           <button
                             className="button is-warning is-light"
-                            onClick={() => handleEditarCliente(cliente.id)}
+                            onClick={() => handleEditarCliente(cliente.id.toString())}
                             title="Editar"
                           >
                             <span className="icon">
@@ -465,6 +468,7 @@ export const ClientesPage: React.FC = () => {
                 )}
               </div>
             )}
+            )}
           </div>
         </div>
 
@@ -478,7 +482,7 @@ export const ClientesPage: React.FC = () => {
                     <div className="level-item">
                       <div>
                         <p className="heading">Total Clientes</p>
-                        <p className="title">{clientesEjemplo.length}</p>
+                        <p className="title">{estadisticas.total}</p>
                       </div>
                     </div>
                   </div>
@@ -503,7 +507,7 @@ export const ClientesPage: React.FC = () => {
                       <div>
                         <p className="heading">Activos</p>
                         <p className="title has-text-success">
-                          {clientesEjemplo.filter(c => c.estado === 'activo').length}
+                          {estadisticas.activos}
                         </p>
                       </div>
                     </div>
@@ -529,7 +533,7 @@ export const ClientesPage: React.FC = () => {
                       <div>
                         <p className="heading">Inactivos</p>
                         <p className="title has-text-danger">
-                          {clientesEjemplo.filter(c => c.estado === 'inactivo').length}
+                          {estadisticas.inactivos}
                         </p>
                       </div>
                     </div>
@@ -555,12 +559,7 @@ export const ClientesPage: React.FC = () => {
                       <div>
                         <p className="heading">Este Mes</p>
                         <p className="title has-text-info">
-                          {clientesEjemplo.filter(c => {
-                            const fecha = new Date(c.fechaCreacion);
-                            const ahora = new Date();
-                            return fecha.getMonth() === ahora.getMonth() && 
-                                   fecha.getFullYear() === ahora.getFullYear();
-                          }).length}
+                          {estadisticas.nuevosEsteMes}
                         </p>
                       </div>
                     </div>

@@ -16,6 +16,36 @@ export interface User {
   updatedAt: string;
 }
 
+// Tipos para Cliente (coinciden con el backend)
+export interface Cliente {
+  id: number;
+  nombreEmpresa: string;
+  rutCuit: string;
+  direccion?: string;
+  telefono?: string;
+  email?: string;
+  usuarioId?: number;
+}
+
+export interface CreateClienteDto {
+  nombreEmpresa: string;
+  rutCuit: string;
+  direccion?: string;
+  telefono?: string;
+  email?: string;
+  usuarioId?: number;
+}
+
+export interface UpdateClienteDto {
+  nombreEmpresa?: string;
+  rutCuit?: string;
+  direccion?: string;
+  telefono?: string;
+  email?: string;
+  usuarioId?: number;
+}
+
+// Mantener Client para compatibilidad
 export interface Client {
   id: string;
   name: string;
@@ -207,6 +237,14 @@ export interface PaginatedResponse<T> {
     total: number;
     totalPages: number;
   };
+}
+
+// Tipos de paginación (coinciden con el backend)
+export interface PaginationQuery {
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
 }
 
 export interface ApiError {

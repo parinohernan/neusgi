@@ -15,6 +15,8 @@ import {
   X
 } from 'lucide-react';
 import { useNotifications } from '../../stores/uiStore';
+import { clienteService } from '../../services/clienteService';
+import type { CreateClienteDto } from '../../types';
 
 // Schema de validación para cliente
 const clienteSchema = z.object({
@@ -60,16 +62,24 @@ export const NuevoClientePage: React.FC = () => {
   const onSubmit = async (data: ClienteFormData) => {
     setIsSubmitting(true);
     try {
-      // TODO: Implementar llamada a la API
-      console.log('Datos del cliente:', data);
+      // Preparar datos para la API
+      const clienteData: CreateClienteDto = {
+        nombreEmpresa: data.nombreEmpresa,
+        rutCuit: data.rutCuit,
+        direccion: data.direccion,
+        telefono: data.telefono || undefined,
+        email: data.email || undefined,
+        // usuarioId se asignará automáticamente desde el backend
+      };
+
+      // Llamar a la API
+      const nuevoCliente = await clienteService.create(clienteData);
       
-      // Simular llamada a API
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      success('Cliente creado exitosamente');
+      success(`Cliente "${nuevoCliente.nombreEmpresa}" creado exitosamente`);
       navigate('/clientes');
     } catch (err) {
-      error('Error al crear el cliente');
+      const errorMessage = err instanceof Error ? err.message : 'Error al crear el cliente';
+      error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }

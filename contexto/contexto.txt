@@ -1,0 +1,78 @@
+### **📌 Contexto de la Problemática a Cubrir por el MVP**  
+
+**Empresa:**  
+PYME dedicada al **alquiler de flota de camiones** para otras empresas (transporte de carga, logística, etc.).  
+
+#### **🔴 Problemas Actuales:**  
+1. **Gestión Manual y Descentralizada:**  
+   - Usan **hojas de cálculo, documentos físicos y correos** para registrar:  
+     - Presupuestos.  
+     - Órdenes de servicio.  
+     - Remitos y facturas.  
+   - **Riesgo:** Pérdida de datos, errores humanos y duplicación de información.  
+
+2. **Falta de Integración entre Áreas:**  
+   - Logística no sabe en tiempo real qué **camiones están disponibles**.  
+   - Facturación no tiene automatizado el **proceso de generación de PDFs** (remitos, certificados).  
+   - Los conductores registran **partes diarios en papel**, dificultando el seguimiento.  
+
+3. **Ineficiencia en el Proceso de Venta:**  
+   - Los presupuestos se envían por correo sin plantillas estandarizadas.  
+   - No hay un **historial centralizado** de tratos con cada cliente.  
+   - Las órdenes de compra aceptadas no se trazan adecuadamente.  
+
+4. **Dificultad para Escalar:**  
+   - Al crecer, la cantidad de clientes y camiones hace insostenible el sistema actual.  
+
+---
+
+### **🎯 Objetivos del MVP**  
+#### **📌 Módulo de Venta (Fase 1)**  
+1. **Digitalizar y Automatizar:**  
+   - CRUD de **clientes, empleados, camiones y presupuestos**.  
+   - Generación automática de **remitos, facturas y certificados en PDF**.  
+
+2. **Seguimiento en Tiempo Real:**  
+   - Estado de camiones (**disponible/en viaje/mantenimiento**).  
+   - Asignación de conductores a cada servicio.  
+
+3. **Reducción de Errores:**  
+   - Validación de datos (ej: un camión no puede asignarse a dos servicios simultáneos).  
+   - Alertas para fechas críticas (vencimiento de licencias, mantenimientos).  
+
+4. **Base para Crecimiento:**  
+   - Sistema modular que permita añadir después:  
+     - Ruteo de viajes.  
+     - Integración con GPS.  
+     - Notificaciones automáticas a clientes.  
+
+---
+
+### **📊 Ejemplo de Flujo a Optimizar**  
+**Proceso Actual (Lento y Propenso a Errores):**  
+1. Cliente pide presupuesto por teléfono → Se registra en Excel.  
+2. Logística verifica disponibilidad de camiones **manualmente**.  
+3. Envían presupuesto por correo → Si el cliente acepta, crean una orden en Word.  
+4. Facturación genera PDFs **uno por uno** y los guarda en carpetas locales.  
+
+**Proceso con el MVP (Automatizado y Centralizado):**  
+1. Cliente solicita presupuesto **desde el sistema** (o el admin lo carga).  
+2. El sistema **filtra camiones disponibles** y sugiere opciones.  
+3. Presupuesto se envía **con un botón "Aceptar"** (genera orden de compra automáticamente).  
+4. **PDFs de remitos/facturas** se crean al clickear un botón y se almacenan en la nube.  
+
+---
+
+### **⚠️ Riesgos Mitigados**  
+- **Pérdida de información:** Todo queda registrado en la BD.  
+- **Errores en facturas:** Cálculos automáticos (IVA, subtotal).  
+
+
+---
+
+### **📌 Frase Clave para el Cliente:**  
+*"Este MVP les permitirá dejar atrás el caos de los Excel y papeles, teniendo **todo integrado en un solo lugar**: desde la emisión de presupuestos hasta la generación de facturas, con información en tiempo real y soporte para crecer."*  
+
+--- 
+
+¿Necesitas ajustar algún punto o profundizar en cómo se resolvería X problema específico? 😊

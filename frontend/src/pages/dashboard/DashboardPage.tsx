@@ -6,8 +6,6 @@ import {
   Users, 
   FileText, 
   DollarSign, 
-  TrendingUp, 
-  Calendar,
   Package,
   Receipt,
   CreditCard,

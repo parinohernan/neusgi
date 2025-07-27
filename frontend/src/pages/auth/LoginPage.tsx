@@ -37,7 +37,7 @@ export const LoginPage: React.FC = () => {
       if (loginSuccess) {
         success('Inicio de sesión exitoso');
       }
-    } catch (err) {
+    } catch {
       error('Error al iniciar sesión');
     }
   };

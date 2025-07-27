@@ -8,6 +8,7 @@ import { ProtectedRoute } from './ProtectedRoute';
 import { LoginPage } from '../pages/auth/LoginPage';
 import { DashboardPage } from '../pages/dashboard/DashboardPage';
 import { NuevoClientePage } from '../pages/clientes/NuevoClientePage';
+import { ClientesPage } from '../pages/clientes/ClientesPage';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 
 // ----------------------------------------------------------------------------
@@ -67,6 +68,15 @@ export const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <NuevoClientePage />
+          </ProtectedRoute>
+        }
+      />
+      
+      <Route
+        path="/clientes"
+        element={
+          <ProtectedRoute>
+            <ClientesPage />
           </ProtectedRoute>
         }
       />

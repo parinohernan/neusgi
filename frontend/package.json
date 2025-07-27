@@ -14,6 +14,7 @@
     "@hookform/resolvers": "^5.2.0",
     "@tanstack/react-query": "^5.83.0",
     "axios": "^1.11.0",
+    "bulma": "^1.0.4",
     "dayjs": "^1.11.13",
     "lucide-react": "^0.526.0",
     "react": "^19.1.0",

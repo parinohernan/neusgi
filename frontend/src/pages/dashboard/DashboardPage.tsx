@@ -1,241 +1,416 @@
-// ============================================================================
-// PÁGINA DEL DASHBOARD - Principio de Responsabilidad Única
-// ============================================================================
-
+import React from 'react';
 import { useAuth } from '../../stores/authStore';
 import { useUI } from '../../stores/uiStore';
 import { 
-  BarChart3, 
-  Users, 
   Truck, 
+  Users, 
   FileText, 
-  ShoppingCart, 
+  DollarSign, 
+  TrendingUp, 
   Calendar,
+  Package,
   Receipt,
   CreditCard,
-  TrendingUp
+  BarChart3
 } from 'lucide-react';
 
-// ----------------------------------------------------------------------------
-// COMPONENTE DASHBOARD PAGE
-// ----------------------------------------------------------------------------
-
-export const DashboardPage = () => {
+export const DashboardPage: React.FC = () => {
   const { user } = useAuth();
   const { toggleSidebar } = useUI();
 
-  // ----------------------------------------------------------------------------
-  // DATOS DE EJEMPLO (TEMPORALES)
-  // ----------------------------------------------------------------------------
-
+  // Datos de ejemplo para las estadísticas
   const stats = [
     {
-      title: 'Presupuestos Pendientes',
-      value: '12',
-      change: '+2.5%',
-      changeType: 'positive' as const,
+      title: 'Presupuestos Activos',
+      value: '24',
+      change: '+12%',
+      isPositive: true,
       icon: FileText,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-100',
+      color: 'is-primary'
     },
     {
-      title: 'Órdenes Activas',
-      value: '8',
-      change: '+1.2%',
-      changeType: 'positive' as const,
-      icon: ShoppingCart,
-      color: 'text-green-600',
-      bgColor: 'bg-green-100',
+      title: 'Órdenes de Compra',
+      value: '18',
+      change: '+8%',
+      isPositive: true,
+      icon: Package,
+      color: 'is-success'
     },
     {
-      title: 'Equipos Disponibles',
-      value: '15',
-      change: '-0.8%',
-      changeType: 'negative' as const,
-      icon: Truck,
-      color: 'text-orange-600',
-      bgColor: 'bg-orange-100',
-    },
-    {
-      title: 'Facturas por Cobrar',
-      value: '$45,230',
-      change: '+12.3%',
-      changeType: 'positive' as const,
+      title: 'Facturas Pendientes',
+      value: '12',
+      change: '-3%',
+      isPositive: false,
       icon: Receipt,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-100',
+      color: 'is-warning'
     },
+    {
+      title: 'Ingresos del Mes',
+      value: '$45,230',
+      change: '+15%',
+      isPositive: true,
+      icon: DollarSign,
+      color: 'is-info'
+    }
   ];
 
   const recentActivities = [
     {
       id: 1,
       type: 'presupuesto',
-      message: 'Nuevo presupuesto creado para Cliente ABC',
+      title: 'Nuevo presupuesto creado',
+      description: 'Presupuesto para Constructora ABC S.A.',
       time: 'Hace 2 horas',
-      status: 'success' as const,
+      status: 'success'
     },
     {
       id: 2,
       type: 'orden',
-      message: 'Orden de compra #OC-001 aprobada',
+      title: 'Orden de compra aprobada',
+      description: 'OC-2024-001 para Transportes XYZ',
       time: 'Hace 4 horas',
-      status: 'success' as const,
+      status: 'success'
     },
     {
       id: 3,
-      type: 'pago',
-      message: 'Pago recibido por factura #F-2024-001',
+      type: 'factura',
+      title: 'Factura generada',
+      description: 'FAC-2024-015 por $12,500',
       time: 'Hace 6 horas',
-      status: 'success' as const,
+      status: 'info'
     },
     {
       id: 4,
-      type: 'alerta',
-      message: 'Equipo TR-001 requiere mantenimiento',
+      type: 'pago',
+      title: 'Pago recibido',
+      description: 'Transferencia de $8,750',
       time: 'Hace 1 día',
-      status: 'warning' as const,
-    },
+      status: 'success'
+    }
   ];
 
-  // ----------------------------------------------------------------------------
-  // RENDERIZADO
-  // ----------------------------------------------------------------------------
+  const quickActions = [
+    { title: 'Nuevo Presupuesto', icon: FileText, color: 'is-primary', href: '/presupuestos/nuevo' },
+    { title: 'Crear Cliente', icon: Users, color: 'is-success', href: '/clientes/nuevo' },
+    { title: 'Registrar Equipo', icon: Truck, color: 'is-info', href: '/equipos/nuevo' },
+    { title: 'Generar Factura', icon: Receipt, color: 'is-warning', href: '/facturas/nueva' }
+  ];
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
-        <div className="flex items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-          <div className="flex items-center">
-            <button
-              onClick={toggleSidebar}
-              className="p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500"
-            >
-              <BarChart3 className="h-6 w-6" />
-            </button>
-            <h1 className="ml-3 text-2xl font-semibold text-gray-900">
-              Dashboard
-            </h1>
-          </div>
-          
-          <div className="flex items-center space-x-4">
-            <span className="text-sm text-gray-500">
-              Bienvenido, {user?.name}
-            </span>
-          </div>
+    <div className="main-container">
+      {/* Sidebar */}
+      <aside className="sidebar">
+        <div className="sidebar-header mb-4">
+          <h3 className="title is-4 has-text-primary">NEUSGI</h3>
+          <p className="subtitle is-6 has-text-grey">Panel de Control</p>
         </div>
-      </header>
+        
+        <nav className="sidebar-menu">
+          <div className="sidebar-item">
+            <a href="/dashboard" className="sidebar-link is-active">
+              <BarChart3 className="sidebar-icon" />
+              Dashboard
+            </a>
+          </div>
+          <div className="sidebar-item">
+            <a href="/presupuestos" className="sidebar-link">
+              <FileText className="sidebar-icon" />
+              Presupuestos
+            </a>
+          </div>
+          <div className="sidebar-item">
+            <a href="/ordenes-compra" className="sidebar-link">
+              <Package className="sidebar-icon" />
+              Órdenes de Compra
+            </a>
+          </div>
+          <div className="sidebar-item">
+            <a href="/clientes" className="sidebar-link">
+              <Users className="sidebar-icon" />
+              Clientes
+            </a>
+          </div>
+          <div className="sidebar-item">
+            <a href="/equipos" className="sidebar-link">
+              <Truck className="sidebar-icon" />
+              Equipos
+            </a>
+          </div>
+          <div className="sidebar-item">
+            <a href="/facturas" className="sidebar-link">
+              <Receipt className="sidebar-icon" />
+              Facturas
+            </a>
+          </div>
+          <div className="sidebar-item">
+            <a href="/pagos" className="sidebar-link">
+              <CreditCard className="sidebar-icon" />
+              Pagos
+            </a>
+          </div>
+        </nav>
+      </aside>
 
       {/* Contenido principal */}
-      <main className="py-6">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Estadísticas */}
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-            {stats.map((stat, index) => (
-              <div key={index} className="card p-6">
-                <div className="flex items-center">
-                  <div className={`flex-shrink-0 ${stat.bgColor} p-3 rounded-lg`}>
-                    <stat.icon className={`h-6 w-6 ${stat.color}`} />
-                  </div>
-                  <div className="ml-4 flex-1">
-                    <p className="text-sm font-medium text-gray-500 truncate">
-                      {stat.title}
-                    </p>
-                    <p className="text-2xl font-semibold text-gray-900">
-                      {stat.value}
-                    </p>
-                  </div>
-                </div>
-                <div className="mt-4">
-                  <span
-                    className={`text-sm font-medium ${
-                      stat.changeType === 'positive' ? 'text-green-600' : 'text-red-600'
-                    }`}
-                  >
-                    {stat.change}
-                  </span>
-                  <span className="text-sm text-gray-500 ml-1">vs mes anterior</span>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Gráficos y Actividad Reciente */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Gráfico de Ventas */}
-            <div className="card p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
-                Ventas Mensuales
-              </h3>
-              <div className="h-64 flex items-center justify-center bg-slate-50 rounded-lg">
-                <div className="text-center">
-                  <TrendingUp className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-                  <p className="text-sm text-gray-500">Gráfico de ventas (Pendiente)</p>
+      <main className="content-area">
+        {/* Header */}
+        <div className="page-header">
+          <div className="level">
+            <div className="level-left">
+              <div className="level-item">
+                <div>
+                  <h1 className="page-title">Dashboard</h1>
+                  <p className="page-subtitle">
+                    Bienvenido de vuelta, {user?.name || 'Usuario'}
+                  </p>
                 </div>
               </div>
             </div>
+            <div className="level-right">
+              <div className="level-item">
+                <button 
+                  className="button is-primary is-hidden-desktop"
+                  onClick={toggleSidebar}
+                >
+                  <span className="icon">
+                    <i className="fas fa-bars"></i>
+                  </span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
 
-            {/* Actividad Reciente */}
-            <div className="card p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
-                Actividad Reciente
-              </h3>
-              <div className="space-y-4">
-                {recentActivities.map((activity) => (
-                  <div key={activity.id} className="flex items-start space-x-3">
-                    <div className={`flex-shrink-0 w-2 h-2 mt-2 rounded-full ${
-                      activity.status === 'success' ? 'bg-green-400' : 'bg-yellow-400'
-                    }`} />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-gray-900">
-                        {activity.message}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {activity.time}
-                      </p>
+        {/* Estadísticas */}
+        <div className="dashboard-stats">
+          {stats.map((stat, index) => {
+            const IconComponent = stat.icon;
+            return (
+              <div key={index} className={`stat-card ${stat.color}`}>
+                <div className="level">
+                  <div className="level-left">
+                    <div className="level-item">
+                      <div>
+                        <div className="stat-number">{stat.value}</div>
+                        <div className="stat-label">{stat.title}</div>
+                        <div className={`stat-change ${stat.isPositive ? 'is-positive' : 'is-negative'}`}>
+                          {stat.change} vs mes anterior
+                        </div>
+                      </div>
                     </div>
                   </div>
-                ))}
+                  <div className="level-right">
+                    <div className="level-item">
+                      <div className="icon is-large">
+                        <IconComponent size={32} />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="columns">
+          {/* Acciones Rápidas */}
+          <div className="column is-4">
+            <div className="card shadow-hover">
+              <div className="card-header">
+                <p className="card-header-title">
+                  Acciones Rápidas
+                </p>
+              </div>
+              <div className="card-content">
+                <div className="buttons has-addons is-vertical is-fullwidth">
+                  {quickActions.map((action, index) => {
+                    const IconComponent = action.icon;
+                    return (
+                      <a 
+                        key={index} 
+                        href={action.href}
+                        className={`button ${action.color} is-fullwidth is-medium`}
+                      >
+                        <span className="icon">
+                          <IconComponent size={20} />
+                        </span>
+                        <span>{action.title}</span>
+                      </a>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Acciones Rápidas */}
-          <div className="mt-8">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">
-              Acciones Rápidas
-            </h3>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-6">
-              <button className="card p-4 text-center hover:shadow-medium transition-shadow">
-                <FileText className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-                <span className="text-sm font-medium text-gray-900">Nuevo Presupuesto</span>
-              </button>
-              
-              <button className="card p-4 text-center hover:shadow-medium transition-shadow">
-                <ShoppingCart className="h-8 w-8 text-green-600 mx-auto mb-2" />
-                <span className="text-sm font-medium text-gray-900">Nueva Orden</span>
-              </button>
-              
-              <button className="card p-4 text-center hover:shadow-medium transition-shadow">
-                <Calendar className="h-8 w-8 text-orange-600 mx-auto mb-2" />
-                <span className="text-sm font-medium text-gray-900">Parte Diario</span>
-              </button>
-              
-              <button className="card p-4 text-center hover:shadow-medium transition-shadow">
-                <Receipt className="h-8 w-8 text-purple-600 mx-auto mb-2" />
-                <span className="text-sm font-medium text-gray-900">Nueva Factura</span>
-              </button>
-              
-              <button className="card p-4 text-center hover:shadow-medium transition-shadow">
-                <CreditCard className="h-8 w-8 text-indigo-600 mx-auto mb-2" />
-                <span className="text-sm font-medium text-gray-900">Registrar Pago</span>
-              </button>
-              
-              <button className="card p-4 text-center hover:shadow-medium transition-shadow">
-                <Users className="h-8 w-8 text-pink-600 mx-auto mb-2" />
-                <span className="text-sm font-medium text-gray-900">Nuevo Cliente</span>
-              </button>
+          {/* Actividad Reciente */}
+          <div className="column is-8">
+            <div className="card shadow-hover">
+              <div className="card-header">
+                <p className="card-header-title">
+                  Actividad Reciente
+                </p>
+              </div>
+              <div className="card-content">
+                <div className="content">
+                  {recentActivities.map((activity) => (
+                    <div key={activity.id} className="notification is-light mb-3">
+                      <div className="level">
+                        <div className="level-left">
+                          <div className="level-item">
+                            <div>
+                              <p className="has-text-weight-semibold">{activity.title}</p>
+                              <p className="has-text-grey is-size-7">{activity.description}</p>
+                              <p className="has-text-grey-light is-size-7">{activity.time}</p>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="level-right">
+                          <div className="level-item">
+                            <span className={`tag is-${activity.status} is-small`}>
+                              {activity.type}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Gráficos y Métricas */}
+        <div className="columns">
+          <div className="column is-6">
+            <div className="card shadow-hover">
+              <div className="card-header">
+                <p className="card-header-title">
+                  Rendimiento Mensual
+                </p>
+              </div>
+              <div className="card-content">
+                <div className="content">
+                  <div className="mb-4">
+                    <div className="level">
+                      <div className="level-left">
+                        <div className="level-item">
+                          <span className="has-text-weight-semibold">Presupuestos</span>
+                        </div>
+                      </div>
+                      <div className="level-right">
+                        <div className="level-item">
+                          <span className="has-text-weight-semibold">85%</span>
+                        </div>
+                      </div>
+                    </div>
+                    <progress className="progress is-primary" value="85" max="100">85%</progress>
+                  </div>
+                  
+                  <div className="mb-4">
+                    <div className="level">
+                      <div className="level-left">
+                        <div className="level-item">
+                          <span className="has-text-weight-semibold">Órdenes Completadas</span>
+                        </div>
+                      </div>
+                      <div className="level-right">
+                        <div className="level-item">
+                          <span className="has-text-weight-semibold">92%</span>
+                        </div>
+                      </div>
+                    </div>
+                    <progress className="progress is-success" value="92" max="100">92%</progress>
+                  </div>
+                  
+                  <div className="mb-4">
+                    <div className="level">
+                      <div className="level-left">
+                        <div className="level-item">
+                          <span className="has-text-weight-semibold">Facturación</span>
+                        </div>
+                      </div>
+                      <div className="level-right">
+                        <div className="level-item">
+                          <span className="has-text-weight-semibold">78%</span>
+                        </div>
+                      </div>
+                    </div>
+                    <progress className="progress is-warning" value="78" max="100">78%</progress>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="column is-6">
+            <div className="card shadow-hover">
+              <div className="card-header">
+                <p className="card-header-title">
+                  Próximos Vencimientos
+                </p>
+              </div>
+              <div className="card-content">
+                <div className="content">
+                  <div className="notification is-warning is-light mb-3">
+                    <div className="level">
+                      <div className="level-left">
+                        <div className="level-item">
+                          <div>
+                            <p className="has-text-weight-semibold">Factura FAC-2024-018</p>
+                            <p className="has-text-grey is-size-7">Constructora ABC S.A.</p>
+                            <p className="has-text-grey-light is-size-7">Vence en 2 días</p>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="level-right">
+                        <div className="level-item">
+                          <span className="tag is-warning">$15,800</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="notification is-info is-light mb-3">
+                    <div className="level">
+                      <div className="level-left">
+                        <div className="level-item">
+                          <div>
+                            <p className="has-text-weight-semibold">Certificado de Seguro</p>
+                            <p className="has-text-grey is-size-7">Equipo ABC123</p>
+                            <p className="has-text-grey-light is-size-7">Vence en 5 días</p>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="level-right">
+                        <div className="level-item">
+                          <span className="tag is-info">Renovar</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="notification is-success is-light">
+                    <div className="level">
+                      <div className="level-left">
+                        <div className="level-item">
+                          <div>
+                            <p className="has-text-weight-semibold">Pago Confirmado</p>
+                            <p className="has-text-grey is-size-7">Transportes XYZ</p>
+                            <p className="has-text-grey-light is-size-7">Recibido hoy</p>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="level-right">
+                        <div className="level-item">
+                          <span className="tag is-success">$8,500</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

@@ -45,6 +45,38 @@ export interface UpdateClienteDto {
   usuarioId?: number;
 }
 
+// Tipos para Equipo (coinciden con el backend)
+export interface Equipo {
+  id: number;
+  patente: string;
+  modelo: string;
+  capacidadKg: number;
+  estado: 'disponible' | 'en_uso' | 'mantenimiento' | 'fuera_servicio';
+  tipo: 'camion' | 'excavadora' | 'retroexcavadora' | 'pala_cargadora' | 'compactador' | 'otro';
+  observaciones?: string;
+  usuarioId?: number;
+}
+
+export interface CreateEquipoDto {
+  patente: string;
+  modelo: string;
+  capacidadKg: number;
+  estado: 'disponible' | 'en_uso' | 'mantenimiento' | 'fuera_servicio';
+  tipo: 'camion' | 'excavadora' | 'retroexcavadora' | 'pala_cargadora' | 'compactador' | 'otro';
+  observaciones?: string;
+  usuarioId?: number;
+}
+
+export interface UpdateEquipoDto {
+  patente?: string;
+  modelo?: string;
+  capacidadKg?: number;
+  estado?: 'disponible' | 'en_uso' | 'mantenimiento' | 'fuera_servicio';
+  tipo?: 'camion' | 'excavadora' | 'retroexcavadora' | 'pala_cargadora' | 'compactador' | 'otro';
+  observaciones?: string;
+  usuarioId?: number;
+}
+
 // Mantener Client para compatibilidad
 export interface Client {
   id: string;

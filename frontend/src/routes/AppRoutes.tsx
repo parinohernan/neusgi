@@ -9,6 +9,8 @@ import { LoginPage } from '../pages/auth/LoginPage';
 import { DashboardPage } from '../pages/dashboard/DashboardPage';
 import { NuevoClientePage } from '../pages/clientes/NuevoClientePage';
 import { ClientesPage } from '../pages/clientes/ClientesPage';
+import { EquiposPage } from '../pages/equipos/EquiposPage';
+import { NuevoEquipoPage } from '../pages/equipos/NuevoEquipoPage';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 
 // ----------------------------------------------------------------------------
@@ -86,6 +88,25 @@ export const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <div>Página de Clientes (Pendiente)</div>
+          </ProtectedRoute>
+        }
+      />
+      
+      {/* Rutas de equipos */}
+      <Route
+        path="/equipos/nuevo"
+        element={
+          <ProtectedRoute>
+            <NuevoEquipoPage />
+          </ProtectedRoute>
+        }
+      />
+      
+      <Route
+        path="/equipos"
+        element={
+          <ProtectedRoute>
+            <EquiposPage />
           </ProtectedRoute>
         }
       />

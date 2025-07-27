@@ -11,9 +11,8 @@ export interface EquipoFilters extends PaginationQuery {
 export interface EquipoEstadisticas {
   total: number;
   disponibles: number;
-  enUso: number;
-  mantenimiento: number;
-  fueraServicio: number;
+  enMantenimiento: number;
+  ocupados: number;
 }
 
 // Servicio de equipos

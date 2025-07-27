@@ -39,9 +39,8 @@ export const EquiposPage: React.FC = () => {
   const [estadisticas, setEstadisticas] = useState<EquipoEstadisticas>({
     total: 0,
     disponibles: 0,
-    enUso: 0,
-    mantenimiento: 0,
-    fueraServicio: 0
+    enMantenimiento: 0,
+    ocupados: 0
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -423,9 +422,9 @@ export const EquiposPage: React.FC = () => {
                   <div className="level-left">
                     <div className="level-item">
                       <div>
-                        <p className="heading">En Uso</p>
+                        <p className="heading">Ocupados</p>
                         <p className="title has-text-warning">
-                          {estadisticas.enUso}
+                          {estadisticas.ocupados}
                         </p>
                       </div>
                     </div>
@@ -451,7 +450,7 @@ export const EquiposPage: React.FC = () => {
                       <div>
                         <p className="heading">Mantenimiento</p>
                         <p className="title has-text-info">
-                          {estadisticas.mantenimiento}
+                          {estadisticas.enMantenimiento}
                         </p>
                       </div>
                     </div>
@@ -460,32 +459,6 @@ export const EquiposPage: React.FC = () => {
                     <div className="level-item">
                       <div className="icon is-large has-text-info">
                         <Wrench size={32} />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div className="column is-2">
-            <div className="card shadow-hover">
-              <div className="card-content">
-                <div className="level">
-                  <div className="level-left">
-                    <div className="level-item">
-                      <div>
-                        <p className="heading">Fuera de Servicio</p>
-                        <p className="title has-text-danger">
-                          {estadisticas.fueraServicio}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="level-right">
-                    <div className="level-item">
-                      <div className="icon is-large has-text-danger">
-                        <AlertTriangle size={32} />
                       </div>
                     </div>
                   </div>

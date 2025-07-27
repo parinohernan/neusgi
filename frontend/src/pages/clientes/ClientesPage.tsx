@@ -65,7 +65,7 @@ export const ClientesPage: React.FC = () => {
     };
 
     cargarDatos();
-  }, [notificationError]);
+  }, []); // Solo se ejecuta al montar el componente
 
   // Filtrar y ordenar clientes
   const filteredClientes = useMemo(() => {
@@ -128,14 +128,35 @@ export const ClientesPage: React.FC = () => {
     navigate(`/clientes/${id}/editar`);
   };
 
+  // Función para recargar datos
+  const recargarDatos = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      // Cargar clientes
+      const response = await clienteService.getAll();
+      setClientes(response.data);
+      
+      // Cargar estadísticas
+      const stats = await clienteService.getEstadisticas();
+      setEstadisticas(stats);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Error al cargar los datos';
+      setError(errorMessage);
+      notificationError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleEliminarCliente = async (id: number) => {
     if (confirm('¿Estás seguro de que quieres eliminar este cliente?')) {
       try {
         await clienteService.delete(id);
         success('Cliente eliminado exitosamente');
         // Recargar datos
-        const response = await clienteService.getAll();
-        setClientes(response.data);
+        await recargarDatos();
       } catch (err) {
         notificationError('Error al eliminar el cliente');
       }
@@ -183,6 +204,17 @@ export const ClientesPage: React.FC = () => {
             </div>
             <div className="level-right">
               <div className="level-item">
+                <button 
+                  className="button is-outlined mr-2"
+                  onClick={recargarDatos}
+                  disabled={isLoading}
+                  title="Recargar datos"
+                >
+                  <span className="icon">
+                    <Users size={16} />
+                  </span>
+                  <span>{isLoading ? 'Cargando...' : 'Recargar'}</span>
+                </button>
                 <button 
                   className="button is-primary"
                   onClick={handleNuevoCliente}
@@ -296,9 +328,10 @@ export const ClientesPage: React.FC = () => {
                 <p><strong>Error:</strong> {error}</p>
                 <button 
                   className="button is-small"
-                  onClick={() => window.location.reload()}
+                  onClick={recargarDatos}
+                  disabled={isLoading}
                 >
-                  Reintentar
+                  {isLoading ? 'Cargando...' : 'Reintentar'}
                 </button>
               </div>
             )}

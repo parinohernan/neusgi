@@ -8,7 +8,6 @@ import {
   Edit, 
   Trash2, 
   Eye, 
-  MoreHorizontal,
   Phone,
   Mail,
   MapPin,
@@ -19,23 +18,7 @@ import { useNotifications } from '../../stores/uiStore';
 import { clienteService } from '../../services/clienteService';
 import type { Cliente } from '../../types';
 
-// Extender el tipo Cliente del backend con campos adicionales para la UI
-interface ClienteWithUI extends Cliente {
-  estado?: 'activo' | 'inactivo';
-  fechaCreacion?: string;
-  ultimaActividad?: string;
-}
 
-// Estado para los datos reales
-const [clientes, setClientes] = useState<Cliente[]>([]);
-const [estadisticas, setEstadisticas] = useState({
-  total: 0,
-  activos: 0,
-  inactivos: 0,
-  nuevosEsteMes: 0
-});
-const [isLoading, setIsLoading] = useState(true);
-const [error, setError] = useState<string | null>(null);
 
 export const ClientesPage: React.FC = () => {
   const navigate = useNavigate();
@@ -46,6 +29,17 @@ export const ClientesPage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<'todos' | 'activo' | 'inactivo'>('todos');
   const [sortBy, setSortBy] = useState<'nombre' | 'fecha' | 'estado'>('nombre');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+
+  // Estado para los datos reales
+  const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [estadisticas, setEstadisticas] = useState({
+    total: 0,
+    activos: 0,
+    inactivos: 0,
+    nuevosEsteMes: 0
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Cargar datos al montar el componente
   useEffect(() => {
@@ -310,164 +304,166 @@ export const ClientesPage: React.FC = () => {
             )}
 
             {!isLoading && !error && (
-            <div className="table-container">
-              <table className="table is-fullwidth is-striped is-hoverable">
-                <thead>
-                  <tr>
-                    <th 
-                      className="is-clickable"
-                      onClick={() => handleSort('nombre')}
-                    >
-                      Empresa {getSortIcon('nombre')}
-                    </th>
-                    <th>RUT/CUIT</th>
-                    <th>Contacto</th>
-                    <th>Dirección</th>
-                    <th 
-                      className="is-clickable"
-                      onClick={() => handleSort('estado')}
-                    >
-                      Estado {getSortIcon('estado')}
-                    </th>
-                    <th 
-                      className="is-clickable"
-                      onClick={() => handleSort('fecha')}
-                    >
-                      Fecha Creación {getSortIcon('fecha')}
-                    </th>
-                    <th>Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredClientes.map((cliente) => (
-                    <tr key={cliente.id}>
-                      <td>
-                        <div className="level">
-                          <div className="level-left">
-                            <div className="level-item">
-                              <div>
-                                <p className="has-text-weight-semibold">
-                                  {cliente.nombreEmpresa}
-                                </p>
-                                <p className="has-text-grey is-size-7">
-                                  ID: {cliente.id}
-                                </p>
+              <>
+                <div className="table-container">
+                  <table className="table is-fullwidth is-striped is-hoverable">
+                    <thead>
+                      <tr>
+                        <th 
+                          className="is-clickable"
+                          onClick={() => handleSort('nombre')}
+                        >
+                          Empresa {getSortIcon('nombre')}
+                        </th>
+                        <th>RUT/CUIT</th>
+                        <th>Contacto</th>
+                        <th>Dirección</th>
+                        <th 
+                          className="is-clickable"
+                          onClick={() => handleSort('estado')}
+                        >
+                          Estado {getSortIcon('estado')}
+                        </th>
+                        <th 
+                          className="is-clickable"
+                          onClick={() => handleSort('fecha')}
+                        >
+                          Fecha Creación {getSortIcon('fecha')}
+                        </th>
+                        <th>Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredClientes.map((cliente) => (
+                        <tr key={cliente.id}>
+                          <td>
+                            <div className="level">
+                              <div className="level-left">
+                                <div className="level-item">
+                                  <div>
+                                    <p className="has-text-weight-semibold">
+                                      {cliente.nombreEmpresa}
+                                    </p>
+                                    <p className="has-text-grey is-size-7">
+                                      ID: {cliente.id}
+                                    </p>
+                                  </div>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <span className="icon-text">
-                          <span className="icon">
-                            <FileText size={14} />
-                          </span>
-                          <span>{cliente.rutCuit}</span>
-                        </span>
-                      </td>
-                      <td>
-                        <div className="content">
-                          {cliente.email && (
+                          </td>
+                          <td>
+                            <span className="icon-text">
+                              <span className="icon">
+                                <FileText size={14} />
+                              </span>
+                              <span>{cliente.rutCuit}</span>
+                            </span>
+                          </td>
+                          <td>
+                            <div className="content">
+                              {cliente.email && (
+                                <div className="icon-text">
+                                  <span className="icon">
+                                    <Mail size={12} />
+                                  </span>
+                                  <span className="is-size-7">{cliente.email}</span>
+                                </div>
+                              )}
+                              {cliente.telefono && (
+                                <div className="icon-text">
+                                  <span className="icon">
+                                    <Phone size={12} />
+                                  </span>
+                                  <span className="is-size-7">{cliente.telefono}</span>
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                          <td>
                             <div className="icon-text">
                               <span className="icon">
-                                <Mail size={12} />
+                                <MapPin size={12} />
                               </span>
-                              <span className="is-size-7">{cliente.email}</span>
+                              <span className="is-size-7">{cliente.direccion}</span>
                             </div>
-                          )}
-                          {cliente.telefono && (
-                            <div className="icon-text">
-                              <span className="icon">
-                                <Phone size={12} />
-                              </span>
-                              <span className="is-size-7">{cliente.telefono}</span>
+                          </td>
+                          <td>
+                            <span className="tag is-success">
+                              Activo
+                            </span>
+                          </td>
+                          <td>
+                            <span className="is-size-7">
+                              ID: {cliente.id}
+                            </span>
+                          </td>
+                          <td>
+                            <div className="buttons are-small">
+                              <button
+                                className="button is-info is-light"
+                                onClick={() => handleVerCliente(cliente.id.toString())}
+                                title="Ver detalles"
+                              >
+                                <span className="icon">
+                                  <Eye size={12} />
+                                </span>
+                              </button>
+                              <button
+                                className="button is-warning is-light"
+                                onClick={() => handleEditarCliente(cliente.id.toString())}
+                                title="Editar"
+                              >
+                                <span className="icon">
+                                  <Edit size={12} />
+                                </span>
+                              </button>
+                              <button
+                                className="button is-danger is-light"
+                                onClick={() => handleEliminarCliente(cliente.id)}
+                                title="Eliminar"
+                              >
+                                <span className="icon">
+                                  <Trash2 size={12} />
+                                </span>
+                              </button>
                             </div>
-                          )}
-                        </div>
-                      </td>
-                      <td>
-                        <div className="icon-text">
-                          <span className="icon">
-                            <MapPin size={12} />
-                          </span>
-                          <span className="is-size-7">{cliente.direccion}</span>
-                        </div>
-                      </td>
-                      <td>
-                        <span className="tag is-success">
-                          Activo
-                        </span>
-                      </td>
-                      <td>
-                        <span className="is-size-7">
-                          ID: {cliente.id}
-                        </span>
-                      </td>
-                      <td>
-                        <div className="buttons are-small">
-                          <button
-                            className="button is-info is-light"
-                            onClick={() => handleVerCliente(cliente.id.toString())}
-                            title="Ver detalles"
-                          >
-                            <span className="icon">
-                              <Eye size={12} />
-                            </span>
-                          </button>
-                          <button
-                            className="button is-warning is-light"
-                            onClick={() => handleEditarCliente(cliente.id.toString())}
-                            title="Editar"
-                          >
-                            <span className="icon">
-                              <Edit size={12} />
-                            </span>
-                          </button>
-                          <button
-                            className="button is-danger is-light"
-                            onClick={() => handleEliminarCliente(cliente.id)}
-                            title="Eliminar"
-                          >
-                            <span className="icon">
-                              <Trash2 size={12} />
-                            </span>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Mensaje cuando no hay resultados */}
-            {filteredClientes.length === 0 && (
-              <div className="has-text-centered py-6">
-                <div className="icon is-large has-text-grey-light">
-                  <Users size={64} />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-                <p className="title is-4 has-text-grey-light mt-4">
-                  No se encontraron clientes
-                </p>
-                <p className="subtitle is-6 has-text-grey-light">
-                  {searchTerm || statusFilter !== 'todos' 
-                    ? 'Intenta ajustar los filtros de búsqueda'
-                    : 'No hay clientes registrados en el sistema'
-                  }
-                </p>
-                {!searchTerm && statusFilter === 'todos' && (
-                  <button
-                    className="button is-primary mt-4"
-                    onClick={handleNuevoCliente}
-                  >
-                    <span className="icon">
-                      <Plus size={16} />
-                    </span>
-                    <span>Crear primer cliente</span>
-                  </button>
+
+                {/* Mensaje cuando no hay resultados */}
+                {filteredClientes.length === 0 && (
+                  <div className="has-text-centered py-6">
+                    <div className="icon is-large has-text-grey-light">
+                      <Users size={64} />
+                    </div>
+                    <p className="title is-4 has-text-grey-light mt-4">
+                      No se encontraron clientes
+                    </p>
+                    <p className="subtitle is-6 has-text-grey-light">
+                      {searchTerm || statusFilter !== 'todos' 
+                        ? 'Intenta ajustar los filtros de búsqueda'
+                        : 'No hay clientes registrados en el sistema'
+                      }
+                    </p>
+                    {!searchTerm && statusFilter === 'todos' && (
+                      <button
+                        className="button is-primary mt-4"
+                        onClick={handleNuevoCliente}
+                      >
+                        <span className="icon">
+                          <Plus size={16} />
+                        </span>
+                        <span>Crear primer cliente</span>
+                      </button>
+                    )}
+                  </div>
                 )}
-              </div>
-            )}
+              </>
             )}
           </div>
         </div>

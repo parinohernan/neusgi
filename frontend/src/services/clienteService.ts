@@ -31,25 +31,25 @@ export const clienteService = {
     const url = `/clientes${queryString ? `?${queryString}` : ''}`;
     
     const response = await api.get<PaginatedResponse<Cliente>>(url);
-    return response.data;
+    return response.data!;
   },
 
   // Obtener cliente por ID
   async getById(id: number): Promise<Cliente> {
     const response = await api.get<Cliente>(`/clientes/${id}`);
-    return response.data;
+    return response.data!;
   },
 
   // Crear nuevo cliente
   async create(data: CreateClienteDto): Promise<Cliente> {
     const response = await api.post<Cliente>('/clientes', data);
-    return response.data;
+    return response.data!;
   },
 
   // Actualizar cliente
   async update(id: number, data: UpdateClienteDto): Promise<Cliente> {
     const response = await api.put<Cliente>(`/clientes/${id}`, data);
-    return response.data;
+    return response.data!;
   },
 
   // Eliminar cliente
@@ -60,30 +60,30 @@ export const clienteService = {
   // Buscar cliente por RUT/CUIT
   async findByRutCuit(rutCuit: string): Promise<Cliente> {
     const response = await api.get<Cliente>(`/clientes/buscar/rut/${rutCuit}`);
-    return response.data;
+    return response.data!;
   },
 
   // Buscar cliente por email
   async findByEmail(email: string): Promise<Cliente> {
     const response = await api.get<Cliente>(`/clientes/buscar/email/${email}`);
-    return response.data;
+    return response.data!;
   },
 
   // Buscar clientes por nombre
   async buscarPorNombre(nombre: string): Promise<Cliente[]> {
     const response = await api.get<Cliente[]>(`/clientes/buscar/nombre/${nombre}`);
-    return response.data;
+    return response.data!;
   },
 
   // Obtener clientes activos
   async getClientesActivos(): Promise<Cliente[]> {
     const response = await api.get<Cliente[]>('/clientes/activos');
-    return response.data;
+    return response.data!;
   },
 
   // Obtener estadísticas de clientes
   async getEstadisticas(): Promise<ClienteEstadisticas> {
     const response = await api.get<ClienteEstadisticas>('/clientes/estadisticas');
-    return response.data;
+    return response.data!;
   }
 }; 

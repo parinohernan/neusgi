@@ -9,7 +9,7 @@ import type { AppConfig, FeatureFlags } from '../types';
 // ----------------------------------------------------------------------------
 
 export const appConfig: AppConfig = {
-  apiUrl: import.meta.env.VITE_API_URL || 'http://localhost:3001/api',
+  apiUrl: import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1',
   appName: 'NEUSGI',
   version: '1.0.0',
   environment: (import.meta.env.VITE_ENVIRONMENT as AppConfig['environment']) || 'development',

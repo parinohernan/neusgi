@@ -51,30 +51,24 @@ export interface Equipo {
   patente: string;
   modelo: string;
   capacidadKg: number;
-  estado: 'disponible' | 'en_uso' | 'mantenimiento' | 'fuera_servicio';
-  tipo: 'camion' | 'excavadora' | 'retroexcavadora' | 'pala_cargadora' | 'compactador' | 'otro';
-  observaciones?: string;
-  usuarioId?: number;
+  estado: 'disponible' | 'ocupado' | 'mantenimiento';
+  fechaUltimoMantenimiento?: Date;
 }
 
 export interface CreateEquipoDto {
   patente: string;
   modelo: string;
   capacidadKg: number;
-  estado: 'disponible' | 'en_uso' | 'mantenimiento' | 'fuera_servicio';
-  tipo: 'camion' | 'excavadora' | 'retroexcavadora' | 'pala_cargadora' | 'compactador' | 'otro';
-  observaciones?: string;
-  usuarioId?: number;
+  estado?: 'disponible' | 'ocupado' | 'mantenimiento';
+  fechaUltimoMantenimiento?: Date;
 }
 
 export interface UpdateEquipoDto {
   patente?: string;
   modelo?: string;
   capacidadKg?: number;
-  estado?: 'disponible' | 'en_uso' | 'mantenimiento' | 'fuera_servicio';
-  tipo?: 'camion' | 'excavadora' | 'retroexcavadora' | 'pala_cargadora' | 'compactador' | 'otro';
-  observaciones?: string;
-  usuarioId?: number;
+  estado?: 'disponible' | 'ocupado' | 'mantenimiento';
+  fechaUltimoMantenimiento?: Date;
 }
 
 // Mantener Client para compatibilidad

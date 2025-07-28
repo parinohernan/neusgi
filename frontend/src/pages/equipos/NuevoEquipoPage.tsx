@@ -31,11 +31,7 @@ const equipoSchema = z.object({
   capacidadKg: z.number()
     .min(1, 'La capacidad debe ser mayor a 0')
     .max(100000, 'La capacidad no puede exceder 100,000 kg'),
-  estado: z.enum(['disponible', 'en_uso', 'mantenimiento', 'fuera_servicio']),
-  tipo: z.enum(['camion', 'excavadora', 'retroexcavadora', 'pala_cargadora', 'compactador', 'otro']),
-  observaciones: z.string()
-    .max(1000, 'Las observaciones no pueden exceder 1000 caracteres')
-    .optional(),
+  estado: z.enum(['disponible', 'ocupado', 'mantenimiento']),
 });
 
 type EquipoFormData = z.infer<typeof equipoSchema>;
@@ -64,8 +60,6 @@ export const NuevoEquipoPage: React.FC = () => {
         modelo: data.modelo,
         capacidadKg: data.capacidadKg,
         estado: data.estado,
-        tipo: data.tipo,
-        observaciones: data.observaciones || undefined,
         // usuarioId se asignará automáticamente desde el backend
       };
 
@@ -228,79 +222,29 @@ export const NuevoEquipoPage: React.FC = () => {
                         <label className="label">
                           <span className="icon-text">
                             <span className="icon">
-                              <Truck size={16} />
+                              <CheckCircle size={16} />
                             </span>
-                            <span>Tipo de Equipo *</span>
+                            <span>Estado *</span>
                           </span>
                         </label>
                         <div className="control">
-                          <div className={`select is-fullwidth ${errors.tipo ? 'is-danger' : ''}`}>
-                            <select {...register('tipo')}>
-                              <option value="">Seleccionar tipo</option>
-                              <option value="camion">Camión</option>
-                              <option value="excavadora">Excavadora</option>
-                              <option value="retroexcavadora">Retroexcavadora</option>
-                              <option value="pala_cargadora">Pala Cargadora</option>
-                              <option value="compactador">Compactador</option>
-                              <option value="otro">Otro</option>
+                          <div className={`select is-fullwidth ${errors.estado ? 'is-danger' : ''}`}>
+                            <select {...register('estado')}>
+                              <option value="">Seleccionar estado</option>
+                              <option value="disponible">Disponible</option>
+                              <option value="ocupado">Ocupado</option>
+                              <option value="mantenimiento">Mantenimiento</option>
                             </select>
                           </div>
                         </div>
-                        {errors.tipo && (
-                          <p className="help is-danger">{errors.tipo.message}</p>
+                        {errors.estado && (
+                          <p className="help is-danger">{errors.estado.message}</p>
                         )}
                       </div>
                     </div>
                   </div>
 
-                  {/* Estado */}
-                  <div className="field">
-                    <label className="label">
-                      <span className="icon-text">
-                        <span className="icon">
-                          <CheckCircle size={16} />
-                        </span>
-                        <span>Estado *</span>
-                      </span>
-                    </label>
-                    <div className="control">
-                      <div className={`select is-fullwidth ${errors.estado ? 'is-danger' : ''}`}>
-                        <select {...register('estado')}>
-                          <option value="">Seleccionar estado</option>
-                          <option value="disponible">Disponible</option>
-                          <option value="en_uso">En Uso</option>
-                          <option value="mantenimiento">Mantenimiento</option>
-                          <option value="fuera_servicio">Fuera de Servicio</option>
-                        </select>
-                      </div>
-                    </div>
-                    {errors.estado && (
-                      <p className="help is-danger">{errors.estado.message}</p>
-                    )}
-                  </div>
 
-                  {/* Observaciones */}
-                  <div className="field">
-                    <label className="label">
-                      <span className="icon-text">
-                        <span className="icon">
-                          <Wrench size={16} />
-                        </span>
-                        <span>Observaciones</span>
-                      </span>
-                    </label>
-                    <div className="control">
-                      <textarea
-                        {...register('observaciones')}
-                        className={`textarea ${errors.observaciones ? 'is-danger' : ''}`}
-                        placeholder="Información adicional sobre el equipo..."
-                        rows={4}
-                      />
-                    </div>
-                    {errors.observaciones && (
-                      <p className="help is-danger">{errors.observaciones.message}</p>
-                    )}
-                  </div>
 
                   {/* Botones de acción */}
                   <div className="field is-grouped is-grouped-right">

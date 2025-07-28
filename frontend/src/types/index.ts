@@ -71,6 +71,48 @@ export interface UpdateEquipoDto {
   fechaUltimoMantenimiento?: Date;
 }
 
+// Tipos para Presupuesto (coinciden con el backend)
+export interface Presupuesto {
+  id: number;
+  clienteId: number;
+  equipoId: number;
+  usuarioId: number;
+  descripcion: string;
+  costo: number;
+  validoHasta: Date;
+  estado: 'pendiente' | 'aceptado' | 'rechazado';
+  creadoEn: Date;
+  // Relaciones
+  cliente?: Cliente;
+  equipo?: Equipo;
+  usuario?: {
+    id: number;
+    nombre: string;
+    email: string;
+    rol: string;
+  };
+}
+
+export interface CreatePresupuestoDto {
+  clienteId: number;
+  equipoId: number;
+  usuarioId?: number; // Se asigna automáticamente desde el backend
+  descripcion: string;
+  costo: number;
+  validoHasta: Date;
+  estado?: 'pendiente' | 'aceptado' | 'rechazado';
+}
+
+export interface UpdatePresupuestoDto {
+  clienteId?: number;
+  equipoId?: number;
+  usuarioId?: number;
+  descripcion?: string;
+  costo?: number;
+  validoHasta?: Date;
+  estado?: 'pendiente' | 'aceptado' | 'rechazado';
+}
+
 // Mantener Client para compatibilidad
 export interface Client {
   id: string;
@@ -96,20 +138,7 @@ export interface Equipment {
   updatedAt: string;
 }
 
-export interface Presupuesto {
-  id: string;
-  clientId: string;
-  equipmentId: string;
-  description: string;
-  totalAmount: number;
-  status: PresupuestoStatus;
-  validUntil: string;
-  createdAt: string;
-  updatedAt: string;
-  // Relaciones
-  client?: Client;
-  equipment?: Equipment;
-}
+
 
 export interface OrdenCompra {
   id: string;

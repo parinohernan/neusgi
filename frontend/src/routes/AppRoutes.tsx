@@ -12,6 +12,9 @@ import { ClientesPage } from '../pages/clientes/ClientesPage';
 import { EquiposPage } from '../pages/equipos/EquiposPage';
 import { NuevoEquipoPage } from '../pages/equipos/NuevoEquipoPage';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
+import { PresupuestosPage } from '../pages/presupuestos/PresupuestosPage';
+import { NuevoPresupuestoPage } from '../pages/presupuestos/NuevoPresupuestoPage';
+import { DetallePresupuestoPage } from '../pages/presupuestos/DetallePresupuestoPage';
 
 // ----------------------------------------------------------------------------
 // COMPONENTE PRINCIPAL DE RUTAS
@@ -116,6 +119,33 @@ export const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <div>Página de Equipos (Pendiente)</div>
+          </ProtectedRoute>
+        }
+      />
+      
+      <Route
+        path="/presupuestos"
+        element={
+          <ProtectedRoute>
+            <PresupuestosPage />
+          </ProtectedRoute>
+        }
+      />
+      
+      <Route
+        path="/presupuestos/nuevo"
+        element={
+          <ProtectedRoute>
+            <NuevoPresupuestoPage />
+          </ProtectedRoute>
+        }
+      />
+      
+      <Route
+        path="/presupuestos/:id"
+        element={
+          <ProtectedRoute>
+            <DetallePresupuestoPage />
           </ProtectedRoute>
         }
       />

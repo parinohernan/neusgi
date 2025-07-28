@@ -10,9 +10,9 @@ export function createEquipoRoutes(equipoController: EquipoController): Router {
 
   // Rutas que requieren rol de logística o admin
   router.get('/', AuthMiddleware.requireLogistica, equipoController.getAll.bind(equipoController));
-  router.get('/:id', AuthMiddleware.requireLogistica, equipoController.getById.bind(equipoController));
   router.get('/disponibles', AuthMiddleware.requireLogistica, equipoController.getDisponibles.bind(equipoController));
   router.get('/estadisticas', AuthMiddleware.requireLogistica, equipoController.getEstadisticas.bind(equipoController));
+  router.get('/:id', AuthMiddleware.requireLogistica, equipoController.getById.bind(equipoController));
 
   // Rutas que requieren rol de admin
   router.post('/', AuthMiddleware.requireAdmin, equipoController.create.bind(equipoController));

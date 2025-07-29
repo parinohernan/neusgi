@@ -80,17 +80,44 @@ export const presupuestoService = {
     pendientes: number;
     aceptados: number;
     rechazados: number;
-    montoTotal: number;
-    montoPromedio: number;
+    vencidos: number;
+    valorTotal: number;
   }> {
-    const response = await api.get('/presupuestos/estadisticas');
+    const response = await api.get('/presupuestos/estadisticas/dashboard');
     return response.data as {
       total: number;
       pendientes: number;
       aceptados: number;
       rechazados: number;
-      montoTotal: number;
-      montoPromedio: number;
+      vencidos: number;
+      valorTotal: number;
     };
+  },
+
+  // Descargar PDF del presupuesto
+  async downloadPdf(id: number): Promise<void> {
+    try {
+      const response = await api.get(`/presupuestos/${id}/pdf`, {
+        responseType: 'blob'
+      });
+      
+      // Crear URL del blob
+      const blob = new Blob([response.data as BlobPart], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      
+      // Crear enlace de descarga
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `presupuesto-${id}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      
+      // Limpiar
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error descargando PDF:', error);
+      throw new Error('Error al descargar el PDF');
+    }
   }
 }; 

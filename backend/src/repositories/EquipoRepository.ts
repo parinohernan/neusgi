@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { Equipo, CreateEquipoDto, UpdateEquipoDto, PaginatedResponse, EquipoFilters } from '@/types';
+import { Equipo, CreateEquipoDto, UpdateEquipoDto, PaginatedResponse, EquipoFilters, EquipoImagen } from '@/types';
 import { IBaseRepository } from './interfaces/IBaseRepository';
 
 export class EquipoRepository implements IBaseRepository<Equipo, CreateEquipoDto, UpdateEquipoDto> {
@@ -11,9 +11,21 @@ export class EquipoRepository implements IBaseRepository<Equipo, CreateEquipoDto
 
   // Helper para convertir tipos de Prisma a nuestros tipos
   private convertPrismaEquipo(prismaEquipo: any): Equipo {
+    let imagenes: EquipoImagen[] = [];
+    
+    if (prismaEquipo.imagenes) {
+      try {
+        imagenes = JSON.parse(prismaEquipo.imagenes);
+      } catch (error) {
+        console.warn('Error parsing imagenes JSON:', error);
+        imagenes = [];
+      }
+    }
+
     return {
       ...prismaEquipo,
       capacidadKg: Number(prismaEquipo.capacidadKg),
+      imagenes,
     };
   }
 
@@ -38,6 +50,7 @@ export class EquipoRepository implements IBaseRepository<Equipo, CreateEquipoDto
           capacidadKg: true,
           estado: true,
           fechaUltimoMantenimiento: true,
+          imagenes: true,
         },
       }),
       this.prisma.equipo.count({ where }),
@@ -62,6 +75,7 @@ export class EquipoRepository implements IBaseRepository<Equipo, CreateEquipoDto
         capacidadKg: true,
         estado: true,
         fechaUltimoMantenimiento: true,
+        imagenes: true,
       },
     });
 
@@ -78,6 +92,7 @@ export class EquipoRepository implements IBaseRepository<Equipo, CreateEquipoDto
         capacidadKg: true,
         estado: true,
         fechaUltimoMantenimiento: true,
+        imagenes: true,
       },
     });
 
@@ -94,6 +109,7 @@ export class EquipoRepository implements IBaseRepository<Equipo, CreateEquipoDto
         capacidadKg: true,
         estado: true,
         fechaUltimoMantenimiento: true,
+        imagenes: true,
       },
     });
 
@@ -112,6 +128,10 @@ export class EquipoRepository implements IBaseRepository<Equipo, CreateEquipoDto
       createData.fechaUltimoMantenimiento = data.fechaUltimoMantenimiento;
     }
 
+    if (data.imagenes && data.imagenes.length > 0) {
+      createData.imagenes = JSON.stringify(data.imagenes);
+    }
+
     const equipo = await this.prisma.equipo.create({
       data: createData,
       select: {
@@ -121,6 +141,7 @@ export class EquipoRepository implements IBaseRepository<Equipo, CreateEquipoDto
         capacidadKg: true,
         estado: true,
         fechaUltimoMantenimiento: true,
+        imagenes: true,
       },
     });
 
@@ -135,6 +156,7 @@ export class EquipoRepository implements IBaseRepository<Equipo, CreateEquipoDto
     if (data.capacidadKg) updateData.capacidadKg = data.capacidadKg;
     if (data.estado) updateData.estado = data.estado;
     if (data.fechaUltimoMantenimiento) updateData.fechaUltimoMantenimiento = data.fechaUltimoMantenimiento;
+    if (data.imagenes) updateData.imagenes = JSON.stringify(data.imagenes);
 
     const equipo = await this.prisma.equipo.update({
       where: { id },
@@ -146,6 +168,7 @@ export class EquipoRepository implements IBaseRepository<Equipo, CreateEquipoDto
         capacidadKg: true,
         estado: true,
         fechaUltimoMantenimiento: true,
+        imagenes: true,
       },
     });
 

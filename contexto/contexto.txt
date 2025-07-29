@@ -15,6 +15,7 @@ PYME dedicada al **alquiler de flota de camiones** para otras empresas (transpor
    - Logística no sabe en tiempo real qué **camiones están disponibles**.  
    - Facturación no tiene automatizado el **proceso de generación de PDFs** (remitos, certificados).  
    - Los conductores registran **partes diarios en papel**, dificultando el seguimiento.  
+   - **Falta de documentación visual** de los equipos (fotos, estado visual).  
 
 3. **Ineficiencia en el Proceso de Venta:**  
    - Los presupuestos se envían por correo sin plantillas estandarizadas.  
@@ -31,6 +32,7 @@ PYME dedicada al **alquiler de flota de camiones** para otras empresas (transpor
 1. **Digitalizar y Automatizar:**  
    - CRUD de **clientes, empleados, camiones y presupuestos**.  
    - Generación automática de **remitos, facturas y certificados en PDF**.  
+   - **Sistema de imágenes múltiples** para documentación visual de equipos.  
 
 2. **Seguimiento en Tiempo Real:**  
    - Estado de camiones (**disponible/en viaje/mantenimiento**).  

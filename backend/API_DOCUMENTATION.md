@@ -249,11 +249,24 @@ Listar equipos (requiere rol logística o admin).
     "data": [
       {
         "id": 1,
+        "id": 1,
         "patente": "ABC123",
         "modelo": "Volvo FH16",
         "capacidadKg": 25000.00,
         "estado": "disponible",
-        "fechaUltimoMantenimiento": "2024-01-10T00:00:00.000Z"
+        "fechaUltimoMantenimiento": "2024-01-10T00:00:00.000Z",
+        "imagenes": [
+          {
+            "descripcion": "Vista frontal del camión",
+            "url": "https://ejemplo.com/imagen1.jpg",
+            "destacada": true
+          },
+          {
+            "descripcion": "Vista lateral",
+            "url": "https://ejemplo.com/imagen2.jpg",
+            "destacada": false
+          }
+        ]
       }
     ],
     "total": 1,
@@ -278,7 +291,19 @@ Crear nuevo equipo.
   "modelo": "Mercedes-Benz Actros",
   "capacidadKg": 30000.00,
   "estado": "disponible",
-  "fechaUltimoMantenimiento": "2024-01-15T00:00:00.000Z"
+  "fechaUltimoMantenimiento": "2024-01-15T00:00:00.000Z",
+  "imagenes": [
+    {
+      "descripcion": "Vista frontal del camión",
+      "url": "https://ejemplo.com/imagen1.jpg",
+      "destacada": true
+    },
+    {
+      "descripcion": "Vista lateral",
+      "url": "https://ejemplo.com/imagen2.jpg",
+      "destacada": false
+    }
+  ]
 }
 ```
 
@@ -325,6 +350,49 @@ Obtener estadísticas de equipos (requiere rol logística o admin).
     "ocupados": 1
   },
   "message": "Estadísticas obtenidas exitosamente"
+}
+```
+
+### 📸 **Sistema de Imágenes de Equipos**
+
+El sistema de equipos ahora incluye soporte para múltiples imágenes por equipo. Cada imagen tiene las siguientes propiedades:
+
+#### **Estructura de Imagen:**
+```json
+{
+  "descripcion": "string",    // Descripción de la imagen
+  "url": "string",           // URL de la imagen (local o externa)
+  "destacada": boolean       // Solo una imagen puede ser destacada por equipo
+}
+```
+
+#### **Reglas del Sistema de Imágenes:**
+- **Máximo 10 imágenes** por equipo
+- **Una sola imagen destacada** por equipo
+- **URLs soportadas:** Imágenes locales o externas
+- **Formatos soportados:** JPG, PNG, GIF, WebP
+- **Almacenamiento:** JSON string en base de datos
+
+#### **Ejemplo de Uso:**
+```json
+{
+  "imagenes": [
+    {
+      "descripcion": "Vista frontal del camión",
+      "url": "https://ejemplo.com/frontal.jpg",
+      "destacada": true
+    },
+    {
+      "descripcion": "Vista lateral",
+      "url": "https://ejemplo.com/lateral.jpg",
+      "destacada": false
+    },
+    {
+      "descripcion": "Interior de la cabina",
+      "url": "https://ejemplo.com/interior.jpg",
+      "destacada": false
+    }
+  ]
 }
 ```
 

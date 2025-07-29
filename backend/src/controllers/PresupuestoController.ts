@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { PresupuestoService } from '@/services/PresupuestoService';
+import { PdfService } from '@/services/PdfService';
 import { CreatePresupuestoDto, UpdatePresupuestoDto, ApiResponse, PresupuestoFilters } from '@/types';
 
 export class PresupuestoController {
@@ -87,7 +88,17 @@ export class PresupuestoController {
   // POST /presupuestos
   async create(req: Request, res: Response): Promise<void> {
     try {
-      const createData: CreatePresupuestoDto = req.body;
+      console.log('=== DEBUG CREATE PRESUPUESTO ===');
+      console.log('req.usuario:', req.usuario);
+      console.log('req.usuario?.id:', req.usuario?.id);
+      console.log('req.body:', req.body);
+      
+      const createData: CreatePresupuestoDto = {
+        ...req.body,
+        usuarioId: req.usuario?.id || 0
+      };
+      
+      console.log('createData final:', createData);
       
       const presupuesto = await this.presupuestoService.create(createData);
       
@@ -99,6 +110,7 @@ export class PresupuestoController {
 
       res.status(201).json(response);
     } catch (error) {
+      console.error('Error en create:', error);
       const response: ApiResponse<null> = {
         success: false,
         error: error instanceof Error ? error.message : 'Error interno del servidor',
@@ -407,6 +419,51 @@ export class PresupuestoController {
       const response: ApiResponse<null> = {
         success: false,
         error: error instanceof Error ? error.message : 'Error interno del servidor',
+      };
+      res.status(500).json(response);
+    }
+  }
+
+  // GET /presupuestos/:id/pdf
+  async generatePdf(req: Request, res: Response): Promise<void> {
+    try {
+      const id = parseInt(req.params['id'] || '0');
+      
+      if (isNaN(id)) {
+        const response: ApiResponse<null> = {
+          success: false,
+          error: 'ID de presupuesto inválido',
+        };
+        res.status(400).json(response);
+        return;
+      }
+
+      const presupuesto = await this.presupuestoService.getById(id);
+      
+      if (!presupuesto) {
+        const response: ApiResponse<null> = {
+          success: false,
+          error: 'Presupuesto no encontrado',
+        };
+        res.status(404).json(response);
+        return;
+      }
+
+      // Generar PDF
+      const pdfBuffer = await PdfService.generatePresupuestoPdf(presupuesto);
+      
+      // Configurar headers para descarga
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="presupuesto-${id}.pdf"`);
+      res.setHeader('Content-Length', pdfBuffer.length);
+      
+      // Enviar PDF
+      res.send(pdfBuffer);
+    } catch (error) {
+      console.error('Error generando PDF:', error);
+      const response: ApiResponse<null> = {
+        success: false,
+        error: error instanceof Error ? error.message : 'Error generando PDF',
       };
       res.status(500).json(response);
     }

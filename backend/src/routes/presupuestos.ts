@@ -35,4 +35,7 @@ router.get('/vencidos/lista', AuthMiddleware.requireRole(['admin', 'logistica'])
 router.get('/por-vencer/:dias', AuthMiddleware.requireRole(['admin', 'logistica']), presupuestoController.getPresupuestosPorVencer.bind(presupuestoController));
 router.get('/estadisticas/dashboard', AuthMiddleware.requireRole(['admin', 'logistica']), presupuestoController.getEstadisticas.bind(presupuestoController));
 
+// Ruta para generar PDF
+router.get('/:id/pdf', AuthMiddleware.requireRole(['admin', 'logistica']), presupuestoController.generatePdf.bind(presupuestoController));
+
 export default router; 

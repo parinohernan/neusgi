@@ -132,6 +132,25 @@ export class EquipoService implements IBaseService<Equipo, CreateEquipoDto, Upda
       fechaUltimoMantenimiento: Joi.date().optional().messages({
         'date.base': 'La fecha de mantenimiento debe ser válida',
       }),
+      imagenes: Joi.array().items(
+        Joi.object({
+          descripcion: Joi.string().min(1).max(200).required().messages({
+            'string.min': 'La descripción debe tener al menos 1 carácter',
+            'string.max': 'La descripción no puede exceder 200 caracteres',
+            'any.required': 'La descripción es requerida',
+          }),
+          url: Joi.string().uri().required().messages({
+            'string.uri': 'La URL debe ser válida',
+            'any.required': 'La URL es requerida',
+          }),
+          destacada: Joi.boolean().required().messages({
+            'boolean.base': 'El campo destacada debe ser un booleano',
+            'any.required': 'El campo destacada es requerido',
+          }),
+        })
+      ).max(10).optional().messages({
+        'array.max': 'No se pueden agregar más de 10 imágenes',
+      }),
     });
 
     const { error } = schema.validate(data, { abortEarly: false });

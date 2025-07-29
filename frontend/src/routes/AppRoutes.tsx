@@ -11,6 +11,7 @@ import { NuevoClientePage } from '../pages/clientes/NuevoClientePage';
 import { ClientesPage } from '../pages/clientes/ClientesPage';
 import { EquiposPage } from '../pages/equipos/EquiposPage';
 import { NuevoEquipoPage } from '../pages/equipos/NuevoEquipoPage';
+import { EditarEquipoPage } from '../pages/equipos/EditarEquipoPage';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { PresupuestosPage } from '../pages/presupuestos/PresupuestosPage';
 import { NuevoPresupuestoPage } from '../pages/presupuestos/NuevoPresupuestoPage';
@@ -101,6 +102,15 @@ export const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <NuevoEquipoPage />
+          </ProtectedRoute>
+        }
+      />
+      
+      <Route
+        path="/equipos/:id/editar"
+        element={
+          <ProtectedRoute>
+            <EditarEquipoPage />
           </ProtectedRoute>
         }
       />

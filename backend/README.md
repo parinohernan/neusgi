@@ -99,6 +99,29 @@ npm run dev
 - **logistica**: Gestión de equipos y presupuestos
 - **cliente_externo**: Acceso limitado a sus datos
 
+## 📸 Sistema de Imágenes de Equipos
+
+### Características
+- **Múltiples imágenes** por equipo (hasta 10)
+- **Imagen destacada** (solo una por equipo)
+- **URLs flexibles** (locales o externas)
+- **Formatos soportados**: JPG, PNG, GIF, WebP
+- **Almacenamiento**: JSON string en base de datos
+
+### Estructura de Datos
+```typescript
+interface EquipoImagen {
+  descripcion: string;  // Descripción de la imagen
+  url: string;         // URL de la imagen
+  destacada: boolean;  // Solo una puede ser destacada
+}
+```
+
+### Migración Aplicada
+- **Archivo**: `20250729010949_add_equipo_imagenes`
+- **Campo**: `imagenes` (TEXT) en tabla `equipos`
+- **Formato**: JSON string con array de imágenes
+
 ### Endpoints Protegidos
 ```typescript
 // Requiere autenticación

@@ -54,15 +54,7 @@ export const DetallePresupuestoPage: React.FC = () => {
     
     try {
       setIsGeneratingPDF(true);
-      const blob = await presupuestoService.generarPDF(presupuesto.id);
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `presupuesto-${presupuesto.id}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      await presupuestoService.downloadPdf(presupuesto.id);
       success('PDF descargado exitosamente');
     } catch (err) {
       error('Error al descargar el PDF');

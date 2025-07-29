@@ -54,6 +54,13 @@ export interface UpdateClienteDto {
   usuarioId?: number;
 }
 
+// Tipos para imágenes de equipos
+export interface EquipoImagen {
+  descripcion: string;
+  url: string;
+  destacada: boolean;
+}
+
 // Tipos para Equipo
 export interface Equipo extends BaseEntity {
   patente: string;
@@ -61,6 +68,7 @@ export interface Equipo extends BaseEntity {
   capacidadKg: number;
   estado: 'disponible' | 'mantenimiento' | 'ocupado';
   fechaUltimoMantenimiento?: Date;
+  imagenes?: EquipoImagen[];
 }
 
 export interface CreateEquipoDto {
@@ -69,6 +77,7 @@ export interface CreateEquipoDto {
   capacidadKg: number;
   estado?: 'disponible' | 'mantenimiento' | 'ocupado';
   fechaUltimoMantenimiento?: Date;
+  imagenes?: EquipoImagen[];
 }
 
 export interface UpdateEquipoDto {
@@ -77,6 +86,7 @@ export interface UpdateEquipoDto {
   capacidadKg?: number;
   estado?: 'disponible' | 'mantenimiento' | 'ocupado';
   fechaUltimoMantenimiento?: Date;
+  imagenes?: EquipoImagen[];
 }
 
 // Tipos para Presupuesto
@@ -89,6 +99,29 @@ export interface Presupuesto extends BaseEntity {
   validoHasta: Date;
   estado: 'pendiente' | 'aceptado' | 'rechazado';
   creadoEn: Date;
+}
+
+// Tipo extendido para Presupuesto con relaciones incluidas
+export interface PresupuestoWithRelations extends Presupuesto {
+  cliente?: {
+    id: number;
+    nombreEmpresa: string;
+    rutCuit: string;
+    email?: string;
+  };
+  equipo?: {
+    id: number;
+    patente: string;
+    modelo: string;
+    capacidadKg: number;
+    estado: 'disponible' | 'mantenimiento' | 'ocupado';
+  };
+  usuario?: {
+    id: number;
+    nombre: string;
+    email: string;
+    rol: 'admin' | 'logistica' | 'cliente_externo';
+  };
 }
 
 export interface CreatePresupuestoDto {

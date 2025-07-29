@@ -51,6 +51,7 @@ model Equipo {
   capacidadKg             Decimal  @map("capacidad_kg") @db.Decimal(10, 2)
   estado                  EstadoEquipo @default(disponible)
   fechaUltimoMantenimiento DateTime? @map("fecha_ultimo_mantenimiento")
+  imagenes                String?  @db.Text // JSON string con array de imágenes
   
   // Relaciones
   presupuestos Presupuesto[]

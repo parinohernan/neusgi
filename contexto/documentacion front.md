@@ -823,6 +823,9 @@ export default defineConfig({
    - Formulario de creación/edición
    - Calendario de disponibilidad
    - Validación de patente
+   - **Sistema de imágenes múltiples** (hasta 10 por equipo)
+   - **Galería visual** con imagen destacada
+   - **Gestión de imágenes** (agregar, eliminar, destacar)
 
 3. **Sistema de Presupuestos**
    - Wizard de creación paso a paso
@@ -880,8 +883,8 @@ export default defineConfig({
 
 ### 🔹 **Componentes Implementados**
 - ✅ **2 Providers** (Auth, Theme)
-- ✅ **1 Componente UI** (LoadingSpinner)
-- ✅ **2 Páginas** (Login, Dashboard)
+- ✅ **3 Componentes UI** (LoadingSpinner, ImageGallery, ImageUploader)
+- ✅ **4 Páginas** (Login, Dashboard, Equipos, EditarEquipo)
 - ✅ **2 Rutas** (AppRoutes, ProtectedRoute)
 - ✅ **2 Stores** (Auth, UI)
 - ✅ **2 Servicios** (API, Config)
@@ -918,6 +921,46 @@ export default defineConfig({
 - ✅ **Navegación intuitiva** y rápida
 - ✅ **Feedback inmediato** en todas las acciones
 - ✅ **Responsive** en todos los dispositivos
+
+---
+
+## 📸 **Sistema de Imágenes de Equipos**
+
+### 🔹 **Características Implementadas**
+
+#### **Componentes de Imágenes:**
+- ✅ **ImageGallery**: Galería visual con imagen destacada
+- ✅ **ImageUploader**: Gestión completa de imágenes
+- ✅ **Modal de vista ampliada** con navegación
+- ✅ **Sistema de imagen destacada** (solo una por equipo)
+
+#### **Funcionalidades:**
+- ✅ **Múltiples imágenes** (hasta 10 por equipo)
+- ✅ **URLs flexibles** (locales o externas)
+- ✅ **Formatos soportados** (JPG, PNG, GIF, WebP)
+- ✅ **Gestión completa** (agregar, eliminar, destacar)
+- ✅ **Validación** de URLs y descripciones
+- ✅ **Interfaz intuitiva** con Bulma CSS
+
+#### **Estructura de Datos:**
+```typescript
+interface EquipoImagen {
+  descripcion: string;  // Descripción de la imagen
+  url: string;         // URL de la imagen
+  destacada: boolean;  // Solo una puede ser destacada
+}
+```
+
+#### **Páginas Actualizadas:**
+- ✅ **NuevoEquipoPage**: Agregar imágenes al crear equipo
+- ✅ **EditarEquipoPage**: Gestionar imágenes existentes
+- ✅ **Integración completa** con formularios
+
+#### **Componentes UI:**
+- ✅ **ImageGallery**: Visualización y navegación
+- ✅ **ImageUploader**: Gestión y administración
+- ✅ **Responsive design** para móviles
+- ✅ **Accesibilidad** con ARIA labels
 
 ---
 

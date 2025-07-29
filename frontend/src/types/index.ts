@@ -45,6 +45,13 @@ export interface UpdateClienteDto {
   usuarioId?: number;
 }
 
+// Tipos para imágenes de equipos
+export interface EquipoImagen {
+  descripcion: string;
+  url: string;
+  destacada: boolean;
+}
+
 // Tipos para Equipo (coinciden con el backend)
 export interface Equipo {
   id: number;
@@ -53,6 +60,7 @@ export interface Equipo {
   capacidadKg: number;
   estado: 'disponible' | 'ocupado' | 'mantenimiento';
   fechaUltimoMantenimiento?: Date;
+  imagenes?: EquipoImagen[];
 }
 
 export interface CreateEquipoDto {
@@ -61,6 +69,7 @@ export interface CreateEquipoDto {
   capacidadKg: number;
   estado?: 'disponible' | 'ocupado' | 'mantenimiento';
   fechaUltimoMantenimiento?: Date;
+  imagenes?: EquipoImagen[];
 }
 
 export interface UpdateEquipoDto {
@@ -69,6 +78,7 @@ export interface UpdateEquipoDto {
   capacidadKg?: number;
   estado?: 'disponible' | 'ocupado' | 'mantenimiento';
   fechaUltimoMantenimiento?: Date;
+  imagenes?: EquipoImagen[];
 }
 
 // Tipos para Presupuesto (coinciden con el backend)

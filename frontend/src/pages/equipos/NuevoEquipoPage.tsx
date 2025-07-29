@@ -16,8 +16,9 @@ import {
 } from 'lucide-react';
 import { useNotifications } from '../../stores/uiStore';
 import { equipoService } from '../../services/equipoService';
-import type { CreateEquipoDto } from '../../types';
+import type { CreateEquipoDto, EquipoImagen } from '../../types';
 import { Sidebar } from '../../components/layout';
+import { ImageUploader } from '../../components/ui/ImageUploader';
 
 // Schema de validación para equipo
 const equipoSchema = z.object({
@@ -40,6 +41,7 @@ export const NuevoEquipoPage: React.FC = () => {
   const navigate = useNavigate();
   const { success, error } = useNotifications();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [imagenes, setImagenes] = useState<EquipoImagen[]>([]);
 
   const {
     register,
@@ -60,6 +62,7 @@ export const NuevoEquipoPage: React.FC = () => {
         modelo: data.modelo,
         capacidadKg: data.capacidadKg,
         estado: data.estado,
+        imagenes: imagenes,
         // usuarioId se asignará automáticamente desde el backend
       };
 
@@ -244,7 +247,24 @@ export const NuevoEquipoPage: React.FC = () => {
                     </div>
                   </div>
 
-
+                  {/* Sección de imágenes */}
+                  <div className="field">
+                    <label className="label">
+                      <span className="icon-text">
+                        <span className="icon">
+                          <Truck size={16} />
+                        </span>
+                        <span>Imágenes del Equipo</span>
+                      </span>
+                    </label>
+                    <div className="control">
+                      <ImageUploader
+                        imagenes={imagenes}
+                        onImagesChange={setImagenes}
+                        maxImages={10}
+                      />
+                    </div>
+                  </div>
 
                   {/* Botones de acción */}
                   <div className="field is-grouped is-grouped-right">

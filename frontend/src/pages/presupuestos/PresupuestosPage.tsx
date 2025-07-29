@@ -26,8 +26,8 @@ interface PresupuestoEstadisticas {
   pendientes: number;
   aceptados: number;
   rechazados: number;
-  montoTotal: number;
-  montoPromedio: number;
+  vencidos: number;
+  valorTotal: number;
 }
 
 export const PresupuestosPage: React.FC = () => {
@@ -43,8 +43,8 @@ export const PresupuestosPage: React.FC = () => {
     pendientes: 0,
     aceptados: 0,
     rechazados: 0,
-    montoTotal: 0,
-    montoPromedio: 0
+    vencidos: 0,
+    valorTotal: 0
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingStats, setIsLoadingStats] = useState(true);
@@ -178,15 +178,7 @@ export const PresupuestosPage: React.FC = () => {
 
   const handleDescargarPDF = async (id: number) => {
     try {
-      const blob = await presupuestoService.generarPDF(id);
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `presupuesto-${id}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      await presupuestoService.downloadPdf(id);
       success('PDF descargado exitosamente');
     } catch (err) {
       error('Error al descargar el PDF');
@@ -323,7 +315,7 @@ export const PresupuestosPage: React.FC = () => {
                       <div className="level-item">
                         <div>
                           <p className="heading has-text-white">Monto Total</p>
-                          <p className="title has-text-white">{formatearMoneda(estadisticas.montoTotal)}</p>
+                          <p className="title has-text-white">{formatearMoneda(estadisticas.valorTotal)}</p>
                         </div>
                       </div>
                     </div>

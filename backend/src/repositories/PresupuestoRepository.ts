@@ -11,9 +11,28 @@ export class PresupuestoRepository implements IBaseRepository<Presupuesto, Creat
 
   // Helper para convertir tipos de Prisma a nuestros tipos
   private convertPrismaPresupuesto(prismaPresupuesto: any): Presupuesto {
+    // Procesar imágenes de los equipos si existen
+    const equipos = prismaPresupuesto.equipos?.map((pe: any) => {
+      let imagenesEquipo: any[] = [];
+      if (pe.equipo?.imagenes) {
+        try {
+          imagenesEquipo = JSON.parse(pe.equipo.imagenes);
+        } catch (error) {
+          console.warn('Error parsing equipo imagenes JSON:', error);
+          imagenesEquipo = [];
+        }
+      }
+
+      return {
+        ...pe.equipo,
+        imagenes: imagenesEquipo,
+      };
+    }) || [];
+
     return {
       ...prismaPresupuesto,
       costo: Number(prismaPresupuesto.costo),
+      equipos,
     };
   }
 
@@ -24,7 +43,13 @@ export class PresupuestoRepository implements IBaseRepository<Presupuesto, Creat
     const where: any = {};
     if (estado) where.estado = estado;
     if (clienteId) where.clienteId = clienteId;
-    if (equipoId) where.equipoId = equipoId;
+    if (equipoId) {
+      where.equipos = {
+        some: {
+          equipoId: equipoId
+        }
+      };
+    }
     
     // Filtros de fecha
     if (fechaDesde || fechaHasta) {
@@ -48,13 +73,28 @@ export class PresupuestoRepository implements IBaseRepository<Presupuesto, Creat
               email: true,
             },
           },
-          equipo: {
+          contacto: {
             select: {
               id: true,
-              patente: true,
-              modelo: true,
-              capacidadKg: true,
-              estado: true,
+              titulo: true,
+              nombre: true,
+              sector: true,
+              email: true,
+              telefono: true,
+            },
+          },
+          equipos: {
+            include: {
+              equipo: {
+                select: {
+                  id: true,
+                  patente: true,
+                  modelo: true,
+                  capacidadKg: true,
+                  estado: true,
+                  imagenes: true,
+                },
+              },
             },
           },
           usuario: {
@@ -91,13 +131,28 @@ export class PresupuestoRepository implements IBaseRepository<Presupuesto, Creat
             email: true,
           },
         },
-        equipo: {
+        contacto: {
           select: {
             id: true,
-            patente: true,
-            modelo: true,
-            capacidadKg: true,
-            estado: true,
+            titulo: true,
+            nombre: true,
+            sector: true,
+            email: true,
+            telefono: true,
+          },
+        },
+        equipos: {
+          include: {
+            equipo: {
+              select: {
+                id: true,
+                patente: true,
+                modelo: true,
+                capacidadKg: true,
+                estado: true,
+                imagenes: true,
+              },
+            },
           },
         },
         usuario: {
@@ -126,13 +181,28 @@ export class PresupuestoRepository implements IBaseRepository<Presupuesto, Creat
             email: true,
           },
         },
-        equipo: {
+        contacto: {
           select: {
             id: true,
-            patente: true,
-            modelo: true,
-            capacidadKg: true,
-            estado: true,
+            titulo: true,
+            nombre: true,
+            sector: true,
+            email: true,
+            telefono: true,
+          },
+        },
+        equipos: {
+          include: {
+            equipo: {
+              select: {
+                id: true,
+                patente: true,
+                modelo: true,
+                capacidadKg: true,
+                estado: true,
+                imagenes: true,
+              },
+            },
           },
         },
         usuario: {
@@ -152,7 +222,13 @@ export class PresupuestoRepository implements IBaseRepository<Presupuesto, Creat
 
   async findByEquipo(equipoId: number): Promise<Presupuesto[]> {
     const presupuestos = await this.prisma.presupuesto.findMany({
-      where: { equipoId },
+      where: {
+        equipos: {
+          some: {
+            equipoId: equipoId
+          }
+        }
+      },
       include: {
         cliente: {
           select: {
@@ -162,13 +238,28 @@ export class PresupuestoRepository implements IBaseRepository<Presupuesto, Creat
             email: true,
           },
         },
-        equipo: {
+        contacto: {
           select: {
             id: true,
-            patente: true,
-            modelo: true,
-            capacidadKg: true,
-            estado: true,
+            titulo: true,
+            nombre: true,
+            sector: true,
+            email: true,
+            telefono: true,
+          },
+        },
+        equipos: {
+          include: {
+            equipo: {
+              select: {
+                id: true,
+                patente: true,
+                modelo: true,
+                capacidadKg: true,
+                estado: true,
+                imagenes: true,
+              },
+            },
           },
         },
         usuario: {
@@ -198,13 +289,28 @@ export class PresupuestoRepository implements IBaseRepository<Presupuesto, Creat
             email: true,
           },
         },
-        equipo: {
+        contacto: {
           select: {
             id: true,
-            patente: true,
-            modelo: true,
-            capacidadKg: true,
-            estado: true,
+            titulo: true,
+            nombre: true,
+            sector: true,
+            email: true,
+            telefono: true,
+          },
+        },
+        equipos: {
+          include: {
+            equipo: {
+              select: {
+                id: true,
+                patente: true,
+                modelo: true,
+                capacidadKg: true,
+                estado: true,
+                imagenes: true,
+              },
+            },
           },
         },
         usuario: {
@@ -226,12 +332,17 @@ export class PresupuestoRepository implements IBaseRepository<Presupuesto, Creat
     const presupuesto = await this.prisma.presupuesto.create({
       data: {
         clienteId: data.clienteId,
-        equipoId: data.equipoId,
+        contactoId: data.contactoId,
         usuarioId: data.usuarioId,
         descripcion: data.descripcion,
         costo: data.costo,
         validoHasta: data.validoHasta,
         estado: data.estado || 'pendiente',
+        equipos: {
+          create: data.equipoIds?.map(equipoId => ({
+            equipoId
+          })) || []
+        }
       },
       include: {
         cliente: {
@@ -242,13 +353,28 @@ export class PresupuestoRepository implements IBaseRepository<Presupuesto, Creat
             email: true,
           },
         },
-        equipo: {
+        contacto: {
           select: {
             id: true,
-            patente: true,
-            modelo: true,
-            capacidadKg: true,
-            estado: true,
+            titulo: true,
+            nombre: true,
+            sector: true,
+            email: true,
+            telefono: true,
+          },
+        },
+        equipos: {
+          include: {
+            equipo: {
+              select: {
+                id: true,
+                patente: true,
+                modelo: true,
+                capacidadKg: true,
+                estado: true,
+                imagenes: true,
+              },
+            },
           },
         },
         usuario: {
@@ -269,12 +395,27 @@ export class PresupuestoRepository implements IBaseRepository<Presupuesto, Creat
     const updateData: any = {};
 
     if (data.clienteId !== undefined) updateData.clienteId = data.clienteId;
-    if (data.equipoId !== undefined) updateData.equipoId = data.equipoId;
+    if (data.contactoId !== undefined) updateData.contactoId = data.contactoId;
     if (data.usuarioId !== undefined) updateData.usuarioId = data.usuarioId;
     if (data.descripcion !== undefined) updateData.descripcion = data.descripcion;
     if (data.costo !== undefined) updateData.costo = data.costo;
     if (data.validoHasta !== undefined) updateData.validoHasta = data.validoHasta;
     if (data.estado !== undefined) updateData.estado = data.estado;
+
+    // Si se proporcionan nuevos equipos, actualizar la relación
+    if (data.equipoIds) {
+      // Eliminar relaciones existentes
+      await this.prisma.presupuestoEquipo.deleteMany({
+        where: { presupuestoId: id }
+      });
+
+      // Crear nuevas relaciones
+      updateData.equipos = {
+        create: data.equipoIds.map(equipoId => ({
+          equipoId
+        }))
+      };
+    }
 
     const presupuesto = await this.prisma.presupuesto.update({
       where: { id },
@@ -288,13 +429,28 @@ export class PresupuestoRepository implements IBaseRepository<Presupuesto, Creat
             email: true,
           },
         },
-        equipo: {
+        contacto: {
           select: {
             id: true,
-            patente: true,
-            modelo: true,
-            capacidadKg: true,
-            estado: true,
+            titulo: true,
+            nombre: true,
+            sector: true,
+            email: true,
+            telefono: true,
+          },
+        },
+        equipos: {
+          include: {
+            equipo: {
+              select: {
+                id: true,
+                patente: true,
+                modelo: true,
+                capacidadKg: true,
+                estado: true,
+                imagenes: true,
+              },
+            },
           },
         },
         usuario: {
@@ -313,6 +469,12 @@ export class PresupuestoRepository implements IBaseRepository<Presupuesto, Creat
 
   async delete(id: number): Promise<boolean> {
     try {
+      // Eliminar relaciones de equipos primero
+      await this.prisma.presupuestoEquipo.deleteMany({
+        where: { presupuestoId: id }
+      });
+
+      // Eliminar el presupuesto
       await this.prisma.presupuesto.delete({
         where: { id },
       });
@@ -334,7 +496,13 @@ export class PresupuestoRepository implements IBaseRepository<Presupuesto, Creat
     
     if (filters?.estado) where.estado = filters.estado;
     if (filters?.clienteId) where.clienteId = filters.clienteId;
-    if (filters?.equipoId) where.equipoId = filters.equipoId;
+    if (filters?.equipoId) {
+      where.equipos = {
+        some: {
+          equipoId: filters.equipoId
+        }
+      };
+    }
     
     if (filters?.fechaDesde || filters?.fechaHasta) {
       where.validoHasta = {};
@@ -367,13 +535,28 @@ export class PresupuestoRepository implements IBaseRepository<Presupuesto, Creat
             email: true,
           },
         },
-        equipo: {
+        contacto: {
           select: {
             id: true,
-            patente: true,
-            modelo: true,
-            capacidadKg: true,
-            estado: true,
+            titulo: true,
+            nombre: true,
+            sector: true,
+            email: true,
+            telefono: true,
+          },
+        },
+        equipos: {
+          include: {
+            equipo: {
+              select: {
+                id: true,
+                patente: true,
+                modelo: true,
+                capacidadKg: true,
+                estado: true,
+                imagenes: true,
+              },
+            },
           },
         },
         usuario: {
@@ -412,13 +595,28 @@ export class PresupuestoRepository implements IBaseRepository<Presupuesto, Creat
             email: true,
           },
         },
-        equipo: {
+        contacto: {
           select: {
             id: true,
-            patente: true,
-            modelo: true,
-            capacidadKg: true,
-            estado: true,
+            titulo: true,
+            nombre: true,
+            sector: true,
+            email: true,
+            telefono: true,
+          },
+        },
+        equipos: {
+          include: {
+            equipo: {
+              select: {
+                id: true,
+                patente: true,
+                modelo: true,
+                capacidadKg: true,
+                estado: true,
+                imagenes: true,
+              },
+            },
           },
         },
         usuario: {

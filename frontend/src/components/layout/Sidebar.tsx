@@ -10,8 +10,10 @@ import {
   CreditCard,
   Calendar,
   MapPin,
-  Settings
+  Settings,
+  LogOut
 } from 'lucide-react';
+import { useAuth } from '../../stores/authStore';
 
 interface SidebarProps {
   title?: string;
@@ -23,6 +25,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   subtitle = "Panel de Control" 
 }) => {
   const location = useLocation();
+  const { logout } = useAuth();
 
   const menuItems = [
     { 
@@ -109,6 +112,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
           );
         })}
+        
+        {/* Separador */}
+        <div className="sidebar-separator"></div>
+        
+        {/* Botón de logout */}
+        <div className="sidebar-item">
+          <button 
+            onClick={logout}
+            className="sidebar-link sidebar-logout"
+          >
+            <LogOut className="sidebar-icon" />
+            Cerrar Sesión
+          </button>
+        </div>
       </nav>
     </aside>
   );

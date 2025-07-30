@@ -1,13 +1,16 @@
 import { Request, Response } from 'express';
 import { PresupuestoService } from '@/services/PresupuestoService';
+import { EmpresaService } from '@/services/EmpresaService';
 import { PdfService } from '@/services/PdfService';
 import { CreatePresupuestoDto, UpdatePresupuestoDto, ApiResponse, PresupuestoFilters } from '@/types';
 
 export class PresupuestoController {
   private presupuestoService: PresupuestoService;
+  private empresaService: EmpresaService;
 
-  constructor(presupuestoService: PresupuestoService) {
+  constructor(presupuestoService: PresupuestoService, empresaService: EmpresaService) {
     this.presupuestoService = presupuestoService;
+    this.empresaService = empresaService;
   }
 
   // GET /presupuestos
@@ -449,8 +452,11 @@ export class PresupuestoController {
         return;
       }
 
+      // Obtener datos de la empresa
+      const empresa = await this.empresaService.getEmpresaActiva();
+      
       // Generar PDF
-      const pdfBuffer = await PdfService.generatePresupuestoPdf(presupuesto);
+      const pdfBuffer = await PdfService.generatePresupuestoPdf(presupuesto, empresa || undefined);
       
       // Configurar headers para descarga
       res.setHeader('Content-Type', 'application/pdf');

@@ -1,7 +1,9 @@
 import { Router } from 'express';
 import { PresupuestoController } from '@/controllers/PresupuestoController';
 import { PresupuestoService } from '@/services/PresupuestoService';
+import { EmpresaService } from '@/services/EmpresaService';
 import { PresupuestoRepository } from '@/repositories/PresupuestoRepository';
+import { EmpresaRepository } from '@/repositories/EmpresaRepository';
 import Database from '@/config/database';
 import { AuthMiddleware } from '@/middleware/auth';
 
@@ -9,8 +11,10 @@ const router = Router();
 
 // Inicializar dependencias
 const presupuestoRepository = new PresupuestoRepository(Database.getInstance());
+const empresaRepository = new EmpresaRepository(Database.getInstance());
 const presupuestoService = new PresupuestoService(presupuestoRepository);
-const presupuestoController = new PresupuestoController(presupuestoService);
+const empresaService = new EmpresaService(empresaRepository);
+const presupuestoController = new PresupuestoController(presupuestoService, empresaService);
 
 // Middleware de autenticación para todas las rutas
 router.use(AuthMiddleware.verifyToken);

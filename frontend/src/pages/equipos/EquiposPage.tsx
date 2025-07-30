@@ -18,6 +18,7 @@ import {
   CalendarDays
 } from 'lucide-react';
 import { useNotifications } from '../../stores/uiStore';
+import { useAuth } from '../../stores/authStore';
 import { equipoService } from '../../services/equipoService';
 import type { Equipo } from '../../types';
 import type { EquipoEstadisticas } from '../../services/equipoService';
@@ -26,6 +27,7 @@ import { Sidebar } from '../../components/layout';
 export const EquiposPage: React.FC = () => {
   const navigate = useNavigate();
   const { success, error: notificationError } = useNotifications();
+  const { isAuthenticated } = useAuth();
   
   // Estados para filtros y búsqueda
   const [searchTerm, setSearchTerm] = useState('');
@@ -68,8 +70,10 @@ export const EquiposPage: React.FC = () => {
       }
     };
 
-    cargarDatos();
-  }, []); // Solo se ejecuta al montar el componente
+    if (isAuthenticated) {
+      cargarDatos();
+    }
+  }, [isAuthenticated]); // Se ejecuta cuando cambia la autenticación
 
   // Filtrar y ordenar equipos
   const filteredEquipos = useMemo(() => {

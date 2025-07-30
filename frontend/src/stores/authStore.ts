@@ -42,17 +42,17 @@ export const useAuthStore = create<AuthStore>()(
         try {
           set({ isLoading: true });
 
-          const response = await api.post<{ user: User; token: string }>('/auth/login', credentials);
+          const response = await api.post<{ usuario: User; token: string }>('/auth/login', credentials);
 
           if (response.success && response.data) {
-            const { user, token } = response.data;
+            const { usuario, token } = response.data;
 
             // Configurar token en el cliente API
             api.setAuthToken(token);
 
             // Actualizar estado
             set({
-              user,
+              user: usuario,
               token,
               isAuthenticated: true,
               isLoading: false,
@@ -152,12 +152,11 @@ export const useAuthSelectors = () => {
     user,
     isAuthenticated,
     isLoading,
-    isAdmin: user?.role === 'ADMIN',
-    isManager: user?.role === 'MANAGER',
-    isOperator: user?.role === 'OPERATOR',
-    isDriver: user?.role === 'DRIVER',
-    hasRole: (role: string) => user?.role === role,
-    hasAnyRole: (roles: string[]) => user?.role ? roles.includes(user.role) : false,
+    isAdmin: user?.rol === 'admin',
+    isLogistica: user?.rol === 'logistica',
+    isClienteExterno: user?.rol === 'cliente_externo',
+    hasRole: (role: string) => user?.rol === role,
+    hasAnyRole: (roles: string[]) => user?.rol ? roles.includes(user.rol) : false,
   };
 };
 

@@ -486,6 +486,60 @@ Obtener estadísticas de clientes (requiere rol logística o admin).
 }
 ```
 
+### 🏢 **Empresas** (`/empresas`) ⚠️ Requiere autenticación
+
+#### **GET** `/empresas`
+Obtener todas las empresas activas (requiere rol admin).
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "nombre": "NeusGroup",
+      "cuit": "20000000002",
+      "ciudad": "Rincon de los Sauces",
+      "direccion": "San Martin 213",
+      "telefono": "+54 299 123-4567",
+      "email": "info@neusgroup.com",
+      "web": "www.neusgroup.com",
+      "logo": null,
+      "activa": true,
+      "creadoEn": "2024-01-01T00:00:00.000Z",
+      "actualizadoEn": "2024-01-01T00:00:00.000Z"
+    }
+  ],
+  "message": "Empresas obtenidas exitosamente"
+}
+```
+
+#### **GET** `/empresas/activa`
+Obtener la empresa activa (requiere rol admin).
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "nombre": "NeusGroup",
+    "cuit": "20000000002",
+    "ciudad": "Rincon de los Sauces",
+    "direccion": "San Martin 213",
+    "telefono": "+54 299 123-4567",
+    "email": "info@neusgroup.com",
+    "web": "www.neusgroup.com",
+    "logo": null,
+    "activa": true,
+    "creadoEn": "2024-01-01T00:00:00.000Z",
+    "actualizadoEn": "2024-01-01T00:00:00.000Z"
+  },
+  "message": "Empresa activa obtenida exitosamente"
+}
+```
+
 ### 📋 **Presupuestos** (`/presupuestos`) ⚠️ Requiere autenticación
 
 #### **GET** `/presupuestos`
@@ -609,6 +663,43 @@ Obtener estadísticas de presupuestos (requiere rol logística o admin).
   "message": "Estadísticas obtenidas exitosamente"
 }
 ```
+
+#### **GET** `/presupuestos/:id/pdf`
+Generar PDF del presupuesto con formato profesional, logo de empresa e imagen destacada del equipo (requiere rol logística o admin).
+
+**Parámetros de ruta:**
+- `id` (number, requerido): ID del presupuesto
+
+**Características del PDF:**
+- **Header profesional**: Logo de empresa + PRESUPUESTO + PG-20 FORM.03 Revisión 01
+- **Información del cliente**: Nombre, CUIT, contacto
+- **Número de presupuesto**: Formato 000-000XXX
+- **Descripción detallada**: Servicios con especificaciones técnicas
+- **Imagen del equipo**: Imagen destacada con descripción
+- **Tabla de precios**: Estructura profesional con columnas organizadas
+- **Condiciones comerciales**: Plazos, pagos, validez
+- **Firma y contacto**: Información de la empresa
+- **Datos dinámicos**: Obtenidos de la base de datos
+
+**Estructura del PDF:**
+1. Header con logo y datos de empresa
+2. Información del cliente
+3. Número de presupuesto
+4. Descripción de servicios
+5. Sección de equipos disponibles
+6. Imágenes del equipo
+7. Tabla de precios detallada
+8. Condiciones comerciales
+9. Firma y datos de contacto
+
+**Response (200):**
+- **Tipo:** `application/pdf`
+- **Descripción:** Archivo PDF del presupuesto con formato profesional
+
+**Response de error:**
+- **Código:** 400 Bad Request - ID de presupuesto inválido
+- **Código:** 404 Not Found - Presupuesto no encontrado
+- **Código:** 500 Internal Server Error - Error generando PDF
 
 ### 📦 **Órdenes de Compra** (`/ordenes-compra`) ⚠️ Requiere autenticación
 

@@ -7,13 +7,11 @@
 // ----------------------------------------------------------------------------
 
 export interface User {
-  id: string;
+  id: number;
   email: string;
-  name: string;
-  role: UserRole;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
+  nombre: string;
+  rol: UserRole;
+  creadoEn: string;
 }
 
 // Tipos para Cliente (coinciden con el backend)
@@ -223,10 +221,9 @@ export interface Pago {
 // ----------------------------------------------------------------------------
 
 export const UserRole = {
-  ADMIN: 'ADMIN',
-  MANAGER: 'MANAGER',
-  OPERATOR: 'OPERATOR',
-  DRIVER: 'DRIVER'
+  ADMIN: 'admin',
+  LOGISTICA: 'logistica',
+  CLIENTE_EXTERNO: 'cliente_externo'
 } as const;
 
 export type UserRole = typeof UserRole[keyof typeof UserRole];

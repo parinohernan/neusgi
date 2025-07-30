@@ -329,7 +329,7 @@ export class FacturaService implements IBaseService<Factura, CreateFacturaDto, U
       throw new Error('El monto pagado no puede exceder el monto total de la factura');
     }
 
-    return this.facturaRepository.marcarComoPagada(id, montoPagado);
+    return this.facturaRepository.marcarComoPagadaConMonto(id, montoPagado);
   }
 
   async cancelarFactura(id: number): Promise<Factura | null> {

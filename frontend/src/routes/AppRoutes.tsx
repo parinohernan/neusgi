@@ -15,6 +15,7 @@ import { EditarEquipoPage } from '../pages/equipos/EditarEquipoPage';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { PresupuestosPage } from '../pages/presupuestos/PresupuestosPage';
 import { NuevoPresupuestoPage } from '../pages/presupuestos/NuevoPresupuestoPage';
+import { EditarPresupuestoPage } from '../pages/presupuestos/EditarPresupuestoPage';
 import { DetallePresupuestoPage } from '../pages/presupuestos/DetallePresupuestoPage';
 
 // ----------------------------------------------------------------------------
@@ -147,6 +148,15 @@ export const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <NuevoPresupuestoPage />
+          </ProtectedRoute>
+        }
+      />
+      
+      <Route
+        path="/presupuestos/:id/editar"
+        element={
+          <ProtectedRoute>
+            <EditarPresupuestoPage />
           </ProtectedRoute>
         }
       />

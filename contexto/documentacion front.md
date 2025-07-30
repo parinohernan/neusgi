@@ -832,6 +832,8 @@ export default defineConfig({
    - Selección de cliente y equipo
    - Cálculo automático de costos
    - Preview y envío
+       - **Generación de PDF con formato profesional y logo de empresa**
+    - **Edición completa de presupuestos existentes**
 
 ### 🔹 **Fase 3: Flujo de Ventas (Semanas 4-5)**
 1. **Órdenes de Compra**
@@ -884,10 +886,10 @@ export default defineConfig({
 ### 🔹 **Componentes Implementados**
 - ✅ **2 Providers** (Auth, Theme)
 - ✅ **3 Componentes UI** (LoadingSpinner, ImageGallery, ImageUploader)
-- ✅ **4 Páginas** (Login, Dashboard, Equipos, EditarEquipo)
+- ✅ **6 Páginas** (Login, Dashboard, Equipos, EditarEquipo, Presupuestos, EditarPresupuesto)
 - ✅ **2 Rutas** (AppRoutes, ProtectedRoute)
 - ✅ **2 Stores** (Auth, UI)
-- ✅ **2 Servicios** (API, Config)
+- ✅ **3 Servicios** (API, Config, PresupuestoService)
 - ✅ **1 Sistema de Tipos** completo
 
 ### 🔹 **Funcionalidades Implementadas**

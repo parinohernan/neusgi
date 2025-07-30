@@ -133,7 +133,8 @@ export class PresupuestoService implements IBaseService<Presupuesto, CreatePresu
 
     // Si se está cambiando el estado a 'aceptado', verificar que no haya otros presupuestos aceptados para el mismo equipo en el mismo período
     if (data.estado === 'aceptado') {
-      const presupuestosAceptados = await this.presupuestoRepository.findByEquipo(presupuestoExistente.equipoId);
+      // Obtener el primer equipo del presupuesto para verificar conflictos
+      const presupuestosAceptados = await this.presupuestoRepository.findByEquipo(presupuestoExistente.equipos?.[0]?.id || 0);
       const presupuestosEnConflicto = presupuestosAceptados.filter(p => 
         p.id !== id && 
         p.estado === 'aceptado' &&
@@ -242,7 +243,7 @@ export class PresupuestoService implements IBaseService<Presupuesto, CreatePresu
 
     // Si se está cambiando a 'aceptado', verificar conflictos
     if (estado === 'aceptado') {
-      const presupuestosAceptados = await this.presupuestoRepository.findByEquipo(presupuestoExistente.equipoId);
+      const presupuestosAceptados = await this.presupuestoRepository.findByEquipo(presupuestoExistente.equipos?.[0]?.id || 0);
       const presupuestosEnConflicto = presupuestosAceptados.filter(p => 
         p.id !== id && 
         p.estado === 'aceptado' &&

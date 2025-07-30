@@ -148,6 +148,30 @@ body {
   height: 1.25rem;
 }
 
+/* Separador del sidebar */
+.sidebar-separator {
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, var(--gray) 50%, transparent 100%);
+  margin: 1rem 0;
+  opacity: 0.3;
+}
+
+/* Botón de logout */
+.sidebar-logout {
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  color: var(--danger-color) !important;
+  transition: var(--transition-fast);
+}
+
+.sidebar-logout:hover {
+  background-color: rgba(239, 68, 68, 0.1) !important;
+  color: var(--danger-dark) !important;
+}
+
 /* Cards personalizadas */
 .card {
   border: none;

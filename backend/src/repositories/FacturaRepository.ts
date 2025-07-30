@@ -13,10 +13,7 @@ export class FacturaRepository implements IBaseRepository<Factura, CreateFactura
   private convertPrismaFactura(prismaFactura: any): Factura {
     return {
       ...prismaFactura,
-      monto: Number(prismaFactura.monto),
-      montoPagado: prismaFactura.montoPagado ? Number(prismaFactura.montoPagado) : undefined,
-      saldoPendiente: prismaFactura.saldoPendiente ? Number(prismaFactura.saldoPendiente) : undefined,
-      archivosAdjuntos: prismaFactura.archivosAdjuntos ? (prismaFactura.archivosAdjuntos as string[]) : undefined,
+      archivosAdjuntos: prismaFactura.archivosAdjuntos ? JSON.parse(prismaFactura.archivosAdjuntos) : undefined,
     };
   }
 
@@ -29,6 +26,13 @@ export class FacturaRepository implements IBaseRepository<Factura, CreateFactura
     if (numeroFactura) where.numeroFactura = { contains: numeroFactura, mode: 'insensitive' };
     if (estado) where.estado = estado;
     
+    // Filtros de monto
+    if (montoMin !== undefined || montoMax !== undefined) {
+      where.monto = {};
+      if (montoMin !== undefined) where.monto.gte = montoMin;
+      if (montoMax !== undefined) where.monto.lte = montoMax;
+    }
+
     // Filtros de fecha de emisión
     if (fechaEmisionDesde || fechaEmisionHasta) {
       where.fechaEmision = {};
@@ -41,13 +45,6 @@ export class FacturaRepository implements IBaseRepository<Factura, CreateFactura
       where.fechaVencimiento = {};
       if (fechaVencimientoDesde) where.fechaVencimiento.gte = new Date(fechaVencimientoDesde);
       if (fechaVencimientoHasta) where.fechaVencimiento.lte = new Date(fechaVencimientoHasta);
-    }
-
-    // Filtros de monto
-    if (montoMin !== undefined || montoMax !== undefined) {
-      where.monto = {};
-      if (montoMin !== undefined) where.monto.gte = montoMin;
-      if (montoMax !== undefined) where.monto.lte = montoMax;
     }
 
     // Filtros de fecha de creación
@@ -64,7 +61,13 @@ export class FacturaRepository implements IBaseRepository<Factura, CreateFactura
       };
       if (presupuestoId) where.ordenCompra.presupuesto.presupuestoId = presupuestoId;
       if (clienteId) where.ordenCompra.presupuesto.clienteId = clienteId;
-      if (equipoId) where.ordenCompra.presupuesto.equipoId = equipoId;
+      if (equipoId) {
+        where.ordenCompra.presupuesto.equipos = {
+          some: {
+            equipoId: equipoId
+          }
+        };
+      }
     }
 
     const [data, total] = await Promise.all([
@@ -86,13 +89,12 @@ export class FacturaRepository implements IBaseRepository<Factura, CreateFactura
                       email: true,
                     },
                   },
-                  equipo: {
+                  usuario: {
                     select: {
                       id: true,
-                      patente: true,
-                      modelo: true,
-                      capacidadKg: true,
-                      estado: true,
+                      nombre: true,
+                      email: true,
+                      rol: true,
                     },
                   },
                 },
@@ -129,13 +131,12 @@ export class FacturaRepository implements IBaseRepository<Factura, CreateFactura
                     email: true,
                   },
                 },
-                equipo: {
+                usuario: {
                   select: {
                     id: true,
-                    patente: true,
-                    modelo: true,
-                    capacidadKg: true,
-                    estado: true,
+                    nombre: true,
+                    email: true,
+                    rol: true,
                   },
                 },
               },
@@ -164,13 +165,12 @@ export class FacturaRepository implements IBaseRepository<Factura, CreateFactura
                     email: true,
                   },
                 },
-                equipo: {
+                usuario: {
                   select: {
                     id: true,
-                    patente: true,
-                    modelo: true,
-                    capacidadKg: true,
-                    estado: true,
+                    nombre: true,
+                    email: true,
+                    rol: true,
                   },
                 },
               },
@@ -178,7 +178,40 @@ export class FacturaRepository implements IBaseRepository<Factura, CreateFactura
           },
         },
       },
-      orderBy: { creadoEn: 'desc' },
+    });
+
+    return facturas.map((factura: any) => this.convertPrismaFactura(factura));
+  }
+
+  async findByEstado(estado: 'pendiente' | 'pagada' | 'cancelada'): Promise<Factura[]> {
+    const facturas = await this.prisma.factura.findMany({
+      where: { estado },
+      include: {
+        ordenCompra: {
+          include: {
+            presupuesto: {
+              include: {
+                cliente: {
+                  select: {
+                    id: true,
+                    nombreEmpresa: true,
+                    rutCuit: true,
+                    email: true,
+                  },
+                },
+                usuario: {
+                  select: {
+                    id: true,
+                    nombre: true,
+                    email: true,
+                    rol: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     });
 
     return facturas.map((factura: any) => this.convertPrismaFactura(factura));
@@ -200,13 +233,12 @@ export class FacturaRepository implements IBaseRepository<Factura, CreateFactura
                     email: true,
                   },
                 },
-                equipo: {
+                usuario: {
                   select: {
                     id: true,
-                    patente: true,
-                    modelo: true,
-                    capacidadKg: true,
-                    estado: true,
+                    nombre: true,
+                    email: true,
+                    rol: true,
                   },
                 },
               },
@@ -217,42 +249,6 @@ export class FacturaRepository implements IBaseRepository<Factura, CreateFactura
     });
 
     return factura ? this.convertPrismaFactura(factura) : null;
-  }
-
-  async findByEstado(estado: 'pendiente' | 'pagada' | 'cancelada'): Promise<Factura[]> {
-    const facturas = await this.prisma.factura.findMany({
-      where: { estado },
-      include: {
-        ordenCompra: {
-          include: {
-            presupuesto: {
-              include: {
-                cliente: {
-                  select: {
-                    id: true,
-                    nombreEmpresa: true,
-                    rutCuit: true,
-                    email: true,
-                  },
-                },
-                equipo: {
-                  select: {
-                    id: true,
-                    patente: true,
-                    modelo: true,
-                    capacidadKg: true,
-                    estado: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-      orderBy: { creadoEn: 'desc' },
-    });
-
-    return facturas.map((factura: any) => this.convertPrismaFactura(factura));
   }
 
   async create(data: CreateFacturaDto): Promise<Factura> {
@@ -266,23 +262,23 @@ export class FacturaRepository implements IBaseRepository<Factura, CreateFactura
       estado: data.estado || 'pendiente',
     };
 
-    // Campos opcionales
     if (data.montoPagado !== undefined) {
       createData.montoPagado = data.montoPagado;
     }
+
     if (data.saldoPendiente !== undefined) {
       createData.saldoPendiente = data.saldoPendiente;
-    } else {
-      // Calcular saldo pendiente automáticamente
-      createData.saldoPendiente = data.monto - (data.montoPagado || 0);
     }
-    if (data.pdfPath !== undefined) {
+
+    if (data.pdfPath) {
       createData.pdfPath = data.pdfPath;
     }
-    if (data.archivosAdjuntos !== undefined) {
-      createData.archivosAdjuntos = data.archivosAdjuntos;
+
+    if (data.archivosAdjuntos && data.archivosAdjuntos.length > 0) {
+      createData.archivosAdjuntos = JSON.stringify(data.archivosAdjuntos);
     }
-    if (data.observaciones !== undefined) {
+
+    if (data.observaciones) {
       createData.observaciones = data.observaciones;
     }
 
@@ -301,13 +297,12 @@ export class FacturaRepository implements IBaseRepository<Factura, CreateFactura
                     email: true,
                   },
                 },
-                equipo: {
+                usuario: {
                   select: {
                     id: true,
-                    patente: true,
-                    modelo: true,
-                    capacidadKg: true,
-                    estado: true,
+                    nombre: true,
+                    email: true,
+                    rol: true,
                   },
                 },
               },
@@ -322,38 +317,20 @@ export class FacturaRepository implements IBaseRepository<Factura, CreateFactura
 
   async update(id: number, data: UpdateFacturaDto): Promise<Factura | null> {
     const updateData: any = {};
-
+    
     if (data.ordenCompraId !== undefined) updateData.ordenCompraId = data.ordenCompraId;
     if (data.numeroFactura !== undefined) updateData.numeroFactura = data.numeroFactura;
     if (data.fechaEmision !== undefined) updateData.fechaEmision = data.fechaEmision;
     if (data.fechaVencimiento !== undefined) updateData.fechaVencimiento = data.fechaVencimiento;
     if (data.monto !== undefined) updateData.monto = data.monto;
+    if (data.montoPagado !== undefined) updateData.montoPagado = data.montoPagado;
+    if (data.saldoPendiente !== undefined) updateData.saldoPendiente = data.saldoPendiente;
     if (data.concepto !== undefined) updateData.concepto = data.concepto;
     if (data.estado !== undefined) updateData.estado = data.estado;
-    
-    // Manejar campos opcionales
-    if (data.montoPagado !== undefined) {
-      updateData.montoPagado = data.montoPagado;
-    }
-    if (data.saldoPendiente !== undefined) {
-      updateData.saldoPendiente = data.saldoPendiente;
-    } else if (data.monto !== undefined || data.montoPagado !== undefined) {
-      // Recalcular saldo pendiente si se actualizó monto o monto pagado
-      const facturaActual = await this.findById(id);
-      if (facturaActual) {
-        const nuevoMonto = data.monto !== undefined ? data.monto : facturaActual.monto;
-        const nuevoMontoPagado = data.montoPagado !== undefined ? data.montoPagado : (facturaActual.montoPagado || 0);
-        updateData.saldoPendiente = nuevoMonto - nuevoMontoPagado;
-      }
-    }
-    if (data.pdfPath !== undefined) {
-      updateData.pdfPath = data.pdfPath;
-    }
+    if (data.pdfPath !== undefined) updateData.pdfPath = data.pdfPath;
+    if (data.observaciones !== undefined) updateData.observaciones = data.observaciones;
     if (data.archivosAdjuntos !== undefined) {
-      updateData.archivosAdjuntos = data.archivosAdjuntos;
-    }
-    if (data.observaciones !== undefined) {
-      updateData.observaciones = data.observaciones;
+      updateData.archivosAdjuntos = data.archivosAdjuntos ? JSON.stringify(data.archivosAdjuntos) : null;
     }
 
     const factura = await this.prisma.factura.update({
@@ -372,13 +349,12 @@ export class FacturaRepository implements IBaseRepository<Factura, CreateFactura
                     email: true,
                   },
                 },
-                equipo: {
+                usuario: {
                   select: {
                     id: true,
-                    patente: true,
-                    modelo: true,
-                    capacidadKg: true,
-                    estado: true,
+                    nombre: true,
+                    email: true,
+                    rol: true,
                   },
                 },
               },
@@ -410,43 +386,55 @@ export class FacturaRepository implements IBaseRepository<Factura, CreateFactura
   }
 
   async count(filters?: FacturaFilters): Promise<number> {
+    const { ordenCompraId, presupuestoId, clienteId, equipoId, numeroFactura, estado, fechaEmisionDesde, fechaEmisionHasta, fechaVencimientoDesde, fechaVencimientoHasta, montoMin, montoMax, fechaDesde, fechaHasta } = filters || {};
+
     const where: any = {};
+    if (ordenCompraId) where.ordenCompraId = ordenCompraId;
+    if (numeroFactura) where.numeroFactura = { contains: numeroFactura, mode: 'insensitive' };
+    if (estado) where.estado = estado;
     
-    if (filters?.ordenCompraId) where.ordenCompraId = filters.ordenCompraId;
-    if (filters?.numeroFactura) where.numeroFactura = { contains: filters.numeroFactura, mode: 'insensitive' };
-    if (filters?.estado) where.estado = filters.estado;
-    
-    if (filters?.fechaEmisionDesde || filters?.fechaEmisionHasta) {
-      where.fechaEmision = {};
-      if (filters.fechaEmisionDesde) where.fechaEmision.gte = new Date(filters.fechaEmisionDesde);
-      if (filters.fechaEmisionHasta) where.fechaEmision.lte = new Date(filters.fechaEmisionHasta);
-    }
-
-    if (filters?.fechaVencimientoDesde || filters?.fechaVencimientoHasta) {
-      where.fechaVencimiento = {};
-      if (filters.fechaVencimientoDesde) where.fechaVencimiento.gte = new Date(filters.fechaVencimientoDesde);
-      if (filters.fechaVencimientoHasta) where.fechaVencimiento.lte = new Date(filters.fechaVencimientoHasta);
-    }
-
-    if (filters?.montoMin !== undefined || filters?.montoMax !== undefined) {
+    // Filtros de monto
+    if (montoMin !== undefined || montoMax !== undefined) {
       where.monto = {};
-      if (filters.montoMin !== undefined) where.monto.gte = filters.montoMin;
-      if (filters.montoMax !== undefined) where.monto.lte = filters.montoMax;
+      if (montoMin !== undefined) where.monto.gte = montoMin;
+      if (montoMax !== undefined) where.monto.lte = montoMax;
     }
 
-    if (filters?.fechaDesde || filters?.fechaHasta) {
+    // Filtros de fecha de emisión
+    if (fechaEmisionDesde || fechaEmisionHasta) {
+      where.fechaEmision = {};
+      if (fechaEmisionDesde) where.fechaEmision.gte = new Date(fechaEmisionDesde);
+      if (fechaEmisionHasta) where.fechaEmision.lte = new Date(fechaEmisionHasta);
+    }
+
+    // Filtros de fecha de vencimiento
+    if (fechaVencimientoDesde || fechaVencimientoHasta) {
+      where.fechaVencimiento = {};
+      if (fechaVencimientoDesde) where.fechaVencimiento.gte = new Date(fechaVencimientoDesde);
+      if (fechaVencimientoHasta) where.fechaVencimiento.lte = new Date(fechaVencimientoHasta);
+    }
+
+    // Filtros de fecha de creación
+    if (fechaDesde || fechaHasta) {
       where.creadoEn = {};
-      if (filters.fechaDesde) where.creadoEn.gte = new Date(filters.fechaDesde);
-      if (filters.fechaHasta) where.creadoEn.lte = new Date(filters.fechaHasta);
+      if (fechaDesde) where.creadoEn.gte = new Date(fechaDesde);
+      if (fechaHasta) where.creadoEn.lte = new Date(fechaHasta);
     }
 
-    if (filters?.presupuestoId || filters?.clienteId || filters?.equipoId) {
+    // Filtros por presupuesto, cliente y equipo a través de la orden de compra
+    if (presupuestoId || clienteId || equipoId) {
       where.ordenCompra = {
         presupuesto: {},
       };
-      if (filters.presupuestoId) where.ordenCompra.presupuesto.presupuestoId = filters.presupuestoId;
-      if (filters.clienteId) where.ordenCompra.presupuesto.clienteId = filters.clienteId;
-      if (filters.equipoId) where.ordenCompra.presupuesto.equipoId = filters.equipoId;
+      if (presupuestoId) where.ordenCompra.presupuesto.presupuestoId = presupuestoId;
+      if (clienteId) where.ordenCompra.presupuesto.clienteId = clienteId;
+      if (equipoId) {
+        where.ordenCompra.presupuesto.equipos = {
+          some: {
+            equipoId: equipoId
+          }
+        };
+      }
     }
 
     return this.prisma.factura.count({ where });
@@ -469,7 +457,11 @@ export class FacturaRepository implements IBaseRepository<Factura, CreateFactura
     return this.update(id, { estado });
   }
 
-  async marcarComoPagada(id: number, montoPagado?: number): Promise<Factura | null> {
+  async marcarComoPagada(id: number): Promise<Factura | null> {
+    return this.update(id, { estado: 'pagada' });
+  }
+
+  async marcarComoPagadaConMonto(id: number, montoPagado?: number): Promise<Factura | null> {
     const facturaActual = await this.findById(id);
     if (!facturaActual) return null;
 
@@ -484,97 +476,11 @@ export class FacturaRepository implements IBaseRepository<Factura, CreateFactura
   }
 
   async cancelarFactura(id: number): Promise<Factura | null> {
-    return this.cambiarEstado(id, 'cancelada');
+    return this.update(id, { estado: 'cancelada' });
   }
 
   async reactivarFactura(id: number): Promise<Factura | null> {
-    return this.cambiarEstado(id, 'pendiente');
-  }
-
-  async getFacturasPorVencer(dias: number = 30): Promise<Factura[]> {
-    const fechaLimite = new Date();
-    fechaLimite.setDate(fechaLimite.getDate() + dias);
-
-    const facturas = await this.prisma.factura.findMany({
-      where: {
-        estado: 'pendiente',
-        fechaVencimiento: {
-          lte: fechaLimite,
-          gte: new Date(),
-        },
-      },
-      include: {
-        ordenCompra: {
-          include: {
-            presupuesto: {
-              include: {
-                cliente: {
-                  select: {
-                    id: true,
-                    nombreEmpresa: true,
-                    rutCuit: true,
-                    email: true,
-                  },
-                },
-                equipo: {
-                  select: {
-                    id: true,
-                    patente: true,
-                    modelo: true,
-                    capacidadKg: true,
-                    estado: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-      orderBy: { fechaVencimiento: 'asc' },
-    });
-
-    return facturas.map((factura: any) => this.convertPrismaFactura(factura));
-  }
-
-  async getFacturasVencidas(): Promise<Factura[]> {
-    const facturas = await this.prisma.factura.findMany({
-      where: {
-        estado: 'pendiente',
-        fechaVencimiento: {
-          lt: new Date(),
-        },
-      },
-      include: {
-        ordenCompra: {
-          include: {
-            presupuesto: {
-              include: {
-                cliente: {
-                  select: {
-                    id: true,
-                    nombreEmpresa: true,
-                    rutCuit: true,
-                    email: true,
-                  },
-                },
-                equipo: {
-                  select: {
-                    id: true,
-                    patente: true,
-                    modelo: true,
-                    capacidadKg: true,
-                    estado: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-      orderBy: { fechaVencimiento: 'asc' },
-    });
-
-    return facturas.map((factura: any) => this.convertPrismaFactura(factura));
+    return this.update(id, { estado: 'pendiente' });
   }
 
   async getEstadisticasPorOrdenCompra(ordenCompraId: number): Promise<{
@@ -665,28 +571,6 @@ export class FacturaRepository implements IBaseRepository<Factura, CreateFactura
     };
   }
 
-  async generarNumeroFactura(): Promise<string> {
-    const fecha = new Date();
-    const anio = fecha.getFullYear();
-    const mes = String(fecha.getMonth() + 1).padStart(2, '0');
-    
-    // Contar facturas del mes para generar secuencial
-    const inicioMes = new Date(anio, fecha.getMonth(), 1);
-    const finMes = new Date(anio, fecha.getMonth() + 1, 0, 23, 59, 59, 999);
-    
-    const facturasDelMes = await this.prisma.factura.count({
-      where: {
-        creadoEn: {
-          gte: inicioMes,
-          lte: finMes,
-        },
-      },
-    });
-
-    const secuencial = String(facturasDelMes + 1).padStart(4, '0');
-    return `FAC-${anio}${mes}-${secuencial}`;
-  }
-
   async registrarPago(id: number, montoPagado: number): Promise<Factura | null> {
     const facturaActual = await this.findById(id);
     if (!facturaActual) return null;
@@ -708,5 +592,110 @@ export class FacturaRepository implements IBaseRepository<Factura, CreateFactura
 
   async actualizarPdfPath(id: number, pdfPath: string): Promise<Factura | null> {
     return this.update(id, { pdfPath });
+  }
+
+  async getFacturasPorVencer(dias: number = 30): Promise<Factura[]> {
+    const fechaLimite = new Date();
+    fechaLimite.setDate(fechaLimite.getDate() + dias);
+
+    const facturas = await this.prisma.factura.findMany({
+      where: {
+        estado: 'pendiente',
+        fechaVencimiento: {
+          lte: fechaLimite,
+          gte: new Date(),
+        },
+      },
+      include: {
+        ordenCompra: {
+          include: {
+            presupuesto: {
+              include: {
+                cliente: {
+                  select: {
+                    id: true,
+                    nombreEmpresa: true,
+                    rutCuit: true,
+                    email: true,
+                  },
+                },
+                usuario: {
+                  select: {
+                    id: true,
+                    nombre: true,
+                    email: true,
+                    rol: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return facturas.map((factura: any) => this.convertPrismaFactura(factura));
+  }
+
+  async getFacturasVencidas(): Promise<Factura[]> {
+    const facturas = await this.prisma.factura.findMany({
+      where: {
+        estado: 'pendiente',
+        fechaVencimiento: {
+          lt: new Date(),
+        },
+      },
+      include: {
+        ordenCompra: {
+          include: {
+            presupuesto: {
+              include: {
+                cliente: {
+                  select: {
+                    id: true,
+                    nombreEmpresa: true,
+                    rutCuit: true,
+                    email: true,
+                  },
+                },
+                usuario: {
+                  select: {
+                    id: true,
+                    nombre: true,
+                    email: true,
+                    rol: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return facturas.map((factura: any) => this.convertPrismaFactura(factura));
+  }
+
+  async generarNumeroFactura(): Promise<string> {
+    const fecha = new Date();
+    const anio = fecha.getFullYear();
+    const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+    const dia = String(fecha.getDate()).padStart(2, '0');
+    
+    // Contar facturas del día para generar secuencial
+    const inicioDia = new Date(anio, fecha.getMonth(), fecha.getDate());
+    const finDia = new Date(anio, fecha.getMonth(), fecha.getDate(), 23, 59, 59, 999);
+    
+    const facturasDelDia = await this.prisma.factura.count({
+      where: {
+        creadoEn: {
+          gte: inicioDia,
+          lte: finDia,
+        },
+      },
+    });
+    
+    const secuencial = String(facturasDelDia + 1).padStart(3, '0');
+    return `FAC-${anio}${mes}${dia}-${secuencial}`;
   }
 } 

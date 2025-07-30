@@ -42,7 +42,7 @@ export const ProtectedRoute = ({ children, requiredRoles }: ProtectedRouteProps)
 
   // Si se requieren roles específicos, validar
   if (requiredRoles && requiredRoles.length > 0) {
-    const hasRequiredRole = requiredRoles.includes(user?.role || '');
+    const hasRequiredRole = requiredRoles.includes(user?.rol || '');
     
     if (!hasRequiredRole) {
       return <Navigate to="/dashboard" replace />;

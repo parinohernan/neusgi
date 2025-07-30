@@ -15,6 +15,7 @@ import {
   FileText
 } from 'lucide-react';
 import { useNotifications } from '../../stores/uiStore';
+import { useAuth } from '../../stores/authStore';
 import { clienteService } from '../../services/clienteService';
 import type { Cliente } from '../../types';
 import type { ClienteEstadisticas } from '../../services/clienteService';
@@ -25,6 +26,7 @@ import { Sidebar } from '../../components/layout';
 export const ClientesPage: React.FC = () => {
   const navigate = useNavigate();
   const { success, error: notificationError } = useNotifications();
+  const { isAuthenticated } = useAuth();
   
   // Estados para filtros y búsqueda
   const [searchTerm, setSearchTerm] = useState('');
@@ -66,8 +68,10 @@ export const ClientesPage: React.FC = () => {
       }
     };
 
-    cargarDatos();
-  }, []); // Solo se ejecuta al montar el componente
+    if (isAuthenticated) {
+      cargarDatos();
+    }
+  }, [isAuthenticated]); // Se ejecuta cuando cambia la autenticación
 
   // Filtrar y ordenar clientes
   const filteredClientes = useMemo(() => {

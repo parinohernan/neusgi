@@ -3,6 +3,45 @@ export interface BaseEntity {
   id: number;
 }
 
+// Tipos para Empresa
+export interface Empresa extends BaseEntity {
+  nombre: string;
+  cuit: string;
+  ciudad: string;
+  direccion: string;
+  telefono?: string | null;
+  email?: string | null;
+  web?: string | null;
+  logo?: string | null;
+  activa: boolean;
+  creadoEn: Date;
+  actualizadoEn: Date;
+}
+
+export interface CreateEmpresaDto {
+  nombre: string;
+  cuit: string;
+  ciudad: string;
+  direccion: string;
+  telefono?: string;
+  email?: string;
+  web?: string;
+  logo?: string;
+  activa?: boolean;
+}
+
+export interface UpdateEmpresaDto {
+  nombre?: string;
+  cuit?: string;
+  ciudad?: string;
+  direccion?: string;
+  telefono?: string;
+  email?: string;
+  web?: string;
+  logo?: string;
+  activa?: boolean;
+}
+
 // Tipos para Usuario
 export interface Usuario extends BaseEntity {
   nombre: string;
@@ -54,6 +93,39 @@ export interface UpdateClienteDto {
   usuarioId?: number;
 }
 
+// Tipos para Contacto
+export interface Contacto extends BaseEntity {
+  clienteId: number;
+  titulo: string;
+  nombre: string;
+  sector?: string;
+  email?: string;
+  telefono?: string;
+  activo: boolean;
+  creadoEn: Date;
+  actualizadoEn: Date;
+}
+
+export interface CreateContactoDto {
+  clienteId: number;
+  titulo: string;
+  nombre: string;
+  sector?: string;
+  email?: string;
+  telefono?: string;
+  activo?: boolean;
+}
+
+export interface UpdateContactoDto {
+  clienteId?: number;
+  titulo?: string;
+  nombre?: string;
+  sector?: string;
+  email?: string;
+  telefono?: string;
+  activo?: boolean;
+}
+
 // Tipos para imágenes de equipos
 export interface EquipoImagen {
   descripcion: string;
@@ -92,13 +164,21 @@ export interface UpdateEquipoDto {
 // Tipos para Presupuesto
 export interface Presupuesto extends BaseEntity {
   clienteId: number;
-  equipoId: number;
+  contactoId: number;
   usuarioId: number;
   descripcion: string;
   costo: number;
   validoHasta: Date;
   estado: 'pendiente' | 'aceptado' | 'rechazado';
   creadoEn: Date;
+  equipos?: {
+    id: number;
+    patente: string;
+    modelo: string;
+    capacidadKg: number;
+    estado: 'disponible' | 'mantenimiento' | 'ocupado';
+    imagenes?: EquipoImagen[];
+  }[];
 }
 
 // Tipo extendido para Presupuesto con relaciones incluidas
@@ -109,13 +189,22 @@ export interface PresupuestoWithRelations extends Presupuesto {
     rutCuit: string;
     email?: string;
   };
-  equipo?: {
+  contacto?: {
+    id: number;
+    titulo: string;
+    nombre: string;
+    sector?: string;
+    email?: string;
+    telefono?: string;
+  };
+  equipos?: {
     id: number;
     patente: string;
     modelo: string;
     capacidadKg: number;
     estado: 'disponible' | 'mantenimiento' | 'ocupado';
-  };
+    imagenes?: EquipoImagen[];
+  }[];
   usuario?: {
     id: number;
     nombre: string;
@@ -126,22 +215,24 @@ export interface PresupuestoWithRelations extends Presupuesto {
 
 export interface CreatePresupuestoDto {
   clienteId: number;
-  equipoId: number;
+  contactoId: number;
   usuarioId: number;
   descripcion: string;
   costo: number;
   validoHasta: Date;
   estado?: 'pendiente' | 'aceptado' | 'rechazado';
+  equipoIds?: number[];
 }
 
 export interface UpdatePresupuestoDto {
   clienteId?: number;
-  equipoId?: number;
+  contactoId?: number;
   usuarioId?: number;
   descripcion?: string;
   costo?: number;
   validoHasta?: Date;
   estado?: 'pendiente' | 'aceptado' | 'rechazado';
+  equipoIds?: number[];
 }
 
 // Tipos para OrdenCompra

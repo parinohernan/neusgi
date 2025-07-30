@@ -218,7 +218,11 @@ export class EquipoRepository implements IBaseRepository<Equipo, CreateEquipoDto
     // Verificar si el equipo está disponible en el rango de fechas
     const presupuestos = await this.prisma.presupuesto.findMany({
       where: {
-        equipoId: id,
+        equipos: {
+          some: {
+            equipoId: id
+          }
+        },
         estado: 'aceptado',
         OR: [
           {

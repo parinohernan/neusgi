@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,228 +7,268 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Empresa {
+  id            Int      @id @default(autoincrement())
+  nombre        String   @unique @map("nombre") @db.VarChar(100)
+  cuit          String   @unique @map("cuit") @db.VarChar(20)
+  ciudad        String   @map("ciudad") @db.VarChar(100)
+  direccion     String   @map("direccion") @db.VarChar(200)
+  telefono      String?  @map("telefono") @db.VarChar(20)
+  email         String?  @map("email") @db.VarChar(100)
+  web           String?  @map("web") @db.VarChar(100)
+  logo          String?  @map("logo") @db.VarChar(500)
+  activa        Boolean  @default(true) @map("activa")
+  creadoEn      DateTime @default(now()) @map("creado_en")
+  actualizadoEn DateTime @updatedAt @map("actualizado_en")
+
+  @@map("empresas")
+}
+
 model Usuario {
-  id           Int       @id @default(autoincrement())
-  nombre       String    @db.VarChar(100)
-  email        String    @unique @db.VarChar(100)
-  passwordHash String    @map("password_hash") @db.VarChar(255)
-  rol          Rol
-  creadoEn     DateTime  @default(now()) @map("creado_en")
-  
-  // Relaciones
-  cliente      Cliente?
-  presupuestos Presupuesto[]
-  pagos        Pago[]
+  id              Int               @id @default(autoincrement())
+  nombre          String            @db.VarChar(100)
+  email           String            @unique @db.VarChar(100)
+  passwordHash    String            @map("password_hash") @db.VarChar(255)
+  rol             Rol
+  creadoEn        DateTime          @default(now()) @map("creado_en")
+  cliente         Cliente?
   cuentaCorriente CuentaCorriente[]
-  
+  pagos           Pago[]
+  presupuestos    Presupuesto[]
+
   @@map("usuarios")
 }
 
 model Cliente {
-  id           Int      @id @default(autoincrement())
-  nombreEmpresa String  @map("nombre_empresa") @db.VarChar(100)
-  rutCuit      String   @unique @map("rut_cuit") @db.VarChar(30)
-  direccion    String?  @db.Text
-  telefono     String?  @db.VarChar(20)
-  email        String?  @db.VarChar(100)
-  usuarioId    Int?     @unique @map("usuario_id")
-  
-  // Relaciones
-  usuario      Usuario? @relation(fields: [usuarioId], references: [id])
-  presupuestos Presupuesto[]
+  id              Int               @id @default(autoincrement())
+  nombreEmpresa   String            @map("nombre_empresa") @db.VarChar(100)
+  rutCuit         String            @unique @map("rut_cuit") @db.VarChar(30)
+  direccion       String?           @db.Text
+  telefono        String?           @db.VarChar(20)
+  email           String?           @db.VarChar(100)
+  usuarioId       Int?              @unique @map("usuario_id")
+  usuario         Usuario?          @relation(fields: [usuarioId], references: [id])
+  contactos       Contacto[]
   cuentaCorriente CuentaCorriente[]
-  
+  presupuestos    Presupuesto[]
+
   @@map("clientes")
 }
 
+model Contacto {
+  id            Int           @id @default(autoincrement())
+  clienteId     Int
+  titulo        String        @db.VarChar(10)
+  nombre        String        @db.VarChar(100)
+  sector        String?       @db.VarChar(100)
+  email         String?       @db.VarChar(100)
+  telefono      String?       @db.VarChar(20)
+  activo        Boolean       @default(true)
+  creadoEn      DateTime      @default(now())
+  actualizadoEn DateTime      @updatedAt
+  cliente       Cliente       @relation(fields: [clienteId], references: [id])
+  presupuestos  Presupuesto[]
+
+  @@index([clienteId], map: "contactos_clienteId_fkey")
+  @@map("contactos")
+}
+
 model Equipo {
-  id                      Int      @id @default(autoincrement())
-  patente                 String   @unique @db.VarChar(20)
-  modelo                  String   @db.VarChar(50)
-  capacidadKg             Decimal  @map("capacidad_kg") @db.Decimal(10, 2)
-  estado                  EstadoEquipo @default(disponible)
-  fechaUltimoMantenimiento DateTime? @map("fecha_ultimo_mantenimiento")
-  imagenes                String?  @db.Text // JSON string con array de imágenes
-  
-  // Relaciones
-  presupuestos Presupuesto[]
-  
+  id                       Int                 @id @default(autoincrement())
+  patente                  String              @unique @db.VarChar(20)
+  modelo                   String              @db.VarChar(50)
+  capacidadKg              Decimal             @map("capacidad_kg") @db.Decimal(10, 2)
+  estado                   EstadoEquipo        @default(disponible)
+  fechaUltimoMantenimiento DateTime?           @map("fecha_ultimo_mantenimiento")
+  imagenes                 String?             @db.Text
+  presupuestos             PresupuestoEquipo[]
+
   @@map("equipos")
 }
 
 model Presupuesto {
-  id         Int      @id @default(autoincrement())
-  clienteId  Int      @map("cliente_id")
-  equipoId   Int      @map("equipo_id")
-  usuarioId  Int      @map("usuario_id")
-  descripcion String  @db.Text
-  costo      Decimal  @db.Decimal(12, 2)
-  validoHasta DateTime @map("valido_hasta")
-  estado     EstadoPresupuesto @default(pendiente)
-  creadoEn   DateTime @default(now()) @map("creado_en")
-  
-  // Relaciones
-  cliente    Cliente  @relation(fields: [clienteId], references: [id])
-  equipo     Equipo   @relation(fields: [equipoId], references: [id])
-  usuario    Usuario  @relation(fields: [usuarioId], references: [id])
+  id          Int                 @id @default(autoincrement())
+  clienteId   Int                 @map("cliente_id")
+  usuarioId   Int                 @map("usuario_id")
+  descripcion String              @db.Text
+  costo       Decimal             @db.Decimal(12, 2)
+  validoHasta DateTime            @map("valido_hasta")
+  estado      EstadoPresupuesto   @default(pendiente)
+  creadoEn    DateTime            @default(now()) @map("creado_en")
+  contactoId  Int                 @map("contacto_id")
   ordenCompra OrdenCompra?
-  
+  cliente     Cliente             @relation(fields: [clienteId], references: [id])
+  contacto    Contacto            @relation(fields: [contactoId], references: [id])
+  usuario     Usuario             @relation(fields: [usuarioId], references: [id])
+  equipos     PresupuestoEquipo[]
+
+  @@index([clienteId], map: "presupuestos_cliente_id_fkey")
+  @@index([contactoId], map: "presupuestos_contacto_id_fkey")
+  @@index([usuarioId], map: "presupuestos_usuario_id_fkey")
   @@map("presupuestos")
 }
 
+model PresupuestoEquipo {
+  id            Int         @id @default(autoincrement())
+  presupuestoId Int
+  equipoId      Int
+  equipo        Equipo      @relation(fields: [equipoId], references: [id])
+  presupuesto   Presupuesto @relation(fields: [presupuestoId], references: [id])
+
+  @@index([equipoId], map: "presupuestos_equipos_equipoId_fkey")
+  @@index([presupuestoId], map: "presupuestos_equipos_presupuestoId_fkey")
+  @@map("presupuestos_equipos")
+}
+
 model OrdenCompra {
-  id           Int      @id @default(autoincrement())
-  presupuestoId Int     @unique @map("presupuesto_id")
-  fechaInicio  DateTime @map("fecha_inicio")
-  fechaFin     DateTime @map("fecha_fin")
-  origen       String   @db.VarChar(100)
-  destino      String   @db.VarChar(100)
-  observaciones String? @db.Text
-  estado       EstadoOrdenCompra @default(activa)
-  
-  // Relaciones
-  presupuesto  Presupuesto @relation(fields: [presupuestoId], references: [id])
-  partesDiario ParteDiario[]
-  remitos      Remito[]
-  certificados Certificado[]
-  facturas     Factura[]
+  id              Int               @id @default(autoincrement())
+  presupuestoId   Int               @unique @map("presupuesto_id")
+  fechaInicio     DateTime          @map("fecha_inicio")
+  fechaFin        DateTime          @map("fecha_fin")
+  origen          String            @db.VarChar(100)
+  destino         String            @db.VarChar(100)
+  observaciones   String?           @db.Text
+  estado          EstadoOrdenCompra @default(activa)
+  certificados    Certificado[]
   cuentaCorriente CuentaCorriente[]
-  
+  facturas        Factura[]
+  presupuesto     Presupuesto       @relation(fields: [presupuestoId], references: [id])
+  partesDiario    ParteDiario[]
+  remitos         Remito[]
+
   @@map("ordenes_compra")
 }
 
 model ParteDiario {
-  id                  Int      @id @default(autoincrement())
-  ordenCompraId       Int      @map("orden_compra_id")
-  fecha               DateTime
-  kmInicial           Int      @map("km_inicial")
-  kmFinal             Int      @map("km_final")
-  kmRecorridos        Int      @map("km_recorridos")
-  horasTrabajadas     Decimal  @map("horas_trabajadas") @db.Decimal(5, 2)
-  combustibleConsumido Decimal? @map("combustible_consumido") @db.Decimal(8, 2)
-  incidencias         String?  @db.Text
-  observaciones       String?  @db.Text
-  archivosAdjuntos    Json?    @map("archivos_adjuntos")
-  creadoEn            DateTime @default(now()) @map("creado_en")
-  
-  // Relaciones
-  ordenCompra         OrdenCompra @relation(fields: [ordenCompraId], references: [id])
-  
+  id                   Int         @id @default(autoincrement())
+  ordenCompraId        Int         @map("orden_compra_id")
+  fecha                DateTime
+  incidencias          String?     @db.Text
+  archivosAdjuntos     String?     @map("archivos_adjuntos") @db.LongText
+  combustibleConsumido Decimal?    @map("combustible_consumido") @db.Decimal(8, 2)
+  creadoEn             DateTime    @default(now()) @map("creado_en")
+  horasTrabajadas      Decimal     @map("horas_trabajadas") @db.Decimal(5, 2)
+  kmFinal              Int         @map("km_final")
+  kmInicial            Int         @map("km_inicial")
+  kmRecorridos         Int         @map("km_recorridos")
+  observaciones        String?     @db.Text
+  ordenCompra          OrdenCompra @relation(fields: [ordenCompraId], references: [id])
+
+  @@index([ordenCompraId], map: "partes_diario_orden_compra_id_fkey")
   @@map("partes_diario")
 }
 
 model Remito {
-  id                Int      @id @default(autoincrement())
-  ordenCompraId     Int      @map("orden_compra_id")
-  codigo            String   @unique @db.VarChar(50)
-  contenido         String   @db.Text
-  pdfPath           String?  @map("pdf_path") @db.VarChar(255)
-  archivosAdjuntos  Json?    @map("archivos_adjuntos")
-  observaciones     String?  @db.Text
-  estado            EstadoRemito @default(pendiente)
-  creadoEn          DateTime @default(now()) @map("creado_en")
-  
-  // Relaciones
-  ordenCompra       OrdenCompra @relation(fields: [ordenCompraId], references: [id])
-  
+  id               Int          @id @default(autoincrement())
+  ordenCompraId    Int          @map("orden_compra_id")
+  codigo           String       @unique @db.VarChar(50)
+  contenido        String       @db.Text
+  pdfPath          String?      @map("pdf_path") @db.VarChar(255)
+  creadoEn         DateTime     @default(now()) @map("creado_en")
+  archivosAdjuntos String?      @map("archivos_adjuntos") @db.LongText
+  estado           EstadoRemito @default(pendiente)
+  observaciones    String?      @db.Text
+  ordenCompra      OrdenCompra  @relation(fields: [ordenCompraId], references: [id])
+
+  @@index([ordenCompraId], map: "remitos_orden_compra_id_fkey")
   @@map("remitos")
 }
 
 model Certificado {
-  id                Int      @id @default(autoincrement())
-  ordenCompraId     Int      @map("orden_compra_id")
-  tipo              TipoCertificado
-  codigo            String   @unique @db.VarChar(50)
-  descripcion       String   @db.Text
-  fechaVencimiento  DateTime @map("fecha_vencimiento")
-  pdfPath           String?  @map("pdf_path") @db.VarChar(255)
-  archivosAdjuntos  Json?    @map("archivos_adjuntos")
-  observaciones     String?  @db.Text
-  estado            EstadoCertificado @default(activo)
-  creadoEn          DateTime @default(now()) @map("creado_en")
-  
-  // Relaciones
-  ordenCompra       OrdenCompra @relation(fields: [ordenCompraId], references: [id])
-  
+  id               Int               @id @default(autoincrement())
+  ordenCompraId    Int               @map("orden_compra_id")
+  tipo             TipoCertificado
+  fechaVencimiento DateTime          @map("fecha_vencimiento")
+  pdfPath          String?           @map("pdf_path") @db.VarChar(255)
+  archivosAdjuntos String?           @map("archivos_adjuntos") @db.LongText
+  codigo           String            @unique @db.VarChar(50)
+  creadoEn         DateTime          @default(now()) @map("creado_en")
+  descripcion      String            @db.Text
+  estado           EstadoCertificado @default(activo)
+  observaciones    String?           @db.Text
+  ordenCompra      OrdenCompra       @relation(fields: [ordenCompraId], references: [id])
+
+  @@index([ordenCompraId], map: "certificados_orden_compra_id_fkey")
   @@map("certificados")
 }
 
 model Factura {
-  id            Int      @id @default(autoincrement())
-  ordenCompraId Int      @map("orden_compra_id")
-  numeroFactura String   @unique @map("numero_factura") @db.VarChar(50)
-  fechaEmision  DateTime @map("fecha_emision")
-  fechaVencimiento DateTime @map("fecha_vencimiento")
-  monto         Decimal  @db.Decimal(12, 2)
-  montoPagado   Decimal? @map("monto_pagado") @db.Decimal(12, 2)
-  saldoPendiente Decimal? @map("saldo_pendiente") @db.Decimal(12, 2)
-  concepto      String   @db.Text
-  observaciones String?  @db.Text
-  pdfPath       String?  @map("pdf_path") @db.VarChar(255)
-  archivosAdjuntos Json? @map("archivos_adjuntos")
-  estado        EstadoFactura @default(pendiente)
-  creadoEn      DateTime @default(now()) @map("creado_en")
-  
-  // Relaciones
-  ordenCompra   OrdenCompra @relation(fields: [ordenCompraId], references: [id])
-  pagos         Pago[]
-  cuentaCorriente CuentaCorriente[]
-  
+  id               Int               @id @default(autoincrement())
+  ordenCompraId    Int               @map("orden_compra_id")
+  numeroFactura    String            @unique @map("numero_factura") @db.VarChar(50)
+  fechaEmision     DateTime          @map("fecha_emision")
+  monto            Decimal           @db.Decimal(12, 2)
+  pdfPath          String?           @map("pdf_path") @db.VarChar(255)
+  estado           EstadoFactura     @default(pendiente)
+  archivosAdjuntos String?           @map("archivos_adjuntos") @db.LongText
+  concepto         String            @db.Text
+  creadoEn         DateTime          @default(now()) @map("creado_en")
+  fechaVencimiento DateTime          @map("fecha_vencimiento")
+  montoPagado      Decimal?          @map("monto_pagado") @db.Decimal(12, 2)
+  observaciones    String?           @db.Text
+  saldoPendiente   Decimal?          @map("saldo_pendiente") @db.Decimal(12, 2)
+  cuentaCorriente  CuentaCorriente[]
+  ordenCompra      OrdenCompra       @relation(fields: [ordenCompraId], references: [id])
+  pagos            Pago[]
+
+  @@index([ordenCompraId], map: "facturas_orden_compra_id_fkey")
   @@map("facturas")
 }
 
 model Pago {
-  id            Int      @id @default(autoincrement())
-  facturaId     Int      @map("factura_id")
-  monto         Decimal  @db.Decimal(12, 2)
-  fechaPago     DateTime @map("fecha_pago")
-  metodoPago    MetodoPago @map("metodo_pago")
-  referencia    String?  @db.VarChar(100)
-  observaciones String?  @db.Text
-  comprobante   String?  @map("comprobante") @db.VarChar(255)
-  archivosAdjuntos Json? @map("archivos_adjuntos")
-  estado        EstadoPago @default(confirmado)
-  procesadoPor  Int?     @map("procesado_por")
-  creadoEn      DateTime @default(now()) @map("creado_en")
-  
-  // Relaciones
-  factura       Factura @relation(fields: [facturaId], references: [id])
-  usuario       Usuario? @relation(fields: [procesadoPor], references: [id])
-  cuentaCorriente CuentaCorriente[]
-  
+  id               Int               @id @default(autoincrement())
+  facturaId        Int               @map("factura_id")
+  monto            Decimal           @db.Decimal(12, 2)
+  fechaPago        DateTime          @map("fecha_pago")
+  metodoPago       MetodoPago        @map("metodo_pago")
+  referencia       String?           @db.VarChar(100)
+  observaciones    String?           @db.Text
+  comprobante      String?           @map("comprobante") @db.VarChar(255)
+  archivosAdjuntos String?           @map("archivos_adjuntos") @db.LongText
+  estado           EstadoPago        @default(confirmado)
+  procesadoPor     Int?              @map("procesado_por")
+  creadoEn         DateTime          @default(now()) @map("creado_en")
+  cuentaCorriente  CuentaCorriente[]
+  factura          Factura           @relation(fields: [facturaId], references: [id])
+  usuario          Usuario?          @relation(fields: [procesadoPor], references: [id])
+
+  @@index([facturaId], map: "pagos_factura_id_fkey")
+  @@index([procesadoPor], map: "pagos_procesado_por_fkey")
   @@map("pagos")
 }
 
 model CuentaCorriente {
-  id            Int      @id @default(autoincrement())
-  clienteId     Int      @map("cliente_id")
-  tipoMovimiento TipoMovimiento @map("tipo_movimiento")
-  referencia    String   @db.VarChar(100)
-  descripcion   String   @db.Text
-  monto         Decimal  @db.Decimal(12, 2)
-  saldoAnterior Decimal  @map("saldo_anterior") @db.Decimal(12, 2)
-  saldoNuevo    Decimal  @map("saldo_nuevo") @db.Decimal(12, 2)
-  fechaMovimiento DateTime @map("fecha_movimiento")
-  fechaVencimiento DateTime? @map("fecha_vencimiento")
-  facturaId     Int?     @map("factura_id")
-  pagoId        Int?     @map("pago_id")
-  ordenCompraId Int?     @map("orden_compra_id")
-  observaciones String?  @db.Text
-  estado        EstadoCuentaCorriente @default(activo)
-  procesadoPor  Int?     @map("procesado_por")
-  creadoEn      DateTime @default(now()) @map("creado_en")
-  
-  // Relaciones
-  cliente       Cliente @relation(fields: [clienteId], references: [id])
-  factura       Factura? @relation(fields: [facturaId], references: [id])
-  pago          Pago? @relation(fields: [pagoId], references: [id])
-  ordenCompra   OrdenCompra? @relation(fields: [ordenCompraId], references: [id])
-  usuario       Usuario? @relation(fields: [procesadoPor], references: [id])
-  
+  id               Int                   @id @default(autoincrement())
+  clienteId        Int                   @map("cliente_id")
+  tipoMovimiento   TipoMovimiento        @map("tipo_movimiento")
+  referencia       String                @db.VarChar(100)
+  descripcion      String                @db.Text
+  monto            Decimal               @db.Decimal(12, 2)
+  saldoAnterior    Decimal               @map("saldo_anterior") @db.Decimal(12, 2)
+  saldoNuevo       Decimal               @map("saldo_nuevo") @db.Decimal(12, 2)
+  fechaMovimiento  DateTime              @map("fecha_movimiento")
+  fechaVencimiento DateTime?             @map("fecha_vencimiento")
+  facturaId        Int?                  @map("factura_id")
+  pagoId           Int?                  @map("pago_id")
+  ordenCompraId    Int?                  @map("orden_compra_id")
+  observaciones    String?               @db.Text
+  estado           EstadoCuentaCorriente @default(activo)
+  procesadoPor     Int?                  @map("procesado_por")
+  creadoEn         DateTime              @default(now()) @map("creado_en")
+  cliente          Cliente               @relation(fields: [clienteId], references: [id])
+  factura          Factura?              @relation(fields: [facturaId], references: [id])
+  ordenCompra      OrdenCompra?          @relation(fields: [ordenCompraId], references: [id])
+  pago             Pago?                 @relation(fields: [pagoId], references: [id])
+  usuario          Usuario?              @relation(fields: [procesadoPor], references: [id])
+
+  @@index([clienteId], map: "cuenta_corriente_cliente_id_fkey")
+  @@index([facturaId], map: "cuenta_corriente_factura_id_fkey")
+  @@index([ordenCompraId], map: "cuenta_corriente_orden_compra_id_fkey")
+  @@index([pagoId], map: "cuenta_corriente_pago_id_fkey")
+  @@index([procesadoPor], map: "cuenta_corriente_procesado_por_fkey")
   @@map("cuenta_corriente")
 }
 
-// Enums
 enum Rol {
   admin
   logistica
@@ -309,4 +346,4 @@ enum EstadoCuentaCorriente {
   activo
   cancelado
   vencido
-} 
+}

@@ -6,6 +6,30 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Iniciando seed de la base de datos...');
 
+  // Crear o verificar empresa
+  const existingEmpresa = await prisma.empresa.findFirst({
+    where: {
+      nombre: 'NeusGroup'
+    }
+  });
+
+  if (!existingEmpresa) {
+    const empresa = await prisma.empresa.create({
+      data: {
+        nombre: 'NeusGroup',
+        cuit: '20000000002',
+        ciudad: 'Rincon de los Sauces',
+        direccion: 'San Martin 213',
+        telefono: '+54 299 123-4567',
+        email: 'info@neusgroup.com',
+        web: 'www.neusgroup.com'
+      }
+    });
+    console.log('✅ Empresa creada:', empresa.nombre);
+  } else {
+    console.log('✅ Empresa ya existe:', existingEmpresa.nombre);
+  }
+
   // Verificar si ya existe un usuario administrador
   const existingAdmin = await prisma.usuario.findFirst({
     where: {

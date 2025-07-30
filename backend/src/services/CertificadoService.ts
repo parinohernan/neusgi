@@ -116,7 +116,7 @@ export class CertificadoService implements IBaseService<Certificado, CreateCerti
 
     // Generar código automáticamente si no se proporciona
     if (!data.codigo) {
-      data.codigo = await this.certificadoRepository.generarCodigoCertificado(data.tipo);
+      data.codigo = await this.certificadoRepository.generarCodigoCertificadoPorTipo(data.tipo);
     }
 
     return this.certificadoRepository.create(data);
@@ -379,7 +379,7 @@ export class CertificadoService implements IBaseService<Certificado, CreateCerti
     if (!tipo || !['seguro', 'habilitacion', 'otros'].includes(tipo)) {
       throw new Error('Tipo de certificado inválido');
     }
-    return this.certificadoRepository.generarCodigoCertificado(tipo);
+    return this.certificadoRepository.generarCodigoCertificadoPorTipo(tipo);
   }
 
   async agregarArchivoAdjunto(id: number, urlArchivo: string): Promise<Certificado | null> {

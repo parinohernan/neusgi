@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Plus, 
   Search, 
-  Filter, 
   Download, 
   Eye, 
   Edit, 
@@ -19,6 +18,7 @@ import { presupuestoService } from '../../services/presupuestoService';
 import { clienteService } from '../../services/clienteService';
 import { equipoService } from '../../services/equipoService';
 import { useNotifications } from '../../hooks/useNotifications';
+import { useAuth } from '../../stores/authStore';
 import type { Presupuesto, Cliente, Equipo } from '../../types';
 
 interface PresupuestoEstadisticas {
@@ -33,6 +33,7 @@ interface PresupuestoEstadisticas {
 export const PresupuestosPage: React.FC = () => {
   const navigate = useNavigate();
   const { success, error } = useNotifications();
+  const { isAuthenticated } = useAuth();
   
   // Estados
   const [presupuestos, setPresupuestos] = useState<Presupuesto[]>([]);
@@ -88,9 +89,11 @@ export const PresupuestosPage: React.FC = () => {
   };
 
   useEffect(() => {
-    cargarDatos();
-    cargarEstadisticas();
-  }, []);
+    if (isAuthenticated) {
+      cargarDatos();
+      cargarEstadisticas();
+    }
+  }, [isAuthenticated]);
 
   // Filtrar presupuestos
   const presupuestosFiltrados = presupuestos.filter(presupuesto => {
@@ -182,17 +185,6 @@ export const PresupuestosPage: React.FC = () => {
       success('PDF descargado exitosamente');
     } catch (err) {
       error('Error al descargar el PDF');
-    }
-  };
-
-  const handleCambiarEstado = async (id: number, nuevoEstado: 'pendiente' | 'aceptado' | 'rechazado') => {
-    try {
-      await presupuestoService.cambiarEstado(id, nuevoEstado);
-      success(`Estado cambiado a ${getEstadoTexto(nuevoEstado)}`);
-      cargarDatos();
-      cargarEstadisticas();
-    } catch (err) {
-      error('Error al cambiar el estado');
     }
   };
 

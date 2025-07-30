@@ -13,7 +13,7 @@ export class RemitoRepository implements IBaseRepository<Remito, CreateRemitoDto
   private convertPrismaRemito(prismaRemito: any): Remito {
     return {
       ...prismaRemito,
-      archivosAdjuntos: prismaRemito.archivosAdjuntos ? (prismaRemito.archivosAdjuntos as string[]) : undefined,
+      archivosAdjuntos: prismaRemito.archivosAdjuntos ? JSON.parse(prismaRemito.archivosAdjuntos) : undefined,
     };
   }
 
@@ -40,7 +40,13 @@ export class RemitoRepository implements IBaseRepository<Remito, CreateRemitoDto
       };
       if (presupuestoId) where.ordenCompra.presupuesto.presupuestoId = presupuestoId;
       if (clienteId) where.ordenCompra.presupuesto.clienteId = clienteId;
-      if (equipoId) where.ordenCompra.presupuesto.equipoId = equipoId;
+      if (equipoId) {
+        where.ordenCompra.presupuesto.equipos = {
+          some: {
+            equipoId: equipoId
+          }
+        };
+      }
     }
 
     const [data, total] = await Promise.all([
@@ -62,13 +68,12 @@ export class RemitoRepository implements IBaseRepository<Remito, CreateRemitoDto
                       email: true,
                     },
                   },
-                  equipo: {
+                  usuario: {
                     select: {
                       id: true,
-                      patente: true,
-                      modelo: true,
-                      capacidadKg: true,
-                      estado: true,
+                      nombre: true,
+                      email: true,
+                      rol: true,
                     },
                   },
                 },
@@ -105,13 +110,12 @@ export class RemitoRepository implements IBaseRepository<Remito, CreateRemitoDto
                     email: true,
                   },
                 },
-                equipo: {
+                usuario: {
                   select: {
                     id: true,
-                    patente: true,
-                    modelo: true,
-                    capacidadKg: true,
-                    estado: true,
+                    nombre: true,
+                    email: true,
+                    rol: true,
                   },
                 },
               },
@@ -140,13 +144,12 @@ export class RemitoRepository implements IBaseRepository<Remito, CreateRemitoDto
                     email: true,
                   },
                 },
-                equipo: {
+                usuario: {
                   select: {
                     id: true,
-                    patente: true,
-                    modelo: true,
-                    capacidadKg: true,
-                    estado: true,
+                    nombre: true,
+                    email: true,
+                    rol: true,
                   },
                 },
               },
@@ -154,7 +157,40 @@ export class RemitoRepository implements IBaseRepository<Remito, CreateRemitoDto
           },
         },
       },
-      orderBy: { creadoEn: 'desc' },
+    });
+
+    return remitos.map((remito: any) => this.convertPrismaRemito(remito));
+  }
+
+  async findByEstado(estado: 'pendiente' | 'entregado' | 'cancelado'): Promise<Remito[]> {
+    const remitos = await this.prisma.remito.findMany({
+      where: { estado },
+      include: {
+        ordenCompra: {
+          include: {
+            presupuesto: {
+              include: {
+                cliente: {
+                  select: {
+                    id: true,
+                    nombreEmpresa: true,
+                    rutCuit: true,
+                    email: true,
+                  },
+                },
+                usuario: {
+                  select: {
+                    id: true,
+                    nombre: true,
+                    email: true,
+                    rol: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     });
 
     return remitos.map((remito: any) => this.convertPrismaRemito(remito));
@@ -176,13 +212,12 @@ export class RemitoRepository implements IBaseRepository<Remito, CreateRemitoDto
                     email: true,
                   },
                 },
-                equipo: {
+                usuario: {
                   select: {
                     id: true,
-                    patente: true,
-                    modelo: true,
-                    capacidadKg: true,
-                    estado: true,
+                    nombre: true,
+                    email: true,
+                    rol: true,
                   },
                 },
               },
@@ -195,40 +230,21 @@ export class RemitoRepository implements IBaseRepository<Remito, CreateRemitoDto
     return remito ? this.convertPrismaRemito(remito) : null;
   }
 
-  async findByEstado(estado: 'pendiente' | 'entregado' | 'cancelado'): Promise<Remito[]> {
-    const remitos = await this.prisma.remito.findMany({
-      where: { estado },
-      include: {
-        ordenCompra: {
-          include: {
-            presupuesto: {
-              include: {
-                cliente: {
-                  select: {
-                    id: true,
-                    nombreEmpresa: true,
-                    rutCuit: true,
-                    email: true,
-                  },
-                },
-                equipo: {
-                  select: {
-                    id: true,
-                    patente: true,
-                    modelo: true,
-                    capacidadKg: true,
-                    estado: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-      orderBy: { creadoEn: 'desc' },
-    });
+  // Métodos específicos para remitos
+  async getRemitosPendientes(): Promise<Remito[]> {
+    return this.findByEstado('pendiente');
+  }
 
-    return remitos.map((remito: any) => this.convertPrismaRemito(remito));
+  async getRemitosEntregados(): Promise<Remito[]> {
+    return this.findByEstado('entregado');
+  }
+
+  async getRemitosCancelados(): Promise<Remito[]> {
+    return this.findByEstado('cancelado');
+  }
+
+  async cambiarEstado(id: number, estado: 'pendiente' | 'entregado' | 'cancelado'): Promise<Remito | null> {
+    return this.update(id, { estado });
   }
 
   async create(data: CreateRemitoDto): Promise<Remito> {
@@ -236,18 +252,16 @@ export class RemitoRepository implements IBaseRepository<Remito, CreateRemitoDto
       ordenCompraId: data.ordenCompraId,
       codigo: data.codigo,
       contenido: data.contenido,
+      observaciones: data.observaciones,
       estado: data.estado || 'pendiente',
     };
 
-    // Campos opcionales
-    if (data.pdfPath !== undefined) {
+    if (data.pdfPath) {
       createData.pdfPath = data.pdfPath;
     }
-    if (data.archivosAdjuntos !== undefined) {
-      createData.archivosAdjuntos = data.archivosAdjuntos;
-    }
-    if (data.observaciones !== undefined) {
-      createData.observaciones = data.observaciones;
+
+    if (data.archivosAdjuntos && data.archivosAdjuntos.length > 0) {
+      createData.archivosAdjuntos = JSON.stringify(data.archivosAdjuntos);
     }
 
     const remito = await this.prisma.remito.create({
@@ -265,13 +279,12 @@ export class RemitoRepository implements IBaseRepository<Remito, CreateRemitoDto
                     email: true,
                   },
                 },
-                equipo: {
+                usuario: {
                   select: {
                     id: true,
-                    patente: true,
-                    modelo: true,
-                    capacidadKg: true,
-                    estado: true,
+                    nombre: true,
+                    email: true,
+                    rol: true,
                   },
                 },
               },
@@ -286,21 +299,15 @@ export class RemitoRepository implements IBaseRepository<Remito, CreateRemitoDto
 
   async update(id: number, data: UpdateRemitoDto): Promise<Remito | null> {
     const updateData: any = {};
-
+    
     if (data.ordenCompraId !== undefined) updateData.ordenCompraId = data.ordenCompraId;
     if (data.codigo !== undefined) updateData.codigo = data.codigo;
     if (data.contenido !== undefined) updateData.contenido = data.contenido;
     if (data.estado !== undefined) updateData.estado = data.estado;
-    
-    // Manejar campos opcionales
-    if (data.pdfPath !== undefined) {
-      updateData.pdfPath = data.pdfPath;
-    }
+    if (data.pdfPath !== undefined) updateData.pdfPath = data.pdfPath;
+    if (data.observaciones !== undefined) updateData.observaciones = data.observaciones;
     if (data.archivosAdjuntos !== undefined) {
-      updateData.archivosAdjuntos = data.archivosAdjuntos;
-    }
-    if (data.observaciones !== undefined) {
-      updateData.observaciones = data.observaciones;
+      updateData.archivosAdjuntos = data.archivosAdjuntos ? JSON.stringify(data.archivosAdjuntos) : null;
     }
 
     const remito = await this.prisma.remito.update({
@@ -319,13 +326,12 @@ export class RemitoRepository implements IBaseRepository<Remito, CreateRemitoDto
                     email: true,
                   },
                 },
-                equipo: {
+                usuario: {
                   select: {
                     id: true,
-                    patente: true,
-                    modelo: true,
-                    capacidadKg: true,
-                    estado: true,
+                    nombre: true,
+                    email: true,
+                    rol: true,
                   },
                 },
               },
@@ -357,57 +363,49 @@ export class RemitoRepository implements IBaseRepository<Remito, CreateRemitoDto
   }
 
   async count(filters?: RemitoFilters): Promise<number> {
+    const { ordenCompraId, presupuestoId, clienteId, equipoId, codigo, estado, fechaDesde, fechaHasta } = filters || {};
+
     const where: any = {};
+    if (ordenCompraId) where.ordenCompraId = ordenCompraId;
+    if (codigo) where.codigo = { contains: codigo, mode: 'insensitive' };
+    if (estado) where.estado = estado;
     
-    if (filters?.ordenCompraId) where.ordenCompraId = filters.ordenCompraId;
-    if (filters?.codigo) where.codigo = { contains: filters.codigo, mode: 'insensitive' };
-    if (filters?.estado) where.estado = filters.estado;
-    
-    if (filters?.fechaDesde || filters?.fechaHasta) {
+    // Filtros de fecha
+    if (fechaDesde || fechaHasta) {
       where.creadoEn = {};
-      if (filters.fechaDesde) where.creadoEn.gte = new Date(filters.fechaDesde);
-      if (filters.fechaHasta) where.creadoEn.lte = new Date(filters.fechaHasta);
+      if (fechaDesde) where.creadoEn.gte = new Date(fechaDesde);
+      if (fechaHasta) where.creadoEn.lte = new Date(fechaHasta);
     }
 
-    if (filters?.presupuestoId || filters?.clienteId || filters?.equipoId) {
+    // Filtros por presupuesto, cliente y equipo a través de la orden de compra
+    if (presupuestoId || clienteId || equipoId) {
       where.ordenCompra = {
         presupuesto: {},
       };
-      if (filters.presupuestoId) where.ordenCompra.presupuesto.presupuestoId = filters.presupuestoId;
-      if (filters.clienteId) where.ordenCompra.presupuesto.clienteId = filters.clienteId;
-      if (filters.equipoId) where.ordenCompra.presupuesto.equipoId = filters.equipoId;
+      if (presupuestoId) where.ordenCompra.presupuesto.presupuestoId = presupuestoId;
+      if (clienteId) where.ordenCompra.presupuesto.clienteId = clienteId;
+      if (equipoId) {
+        where.ordenCompra.presupuesto.equipos = {
+          some: {
+            equipoId: equipoId
+          }
+        };
+      }
     }
 
     return this.prisma.remito.count({ where });
   }
 
-  // Métodos específicos para remitos
-  async getRemitosPendientes(): Promise<Remito[]> {
-    return this.findByEstado('pendiente');
-  }
-
-  async getRemitosEntregados(): Promise<Remito[]> {
-    return this.findByEstado('entregado');
-  }
-
-  async getRemitosCancelados(): Promise<Remito[]> {
-    return this.findByEstado('cancelado');
-  }
-
-  async cambiarEstado(id: number, estado: 'pendiente' | 'entregado' | 'cancelado'): Promise<Remito | null> {
-    return this.update(id, { estado });
-  }
-
   async marcarComoEntregado(id: number): Promise<Remito | null> {
-    return this.cambiarEstado(id, 'entregado');
+    return this.update(id, { estado: 'entregado' });
   }
 
   async cancelarRemito(id: number): Promise<Remito | null> {
-    return this.cambiarEstado(id, 'cancelado');
+    return this.update(id, { estado: 'cancelado' });
   }
 
   async reactivarRemito(id: number): Promise<Remito | null> {
-    return this.cambiarEstado(id, 'pendiente');
+    return this.update(id, { estado: 'pendiente' });
   }
 
   async getEstadisticasPorOrdenCompra(ordenCompraId: number): Promise<{
@@ -416,12 +414,12 @@ export class RemitoRepository implements IBaseRepository<Remito, CreateRemitoDto
     entregados: number;
     cancelados: number;
   }> {
-    const remitos = await this.findByOrdenCompra(ordenCompraId);
-    
-    const totalRemitos = remitos.length;
-    const pendientes = remitos.filter(r => r.estado === 'pendiente').length;
-    const entregados = remitos.filter(r => r.estado === 'entregado').length;
-    const cancelados = remitos.filter(r => r.estado === 'cancelado').length;
+    const [totalRemitos, pendientes, entregados, cancelados] = await Promise.all([
+      this.prisma.remito.count({ where: { ordenCompraId } }),
+      this.prisma.remito.count({ where: { ordenCompraId, estado: 'pendiente' } }),
+      this.prisma.remito.count({ where: { ordenCompraId, estado: 'entregado' } }),
+      this.prisma.remito.count({ where: { ordenCompraId, estado: 'cancelado' } }),
+    ]);
 
     return {
       totalRemitos,
@@ -439,7 +437,6 @@ export class RemitoRepository implements IBaseRepository<Remito, CreateRemitoDto
     promedioRemitosPorOrden: number;
   }> {
     const where: any = {};
-    
     if (fechaInicio || fechaFin) {
       where.creadoEn = {};
       if (fechaInicio) where.creadoEn.gte = fechaInicio;
@@ -481,7 +478,7 @@ export class RemitoRepository implements IBaseRepository<Remito, CreateRemitoDto
         },
       },
     });
-
+    
     const secuencial = String(remitosDelDia + 1).padStart(3, '0');
     return `REM-${anio}${mes}${dia}-${secuencial}`;
   }

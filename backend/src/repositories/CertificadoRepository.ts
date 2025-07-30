@@ -13,7 +13,7 @@ export class CertificadoRepository implements IBaseRepository<Certificado, Creat
   private convertPrismaCertificado(prismaCertificado: any): Certificado {
     return {
       ...prismaCertificado,
-      archivosAdjuntos: prismaCertificado.archivosAdjuntos ? (prismaCertificado.archivosAdjuntos as string[]) : undefined,
+      archivosAdjuntos: prismaCertificado.archivosAdjuntos ? JSON.parse(prismaCertificado.archivosAdjuntos) : undefined,
     };
   }
 
@@ -48,7 +48,13 @@ export class CertificadoRepository implements IBaseRepository<Certificado, Creat
       };
       if (presupuestoId) where.ordenCompra.presupuesto.presupuestoId = presupuestoId;
       if (clienteId) where.ordenCompra.presupuesto.clienteId = clienteId;
-      if (equipoId) where.ordenCompra.presupuesto.equipoId = equipoId;
+      if (equipoId) {
+        where.ordenCompra.presupuesto.equipos = {
+          some: {
+            equipoId: equipoId
+          }
+        };
+      }
     }
 
     const [data, total] = await Promise.all([
@@ -70,13 +76,12 @@ export class CertificadoRepository implements IBaseRepository<Certificado, Creat
                       email: true,
                     },
                   },
-                  equipo: {
+                  usuario: {
                     select: {
                       id: true,
-                      patente: true,
-                      modelo: true,
-                      capacidadKg: true,
-                      estado: true,
+                      nombre: true,
+                      email: true,
+                      rol: true,
                     },
                   },
                 },
@@ -113,13 +118,12 @@ export class CertificadoRepository implements IBaseRepository<Certificado, Creat
                     email: true,
                   },
                 },
-                equipo: {
+                usuario: {
                   select: {
                     id: true,
-                    patente: true,
-                    modelo: true,
-                    capacidadKg: true,
-                    estado: true,
+                    nombre: true,
+                    email: true,
+                    rol: true,
                   },
                 },
               },
@@ -148,13 +152,12 @@ export class CertificadoRepository implements IBaseRepository<Certificado, Creat
                     email: true,
                   },
                 },
-                equipo: {
+                usuario: {
                   select: {
                     id: true,
-                    patente: true,
-                    modelo: true,
-                    capacidadKg: true,
-                    estado: true,
+                    nombre: true,
+                    email: true,
+                    rol: true,
                   },
                 },
               },
@@ -162,7 +165,40 @@ export class CertificadoRepository implements IBaseRepository<Certificado, Creat
           },
         },
       },
-      orderBy: { creadoEn: 'desc' },
+    });
+
+    return certificados.map((certificado: any) => this.convertPrismaCertificado(certificado));
+  }
+
+  async findByEstado(estado: 'activo' | 'vencido' | 'cancelado'): Promise<Certificado[]> {
+    const certificados = await this.prisma.certificado.findMany({
+      where: { estado },
+      include: {
+        ordenCompra: {
+          include: {
+            presupuesto: {
+              include: {
+                cliente: {
+                  select: {
+                    id: true,
+                    nombreEmpresa: true,
+                    rutCuit: true,
+                    email: true,
+                  },
+                },
+                usuario: {
+                  select: {
+                    id: true,
+                    nombre: true,
+                    email: true,
+                    rol: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     });
 
     return certificados.map((certificado: any) => this.convertPrismaCertificado(certificado));
@@ -184,13 +220,12 @@ export class CertificadoRepository implements IBaseRepository<Certificado, Creat
                     email: true,
                   },
                 },
-                equipo: {
+                usuario: {
                   select: {
                     id: true,
-                    patente: true,
-                    modelo: true,
-                    capacidadKg: true,
-                    estado: true,
+                    nombre: true,
+                    email: true,
+                    rol: true,
                   },
                 },
               },
@@ -198,7 +233,6 @@ export class CertificadoRepository implements IBaseRepository<Certificado, Creat
           },
         },
       },
-      orderBy: { creadoEn: 'desc' },
     });
 
     return certificados.map((certificado: any) => this.convertPrismaCertificado(certificado));
@@ -220,13 +254,12 @@ export class CertificadoRepository implements IBaseRepository<Certificado, Creat
                     email: true,
                   },
                 },
-                equipo: {
+                usuario: {
                   select: {
                     id: true,
-                    patente: true,
-                    modelo: true,
-                    capacidadKg: true,
-                    estado: true,
+                    nombre: true,
+                    email: true,
+                    rol: true,
                   },
                 },
               },
@@ -239,42 +272,6 @@ export class CertificadoRepository implements IBaseRepository<Certificado, Creat
     return certificado ? this.convertPrismaCertificado(certificado) : null;
   }
 
-  async findByEstado(estado: 'activo' | 'vencido' | 'cancelado'): Promise<Certificado[]> {
-    const certificados = await this.prisma.certificado.findMany({
-      where: { estado },
-      include: {
-        ordenCompra: {
-          include: {
-            presupuesto: {
-              include: {
-                cliente: {
-                  select: {
-                    id: true,
-                    nombreEmpresa: true,
-                    rutCuit: true,
-                    email: true,
-                  },
-                },
-                equipo: {
-                  select: {
-                    id: true,
-                    patente: true,
-                    modelo: true,
-                    capacidadKg: true,
-                    estado: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-      orderBy: { creadoEn: 'desc' },
-    });
-
-    return certificados.map((certificado: any) => this.convertPrismaCertificado(certificado));
-  }
-
   async create(data: CreateCertificadoDto): Promise<Certificado> {
     const createData: any = {
       ordenCompraId: data.ordenCompraId,
@@ -285,14 +282,15 @@ export class CertificadoRepository implements IBaseRepository<Certificado, Creat
       estado: data.estado || 'activo',
     };
 
-    // Campos opcionales
-    if (data.pdfPath !== undefined) {
+    if (data.pdfPath) {
       createData.pdfPath = data.pdfPath;
     }
-    if (data.archivosAdjuntos !== undefined) {
-      createData.archivosAdjuntos = data.archivosAdjuntos;
+
+    if (data.archivosAdjuntos && data.archivosAdjuntos.length > 0) {
+      createData.archivosAdjuntos = JSON.stringify(data.archivosAdjuntos);
     }
-    if (data.observaciones !== undefined) {
+
+    if (data.observaciones) {
       createData.observaciones = data.observaciones;
     }
 
@@ -311,13 +309,12 @@ export class CertificadoRepository implements IBaseRepository<Certificado, Creat
                     email: true,
                   },
                 },
-                equipo: {
+                usuario: {
                   select: {
                     id: true,
-                    patente: true,
-                    modelo: true,
-                    capacidadKg: true,
-                    estado: true,
+                    nombre: true,
+                    email: true,
+                    rol: true,
                   },
                 },
               },
@@ -332,23 +329,17 @@ export class CertificadoRepository implements IBaseRepository<Certificado, Creat
 
   async update(id: number, data: UpdateCertificadoDto): Promise<Certificado | null> {
     const updateData: any = {};
-
+    
     if (data.ordenCompraId !== undefined) updateData.ordenCompraId = data.ordenCompraId;
     if (data.tipo !== undefined) updateData.tipo = data.tipo;
     if (data.codigo !== undefined) updateData.codigo = data.codigo;
     if (data.descripcion !== undefined) updateData.descripcion = data.descripcion;
     if (data.fechaVencimiento !== undefined) updateData.fechaVencimiento = data.fechaVencimiento;
     if (data.estado !== undefined) updateData.estado = data.estado;
-    
-    // Manejar campos opcionales
-    if (data.pdfPath !== undefined) {
-      updateData.pdfPath = data.pdfPath;
-    }
+    if (data.pdfPath !== undefined) updateData.pdfPath = data.pdfPath;
+    if (data.observaciones !== undefined) updateData.observaciones = data.observaciones;
     if (data.archivosAdjuntos !== undefined) {
-      updateData.archivosAdjuntos = data.archivosAdjuntos;
-    }
-    if (data.observaciones !== undefined) {
-      updateData.observaciones = data.observaciones;
+      updateData.archivosAdjuntos = data.archivosAdjuntos ? JSON.stringify(data.archivosAdjuntos) : null;
     }
 
     const certificado = await this.prisma.certificado.update({
@@ -367,13 +358,12 @@ export class CertificadoRepository implements IBaseRepository<Certificado, Creat
                     email: true,
                   },
                 },
-                equipo: {
+                usuario: {
                   select: {
                     id: true,
-                    patente: true,
-                    modelo: true,
-                    capacidadKg: true,
-                    estado: true,
+                    nombre: true,
+                    email: true,
+                    rol: true,
                   },
                 },
               },
@@ -405,32 +395,42 @@ export class CertificadoRepository implements IBaseRepository<Certificado, Creat
   }
 
   async count(filters?: CertificadoFilters): Promise<number> {
+    const { ordenCompraId, presupuestoId, clienteId, equipoId, tipo, codigo, estado, fechaVencimientoDesde, fechaVencimientoHasta, fechaDesde, fechaHasta } = filters || {};
+
     const where: any = {};
+    if (ordenCompraId) where.ordenCompraId = ordenCompraId;
+    if (tipo) where.tipo = tipo;
+    if (codigo) where.codigo = { contains: codigo, mode: 'insensitive' };
+    if (estado) where.estado = estado;
     
-    if (filters?.ordenCompraId) where.ordenCompraId = filters.ordenCompraId;
-    if (filters?.tipo) where.tipo = filters.tipo;
-    if (filters?.codigo) where.codigo = { contains: filters.codigo, mode: 'insensitive' };
-    if (filters?.estado) where.estado = filters.estado;
-    
-    if (filters?.fechaVencimientoDesde || filters?.fechaVencimientoHasta) {
+    // Filtros de fecha de vencimiento
+    if (fechaVencimientoDesde || fechaVencimientoHasta) {
       where.fechaVencimiento = {};
-      if (filters.fechaVencimientoDesde) where.fechaVencimiento.gte = new Date(filters.fechaVencimientoDesde);
-      if (filters.fechaVencimientoHasta) where.fechaVencimiento.lte = new Date(filters.fechaVencimientoHasta);
+      if (fechaVencimientoDesde) where.fechaVencimiento.gte = new Date(fechaVencimientoDesde);
+      if (fechaVencimientoHasta) where.fechaVencimiento.lte = new Date(fechaVencimientoHasta);
     }
 
-    if (filters?.fechaDesde || filters?.fechaHasta) {
+    // Filtros de fecha de creación
+    if (fechaDesde || fechaHasta) {
       where.creadoEn = {};
-      if (filters.fechaDesde) where.creadoEn.gte = new Date(filters.fechaDesde);
-      if (filters.fechaHasta) where.creadoEn.lte = new Date(filters.fechaHasta);
+      if (fechaDesde) where.creadoEn.gte = new Date(fechaDesde);
+      if (fechaHasta) where.creadoEn.lte = new Date(fechaHasta);
     }
 
-    if (filters?.presupuestoId || filters?.clienteId || filters?.equipoId) {
+    // Filtros por presupuesto, cliente y equipo a través de la orden de compra
+    if (presupuestoId || clienteId || equipoId) {
       where.ordenCompra = {
         presupuesto: {},
       };
-      if (filters.presupuestoId) where.ordenCompra.presupuesto.presupuestoId = filters.presupuestoId;
-      if (filters.clienteId) where.ordenCompra.presupuesto.clienteId = filters.clienteId;
-      if (filters.equipoId) where.ordenCompra.presupuesto.equipoId = filters.equipoId;
+      if (presupuestoId) where.ordenCompra.presupuesto.presupuestoId = presupuestoId;
+      if (clienteId) where.ordenCompra.presupuesto.clienteId = clienteId;
+      if (equipoId) {
+        where.ordenCompra.presupuesto.equipos = {
+          some: {
+            equipoId: equipoId
+          }
+        };
+      }
     }
 
     return this.prisma.certificado.count({ where });
@@ -454,15 +454,15 @@ export class CertificadoRepository implements IBaseRepository<Certificado, Creat
   }
 
   async marcarComoVencido(id: number): Promise<Certificado | null> {
-    return this.cambiarEstado(id, 'vencido');
+    return this.update(id, { estado: 'vencido' });
   }
 
   async cancelarCertificado(id: number): Promise<Certificado | null> {
-    return this.cambiarEstado(id, 'cancelado');
+    return this.update(id, { estado: 'cancelado' });
   }
 
   async reactivarCertificado(id: number): Promise<Certificado | null> {
-    return this.cambiarEstado(id, 'activo');
+    return this.update(id, { estado: 'activo' });
   }
 
   async getCertificadosPorVencer(dias: number = 30): Promise<Certificado[]> {
@@ -490,13 +490,12 @@ export class CertificadoRepository implements IBaseRepository<Certificado, Creat
                     email: true,
                   },
                 },
-                equipo: {
+                usuario: {
                   select: {
                     id: true,
-                    patente: true,
-                    modelo: true,
-                    capacidadKg: true,
-                    estado: true,
+                    nombre: true,
+                    email: true,
+                    rol: true,
                   },
                 },
               },
@@ -504,7 +503,6 @@ export class CertificadoRepository implements IBaseRepository<Certificado, Creat
           },
         },
       },
-      orderBy: { fechaVencimiento: 'asc' },
     });
 
     return certificados.map((certificado: any) => this.convertPrismaCertificado(certificado));
@@ -534,13 +532,12 @@ export class CertificadoRepository implements IBaseRepository<Certificado, Creat
                     email: true,
                   },
                 },
-                equipo: {
+                usuario: {
                   select: {
                     id: true,
-                    patente: true,
-                    modelo: true,
-                    capacidadKg: true,
-                    estado: true,
+                    nombre: true,
+                    email: true,
+                    rol: true,
                   },
                 },
               },
@@ -548,10 +545,57 @@ export class CertificadoRepository implements IBaseRepository<Certificado, Creat
           },
         },
       },
-      orderBy: { fechaVencimiento: 'desc' },
     });
 
     return certificados.map((certificado: any) => this.convertPrismaCertificado(certificado));
+  }
+
+  async generarCodigoCertificado(): Promise<string> {
+    const fecha = new Date();
+    const anio = fecha.getFullYear();
+    const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+    const dia = String(fecha.getDate()).padStart(2, '0');
+    
+    // Contar certificados del día para generar secuencial
+    const inicioDia = new Date(anio, fecha.getMonth(), fecha.getDate());
+    const finDia = new Date(anio, fecha.getMonth(), fecha.getDate(), 23, 59, 59, 999);
+    
+    const certificadosDelDia = await this.prisma.certificado.count({
+      where: {
+        creadoEn: {
+          gte: inicioDia,
+          lte: finDia,
+        },
+      },
+    });
+    
+    const secuencial = String(certificadosDelDia + 1).padStart(3, '0');
+    return `CERT-${anio}${mes}${dia}-${secuencial}`;
+  }
+
+  async generarCodigoCertificadoPorTipo(tipo: 'seguro' | 'habilitacion' | 'otros'): Promise<string> {
+    const fecha = new Date();
+    const anio = fecha.getFullYear();
+    const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+    const dia = String(fecha.getDate()).padStart(2, '0');
+    
+    // Contar certificados del día para generar secuencial
+    const inicioDia = new Date(anio, fecha.getMonth(), fecha.getDate());
+    const finDia = new Date(anio, fecha.getMonth(), fecha.getDate(), 23, 59, 59, 999);
+    
+    const certificadosDelDia = await this.prisma.certificado.count({
+      where: {
+        tipo,
+        creadoEn: {
+          gte: inicioDia,
+          lte: finDia,
+        },
+      },
+    });
+    
+    const secuencial = String(certificadosDelDia + 1).padStart(3, '0');
+    const tipoAbrev = tipo === 'seguro' ? 'SEG' : tipo === 'habilitacion' ? 'HAB' : 'OTR';
+    return `${tipoAbrev}-${anio}${mes}${dia}-${secuencial}`;
   }
 
   async getEstadisticasPorOrdenCompra(ordenCompraId: number): Promise<{
@@ -628,31 +672,6 @@ export class CertificadoRepository implements IBaseRepository<Certificado, Creat
       porVencer,
       promedioCertificadosPorOrden: totalOrdenes > 0 ? totalCertificados / totalOrdenes : 0,
     };
-  }
-
-  async generarCodigoCertificado(tipo: 'seguro' | 'habilitacion' | 'otros'): Promise<string> {
-    const fecha = new Date();
-    const anio = fecha.getFullYear();
-    const mes = String(fecha.getMonth() + 1).padStart(2, '0');
-    const dia = String(fecha.getDate()).padStart(2, '0');
-    
-    // Contar certificados del día para generar secuencial
-    const inicioDia = new Date(anio, fecha.getMonth(), fecha.getDate());
-    const finDia = new Date(anio, fecha.getMonth(), fecha.getDate(), 23, 59, 59, 999);
-    
-    const certificadosDelDia = await this.prisma.certificado.count({
-      where: {
-        tipo,
-        creadoEn: {
-          gte: inicioDia,
-          lte: finDia,
-        },
-      },
-    });
-
-    const secuencial = String(certificadosDelDia + 1).padStart(3, '0');
-    const tipoAbrev = tipo === 'seguro' ? 'SEG' : tipo === 'habilitacion' ? 'HAB' : 'OTR';
-    return `${tipoAbrev}-${anio}${mes}${dia}-${secuencial}`;
   }
 
   async actualizarEstadosAutomaticamente(): Promise<{

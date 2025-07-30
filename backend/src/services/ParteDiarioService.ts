@@ -256,7 +256,7 @@ export class ParteDiarioService implements IBaseService<ParteDiario, CreateParte
     if (fechaInicio > fechaFin) {
       throw new Error('La fecha de inicio debe ser anterior a la fecha de fin');
     }
-    return this.parteDiarioRepository.findByRangoFechas(fechaInicio, fechaFin);
+    return this.parteDiarioRepository.getPartesDiarioPorFecha(fechaInicio, fechaFin);
   }
 
   async getPartesDiarioPorMes(anio: number, mes: number): Promise<ParteDiario[]> {
@@ -266,14 +266,24 @@ export class ParteDiarioService implements IBaseService<ParteDiario, CreateParte
     if (mes < 1 || mes > 12) {
       throw new Error('Mes inválido');
     }
-    return this.parteDiarioRepository.getPartesDiarioPorMes(anio, mes);
+    const fechaInicio = new Date(anio, mes - 1, 1);
+    const fechaFin = new Date(anio, mes, 0, 23, 59, 59);
+    return this.parteDiarioRepository.getPartesDiarioPorFecha(fechaInicio, fechaFin);
   }
 
   async getPartesDiarioPorSemana(fecha: Date): Promise<ParteDiario[]> {
     if (!fecha || isNaN(fecha.getTime())) {
       throw new Error('Fecha inválida');
     }
-    return this.parteDiarioRepository.getPartesDiarioPorSemana(fecha);
+    const inicioSemana = new Date(fecha);
+    inicioSemana.setDate(fecha.getDate() - fecha.getDay());
+    inicioSemana.setHours(0, 0, 0, 0);
+
+    const finSemana = new Date(inicioSemana);
+    finSemana.setDate(inicioSemana.getDate() + 6);
+    finSemana.setHours(23, 59, 59, 999);
+
+    return this.parteDiarioRepository.getPartesDiarioPorFecha(inicioSemana, finSemana);
   }
 
   async getEstadisticasPorOrdenCompra(ordenCompraId: number): Promise<{
@@ -287,7 +297,24 @@ export class ParteDiarioService implements IBaseService<ParteDiario, CreateParte
     if (!ordenCompraId || isNaN(ordenCompraId)) {
       throw new Error('ID de orden de compra inválido');
     }
-    return this.parteDiarioRepository.getEstadisticasPorOrdenCompra(ordenCompraId);
+    const partesDiario = await this.parteDiarioRepository.findByOrdenCompra(ordenCompraId);
+    
+    const totalPartes = partesDiario.length;
+    const totalKmRecorridos = partesDiario.reduce((sum, parte) => sum + parte.kmRecorridos, 0);
+    const totalHorasTrabajadas = partesDiario.reduce((sum, parte) => sum + parte.horasTrabajadas, 0);
+    const totalCombustible = partesDiario.reduce((sum, parte) => sum + (parte.combustibleConsumido || 0), 0);
+    
+    const promedioKmPorDia = totalPartes > 0 ? totalKmRecorridos / totalPartes : 0;
+    const promedioHorasPorDia = totalPartes > 0 ? totalHorasTrabajadas / totalPartes : 0;
+
+    return {
+      totalPartes,
+      totalKmRecorridos,
+      totalHorasTrabajadas,
+      totalCombustible,
+      promedioKmPorDia,
+      promedioHorasPorDia,
+    };
   }
 
   async getEstadisticasGenerales(fechaInicio?: Date, fechaFin?: Date): Promise<{
@@ -307,7 +334,17 @@ export class ParteDiarioService implements IBaseService<ParteDiario, CreateParte
     if (fechaInicio && fechaFin && fechaInicio > fechaFin) {
       throw new Error('La fecha de inicio debe ser anterior a la fecha de fin');
     }
-    return this.parteDiarioRepository.getEstadisticasGenerales(fechaInicio, fechaFin);
+    
+    const estadisticas = await this.parteDiarioRepository.getEstadisticas();
+    
+    return {
+      totalPartes: estadisticas.total,
+      totalKmRecorridos: estadisticas.totalKmRecorridos,
+      totalHorasTrabajadas: estadisticas.totalHorasTrabajadas,
+      totalCombustible: estadisticas.totalCombustibleConsumido,
+      promedioKmPorParte: estadisticas.promedioKmPorDia,
+      promedioHorasPorParte: estadisticas.promedioHorasPorDia,
+    };
   }
 
   // Métodos de negocio específicos

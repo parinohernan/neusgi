@@ -120,7 +120,11 @@ export class CuentaCorrienteRepository implements IBaseRepository<CuentaCorrient
                   presupuesto: {
                     include: {
                       cliente: true,
-                      equipo: true,
+                      equipos: {
+              include: {
+                equipo: true
+              }
+            },
                     },
                   },
                 },
@@ -136,7 +140,11 @@ export class CuentaCorrienteRepository implements IBaseRepository<CuentaCorrient
                       presupuesto: {
                         include: {
                           cliente: true,
-                          equipo: true,
+                          equipos: {
+              include: {
+                equipo: true
+              }
+            },
                         },
                       },
                     },
@@ -150,7 +158,11 @@ export class CuentaCorrienteRepository implements IBaseRepository<CuentaCorrient
               presupuesto: {
                 include: {
                   cliente: true,
-                  equipo: true,
+                  equipos: {
+              include: {
+                equipo: true
+              }
+            },
                 },
               },
             },
@@ -186,7 +198,11 @@ export class CuentaCorrienteRepository implements IBaseRepository<CuentaCorrient
                 presupuesto: {
                   include: {
                     cliente: true,
-                    equipo: true,
+                    equipos: {
+              include: {
+                equipo: true
+              }
+            },
                   },
                 },
               },
@@ -202,7 +218,11 @@ export class CuentaCorrienteRepository implements IBaseRepository<CuentaCorrient
                     presupuesto: {
                       include: {
                         cliente: true,
-                        equipo: true,
+                        equipos: {
+              include: {
+                equipo: true
+              }
+            },
                       },
                     },
                   },
@@ -216,7 +236,11 @@ export class CuentaCorrienteRepository implements IBaseRepository<CuentaCorrient
             presupuesto: {
               include: {
                 cliente: true,
-                equipo: true,
+                equipos: {
+              include: {
+                equipo: true
+              }
+            },
               },
             },
           },
@@ -264,7 +288,11 @@ export class CuentaCorrienteRepository implements IBaseRepository<CuentaCorrient
                 presupuesto: {
                   include: {
                     cliente: true,
-                    equipo: true,
+                    equipos: {
+              include: {
+                equipo: true
+              }
+            },
                   },
                 },
               },
@@ -280,7 +308,11 @@ export class CuentaCorrienteRepository implements IBaseRepository<CuentaCorrient
                     presupuesto: {
                       include: {
                         cliente: true,
-                        equipo: true,
+                        equipos: {
+              include: {
+                equipo: true
+              }
+            },
                       },
                     },
                   },
@@ -294,7 +326,11 @@ export class CuentaCorrienteRepository implements IBaseRepository<CuentaCorrient
             presupuesto: {
               include: {
                 cliente: true,
-                equipo: true,
+                equipos: {
+              include: {
+                equipo: true
+              }
+            },
               },
             },
           },
@@ -342,7 +378,11 @@ export class CuentaCorrienteRepository implements IBaseRepository<CuentaCorrient
                 presupuesto: {
                   include: {
                     cliente: true,
-                    equipo: true,
+                    equipos: {
+              include: {
+                equipo: true
+              }
+            },
                   },
                 },
               },
@@ -358,7 +398,11 @@ export class CuentaCorrienteRepository implements IBaseRepository<CuentaCorrient
                     presupuesto: {
                       include: {
                         cliente: true,
-                        equipo: true,
+                        equipos: {
+              include: {
+                equipo: true
+              }
+            },
                       },
                     },
                   },
@@ -372,7 +416,11 @@ export class CuentaCorrienteRepository implements IBaseRepository<CuentaCorrient
             presupuesto: {
               include: {
                 cliente: true,
-                equipo: true,
+                equipos: {
+              include: {
+                equipo: true
+              }
+            },
               },
             },
           },
@@ -438,7 +486,11 @@ export class CuentaCorrienteRepository implements IBaseRepository<CuentaCorrient
                 presupuesto: {
                   include: {
                     cliente: true,
-                    equipo: true,
+                    equipos: {
+              include: {
+                equipo: true
+              }
+            },
                   },
                 },
               },
@@ -454,7 +506,11 @@ export class CuentaCorrienteRepository implements IBaseRepository<CuentaCorrient
                     presupuesto: {
                       include: {
                         cliente: true,
-                        equipo: true,
+                        equipos: {
+              include: {
+                equipo: true
+              }
+            },
                       },
                     },
                   },
@@ -468,7 +524,11 @@ export class CuentaCorrienteRepository implements IBaseRepository<CuentaCorrient
             presupuesto: {
               include: {
                 cliente: true,
-                equipo: true,
+                equipos: {
+              include: {
+                equipo: true
+              }
+            },
               },
             },
           },
@@ -497,7 +557,11 @@ export class CuentaCorrienteRepository implements IBaseRepository<CuentaCorrient
                 presupuesto: {
                   include: {
                     cliente: true,
-                    equipo: true,
+                    equipos: {
+              include: {
+                equipo: true
+              }
+            },
                   },
                 },
               },
@@ -513,7 +577,11 @@ export class CuentaCorrienteRepository implements IBaseRepository<CuentaCorrient
                     presupuesto: {
                       include: {
                         cliente: true,
-                        equipo: true,
+                        equipos: {
+              include: {
+                equipo: true
+              }
+            },
                       },
                     },
                   },
@@ -527,7 +595,11 @@ export class CuentaCorrienteRepository implements IBaseRepository<CuentaCorrient
             presupuesto: {
               include: {
                 cliente: true,
-                equipo: true,
+                equipos: {
+              include: {
+                equipo: true
+              }
+            },
               },
             },
           },
@@ -556,7 +628,11 @@ export class CuentaCorrienteRepository implements IBaseRepository<CuentaCorrient
                 presupuesto: {
                   include: {
                     cliente: true,
-                    equipo: true,
+                    equipos: {
+              include: {
+                equipo: true
+              }
+            },
                   },
                 },
               },
@@ -572,7 +648,11 @@ export class CuentaCorrienteRepository implements IBaseRepository<CuentaCorrient
                     presupuesto: {
                       include: {
                         cliente: true,
-                        equipo: true,
+                        equipos: {
+              include: {
+                equipo: true
+              }
+            },
                       },
                     },
                   },
@@ -586,7 +666,11 @@ export class CuentaCorrienteRepository implements IBaseRepository<CuentaCorrient
             presupuesto: {
               include: {
                 cliente: true,
-                equipo: true,
+                equipos: {
+              include: {
+                equipo: true
+              }
+            },
               },
             },
           },
@@ -632,7 +716,11 @@ export class CuentaCorrienteRepository implements IBaseRepository<CuentaCorrient
                 presupuesto: {
                   include: {
                     cliente: true,
-                    equipo: true,
+                    equipos: {
+              include: {
+                equipo: true
+              }
+            },
                   },
                 },
               },
@@ -648,7 +736,11 @@ export class CuentaCorrienteRepository implements IBaseRepository<CuentaCorrient
                     presupuesto: {
                       include: {
                         cliente: true,
-                        equipo: true,
+                        equipos: {
+              include: {
+                equipo: true
+              }
+            },
                       },
                     },
                   },
@@ -662,7 +754,11 @@ export class CuentaCorrienteRepository implements IBaseRepository<CuentaCorrient
             presupuesto: {
               include: {
                 cliente: true,
-                equipo: true,
+                equipos: {
+              include: {
+                equipo: true
+              }
+            },
               },
             },
           },
@@ -697,7 +793,11 @@ export class CuentaCorrienteRepository implements IBaseRepository<CuentaCorrient
                 presupuesto: {
                   include: {
                     cliente: true,
-                    equipo: true,
+                    equipos: {
+              include: {
+                equipo: true
+              }
+            },
                   },
                 },
               },
@@ -713,7 +813,11 @@ export class CuentaCorrienteRepository implements IBaseRepository<CuentaCorrient
                     presupuesto: {
                       include: {
                         cliente: true,
-                        equipo: true,
+                        equipos: {
+              include: {
+                equipo: true
+              }
+            },
                       },
                     },
                   },
@@ -727,7 +831,11 @@ export class CuentaCorrienteRepository implements IBaseRepository<CuentaCorrient
             presupuesto: {
               include: {
                 cliente: true,
-                equipo: true,
+                equipos: {
+              include: {
+                equipo: true
+              }
+            },
               },
             },
           },

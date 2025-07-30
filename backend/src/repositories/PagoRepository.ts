@@ -13,8 +13,7 @@ export class PagoRepository implements IBaseRepository<Pago, CreatePagoDto, Upda
   private convertPrismaPago(prismaPago: any): Pago {
     return {
       ...prismaPago,
-      monto: Number(prismaPago.monto),
-      archivosAdjuntos: prismaPago.archivosAdjuntos ? (prismaPago.archivosAdjuntos as string[]) : undefined,
+      archivosAdjuntos: prismaPago.archivosAdjuntos ? JSON.parse(prismaPago.archivosAdjuntos) : undefined,
     };
   }
 
@@ -28,18 +27,18 @@ export class PagoRepository implements IBaseRepository<Pago, CreatePagoDto, Upda
     if (estado) where.estado = estado;
     if (procesadoPor) where.procesadoPor = procesadoPor;
     
-    // Filtros de fecha de pago
-    if (fechaPagoDesde || fechaPagoHasta) {
-      where.fechaPago = {};
-      if (fechaPagoDesde) where.fechaPago.gte = new Date(fechaPagoDesde);
-      if (fechaPagoHasta) where.fechaPago.lte = new Date(fechaPagoHasta);
-    }
-
     // Filtros de monto
     if (montoMin !== undefined || montoMax !== undefined) {
       where.monto = {};
       if (montoMin !== undefined) where.monto.gte = montoMin;
       if (montoMax !== undefined) where.monto.lte = montoMax;
+    }
+
+    // Filtros de fecha de pago
+    if (fechaPagoDesde || fechaPagoHasta) {
+      where.fechaPago = {};
+      if (fechaPagoDesde) where.fechaPago.gte = new Date(fechaPagoDesde);
+      if (fechaPagoHasta) where.fechaPago.lte = new Date(fechaPagoHasta);
     }
 
     // Filtros de fecha de creación
@@ -82,13 +81,12 @@ export class PagoRepository implements IBaseRepository<Pago, CreatePagoDto, Upda
                           email: true,
                         },
                       },
-                      equipo: {
+                      usuario: {
                         select: {
                           id: true,
-                          patente: true,
-                          modelo: true,
-                          capacidadKg: true,
-                          estado: true,
+                          nombre: true,
+                          email: true,
+                          rol: true,
                         },
                       },
                     },
@@ -137,13 +135,12 @@ export class PagoRepository implements IBaseRepository<Pago, CreatePagoDto, Upda
                         email: true,
                       },
                     },
-                    equipo: {
+                    usuario: {
                       select: {
                         id: true,
-                        patente: true,
-                        modelo: true,
-                        capacidadKg: true,
-                        estado: true,
+                        nombre: true,
+                        email: true,
+                        rol: true,
                       },
                     },
                   },
@@ -184,61 +181,12 @@ export class PagoRepository implements IBaseRepository<Pago, CreatePagoDto, Upda
                         email: true,
                       },
                     },
-                    equipo: {
+                    usuario: {
                       select: {
                         id: true,
-                        patente: true,
-                        modelo: true,
-                        capacidadKg: true,
-                        estado: true,
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-        usuario: {
-          select: {
-            id: true,
-            nombre: true,
-            email: true,
-            rol: true,
-          },
-        },
-      },
-      orderBy: { creadoEn: 'desc' },
-    });
-
-    return pagos.map((pago: any) => this.convertPrismaPago(pago));
-  }
-
-  async findByMetodoPago(metodoPago: 'efectivo' | 'transferencia' | 'cheque' | 'tarjeta_credito' | 'tarjeta_debito' | 'otros'): Promise<Pago[]> {
-    const pagos = await this.prisma.pago.findMany({
-      where: { metodoPago },
-      include: {
-        factura: {
-          include: {
-            ordenCompra: {
-              include: {
-                presupuesto: {
-                  include: {
-                    cliente: {
-                      select: {
-                        id: true,
-                        nombreEmpresa: true,
-                        rutCuit: true,
+                        nombre: true,
                         email: true,
-                      },
-                    },
-                    equipo: {
-                      select: {
-                        id: true,
-                        patente: true,
-                        modelo: true,
-                        capacidadKg: true,
-                        estado: true,
+                        rol: true,
                       },
                     },
                   },
@@ -256,7 +204,6 @@ export class PagoRepository implements IBaseRepository<Pago, CreatePagoDto, Upda
           },
         },
       },
-      orderBy: { creadoEn: 'desc' },
     });
 
     return pagos.map((pago: any) => this.convertPrismaPago(pago));
@@ -280,13 +227,12 @@ export class PagoRepository implements IBaseRepository<Pago, CreatePagoDto, Upda
                         email: true,
                       },
                     },
-                    equipo: {
+                    usuario: {
                       select: {
                         id: true,
-                        patente: true,
-                        modelo: true,
-                        capacidadKg: true,
-                        estado: true,
+                        nombre: true,
+                        email: true,
+                        rol: true,
                       },
                     },
                   },
@@ -304,7 +250,52 @@ export class PagoRepository implements IBaseRepository<Pago, CreatePagoDto, Upda
           },
         },
       },
-      orderBy: { creadoEn: 'desc' },
+    });
+
+    return pagos.map((pago: any) => this.convertPrismaPago(pago));
+  }
+
+  async findByMetodoPago(metodoPago: 'efectivo' | 'transferencia' | 'cheque' | 'tarjeta_credito' | 'tarjeta_debito' | 'otros'): Promise<Pago[]> {
+    const pagos = await this.prisma.pago.findMany({
+      where: { metodoPago },
+      include: {
+        factura: {
+          include: {
+            ordenCompra: {
+              include: {
+                presupuesto: {
+                  include: {
+                    cliente: {
+                      select: {
+                        id: true,
+                        nombreEmpresa: true,
+                        rutCuit: true,
+                        email: true,
+                      },
+                    },
+                    usuario: {
+                      select: {
+                        id: true,
+                        nombre: true,
+                        email: true,
+                        rol: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        usuario: {
+          select: {
+            id: true,
+            nombre: true,
+            email: true,
+            rol: true,
+          },
+        },
+      },
     });
 
     return pagos.map((pago: any) => this.convertPrismaPago(pago));
@@ -316,23 +307,26 @@ export class PagoRepository implements IBaseRepository<Pago, CreatePagoDto, Upda
       monto: data.monto,
       fechaPago: data.fechaPago,
       metodoPago: data.metodoPago,
-      estado: data.estado || 'confirmado',
+      estado: data.estado || 'pendiente',
     };
 
-    // Campos opcionales
-    if (data.referencia !== undefined) {
+    if (data.referencia) {
       createData.referencia = data.referencia;
     }
-    if (data.observaciones !== undefined) {
+
+    if (data.observaciones) {
       createData.observaciones = data.observaciones;
     }
-    if (data.comprobante !== undefined) {
+
+    if (data.comprobante) {
       createData.comprobante = data.comprobante;
     }
-    if (data.archivosAdjuntos !== undefined) {
-      createData.archivosAdjuntos = data.archivosAdjuntos;
+
+    if (data.archivosAdjuntos && data.archivosAdjuntos.length > 0) {
+      createData.archivosAdjuntos = JSON.stringify(data.archivosAdjuntos);
     }
-    if (data.procesadoPor !== undefined) {
+
+    if (data.procesadoPor) {
       createData.procesadoPor = data.procesadoPor;
     }
 
@@ -353,13 +347,12 @@ export class PagoRepository implements IBaseRepository<Pago, CreatePagoDto, Upda
                         email: true,
                       },
                     },
-                    equipo: {
+                    usuario: {
                       select: {
                         id: true,
-                        patente: true,
-                        modelo: true,
-                        capacidadKg: true,
-                        estado: true,
+                        nombre: true,
+                        email: true,
+                        rol: true,
                       },
                     },
                   },
@@ -384,28 +377,18 @@ export class PagoRepository implements IBaseRepository<Pago, CreatePagoDto, Upda
 
   async update(id: number, data: UpdatePagoDto): Promise<Pago | null> {
     const updateData: any = {};
-
+    
     if (data.facturaId !== undefined) updateData.facturaId = data.facturaId;
     if (data.monto !== undefined) updateData.monto = data.monto;
     if (data.fechaPago !== undefined) updateData.fechaPago = data.fechaPago;
     if (data.metodoPago !== undefined) updateData.metodoPago = data.metodoPago;
     if (data.estado !== undefined) updateData.estado = data.estado;
-    
-    // Manejar campos opcionales
-    if (data.referencia !== undefined) {
-      updateData.referencia = data.referencia;
-    }
-    if (data.observaciones !== undefined) {
-      updateData.observaciones = data.observaciones;
-    }
-    if (data.comprobante !== undefined) {
-      updateData.comprobante = data.comprobante;
-    }
+    if (data.referencia !== undefined) updateData.referencia = data.referencia;
+    if (data.observaciones !== undefined) updateData.observaciones = data.observaciones;
+    if (data.comprobante !== undefined) updateData.comprobante = data.comprobante;
+    if (data.procesadoPor !== undefined) updateData.procesadoPor = data.procesadoPor;
     if (data.archivosAdjuntos !== undefined) {
-      updateData.archivosAdjuntos = data.archivosAdjuntos;
-    }
-    if (data.procesadoPor !== undefined) {
-      updateData.procesadoPor = data.procesadoPor;
+      updateData.archivosAdjuntos = data.archivosAdjuntos ? JSON.stringify(data.archivosAdjuntos) : null;
     }
 
     const pago = await this.prisma.pago.update({
@@ -426,13 +409,12 @@ export class PagoRepository implements IBaseRepository<Pago, CreatePagoDto, Upda
                         email: true,
                       },
                     },
-                    equipo: {
+                    usuario: {
                       select: {
                         id: true,
-                        patente: true,
-                        modelo: true,
-                        capacidadKg: true,
-                        estado: true,
+                        nombre: true,
+                        email: true,
+                        rol: true,
                       },
                     },
                   },
@@ -474,40 +456,45 @@ export class PagoRepository implements IBaseRepository<Pago, CreatePagoDto, Upda
   }
 
   async count(filters?: PagoFilters): Promise<number> {
+    const { facturaId, ordenCompraId, presupuestoId, clienteId, metodoPago, estado, procesadoPor, fechaPagoDesde, fechaPagoHasta, montoMin, montoMax, fechaDesde, fechaHasta } = filters || {};
+
     const where: any = {};
+    if (facturaId) where.facturaId = facturaId;
+    if (metodoPago) where.metodoPago = metodoPago;
+    if (estado) where.estado = estado;
+    if (procesadoPor) where.procesadoPor = procesadoPor;
     
-    if (filters?.facturaId) where.facturaId = filters.facturaId;
-    if (filters?.metodoPago) where.metodoPago = filters.metodoPago;
-    if (filters?.estado) where.estado = filters.estado;
-    if (filters?.procesadoPor) where.procesadoPor = filters.procesadoPor;
-    
-    if (filters?.fechaPagoDesde || filters?.fechaPagoHasta) {
-      where.fechaPago = {};
-      if (filters.fechaPagoDesde) where.fechaPago.gte = new Date(filters.fechaPagoDesde);
-      if (filters.fechaPagoHasta) where.fechaPago.lte = new Date(filters.fechaPagoHasta);
-    }
-
-    if (filters?.montoMin !== undefined || filters?.montoMax !== undefined) {
+    // Filtros de monto
+    if (montoMin !== undefined || montoMax !== undefined) {
       where.monto = {};
-      if (filters.montoMin !== undefined) where.monto.gte = filters.montoMin;
-      if (filters.montoMax !== undefined) where.monto.lte = filters.montoMax;
+      if (montoMin !== undefined) where.monto.gte = montoMin;
+      if (montoMax !== undefined) where.monto.lte = montoMax;
     }
 
-    if (filters?.fechaDesde || filters?.fechaHasta) {
+    // Filtros de fecha de pago
+    if (fechaPagoDesde || fechaPagoHasta) {
+      where.fechaPago = {};
+      if (fechaPagoDesde) where.fechaPago.gte = new Date(fechaPagoDesde);
+      if (fechaPagoHasta) where.fechaPago.lte = new Date(fechaPagoHasta);
+    }
+
+    // Filtros de fecha de creación
+    if (fechaDesde || fechaHasta) {
       where.creadoEn = {};
-      if (filters.fechaDesde) where.creadoEn.gte = new Date(filters.fechaDesde);
-      if (filters.fechaHasta) where.creadoEn.lte = new Date(filters.fechaHasta);
+      if (fechaDesde) where.creadoEn.gte = new Date(fechaDesde);
+      if (fechaHasta) where.creadoEn.lte = new Date(fechaHasta);
     }
 
-    if (filters?.ordenCompraId || filters?.presupuestoId || filters?.clienteId) {
+    // Filtros por orden de compra, presupuesto y cliente a través de la factura
+    if (ordenCompraId || presupuestoId || clienteId) {
       where.factura = {
         ordenCompra: {
           presupuesto: {},
         },
       };
-      if (filters.ordenCompraId) where.factura.ordenCompra.ordenCompraId = filters.ordenCompraId;
-      if (filters.presupuestoId) where.factura.ordenCompra.presupuesto.presupuestoId = filters.presupuestoId;
-      if (filters.clienteId) where.factura.ordenCompra.presupuesto.clienteId = filters.clienteId;
+      if (ordenCompraId) where.factura.ordenCompra.ordenCompraId = ordenCompraId;
+      if (presupuestoId) where.factura.ordenCompra.presupuesto.presupuestoId = presupuestoId;
+      if (clienteId) where.factura.ordenCompra.presupuesto.clienteId = clienteId;
     }
 
     return this.prisma.pago.count({ where });
@@ -559,7 +546,7 @@ export class PagoRepository implements IBaseRepository<Pago, CreatePagoDto, Upda
   }
 
   async reactivarPago(id: number): Promise<Pago | null> {
-    return this.cambiarEstado(id, 'pendiente');
+    return this.update(id, { estado: 'pendiente' });
   }
 
   async getPagosPorPeriodo(fechaInicio: Date, fechaFin: Date): Promise<Pago[]> {
@@ -585,13 +572,12 @@ export class PagoRepository implements IBaseRepository<Pago, CreatePagoDto, Upda
                         email: true,
                       },
                     },
-                    equipo: {
+                    usuario: {
                       select: {
                         id: true,
-                        patente: true,
-                        modelo: true,
-                        capacidadKg: true,
-                        estado: true,
+                        nombre: true,
+                        email: true,
+                        rol: true,
                       },
                     },
                   },
@@ -609,7 +595,6 @@ export class PagoRepository implements IBaseRepository<Pago, CreatePagoDto, Upda
           },
         },
       },
-      orderBy: { fechaPago: 'desc' },
     });
 
     return pagos.map((pago: any) => this.convertPrismaPago(pago));
@@ -664,9 +649,9 @@ export class PagoRepository implements IBaseRepository<Pago, CreatePagoDto, Upda
     const where: any = {};
     
     if (fechaInicio || fechaFin) {
-      where.fechaPago = {};
-      if (fechaInicio) where.fechaPago.gte = fechaInicio;
-      if (fechaFin) where.fechaPago.lte = fechaFin;
+      where.creadoEn = {};
+      if (fechaInicio) where.creadoEn.gte = fechaInicio;
+      if (fechaFin) where.creadoEn.lte = fechaFin;
     }
 
     const [totalPagos, pendientes, confirmados, rechazados, cancelados, totalFacturas] = await Promise.all([
@@ -714,25 +699,21 @@ export class PagoRepository implements IBaseRepository<Pago, CreatePagoDto, Upda
   }
 
   async agregarArchivoAdjunto(id: number, urlArchivo: string): Promise<Pago | null> {
-    const pagoActual = await this.findById(id);
-    if (!pagoActual) return null;
+    const pagoExistente = await this.findById(id);
+    if (!pagoExistente) return null;
 
-    const archivosAdjuntos = pagoActual.archivosAdjuntos || [];
+    const archivosAdjuntos = pagoExistente.archivosAdjuntos || [];
     archivosAdjuntos.push(urlArchivo);
 
     return this.update(id, { archivosAdjuntos });
   }
 
   async removerArchivoAdjunto(id: number, urlArchivo: string): Promise<Pago | null> {
-    const pagoActual = await this.findById(id);
-    if (!pagoActual) return null;
+    const pagoExistente = await this.findById(id);
+    if (!pagoExistente) return null;
 
-    const archivosAdjuntos = pagoActual.archivosAdjuntos || [];
+    const archivosAdjuntos = pagoExistente.archivosAdjuntos || [];
     const archivosFiltrados = archivosAdjuntos.filter(url => url !== urlArchivo);
-
-    if (archivosFiltrados.length === archivosAdjuntos.length) {
-      throw new Error('El archivo especificado no existe en este pago');
-    }
 
     return this.update(id, { archivosAdjuntos: archivosFiltrados });
   }

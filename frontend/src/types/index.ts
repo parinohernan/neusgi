@@ -50,32 +50,129 @@ export interface EquipoImagen {
   destacada: boolean;
 }
 
+// Tipos para Categoria
+export interface Categoria {
+  id: number;
+  nombre: string;
+  descripcion?: string;
+  activa: boolean;
+  creadoEn: Date;
+}
+
+export interface CreateCategoriaDto {
+  nombre: string;
+  descripcion?: string;
+  activa?: boolean;
+}
+
+export interface UpdateCategoriaDto {
+  nombre?: string;
+  descripcion?: string;
+  activa?: boolean;
+}
+
+// Tipos para TipoEmpleado
+export interface TipoEmpleado {
+  id: number;
+  nombre: string;
+  descripcion?: string;
+  activo: boolean;
+  creadoEn: Date;
+}
+
+export interface CreateTipoEmpleadoDto {
+  nombre: string;
+  descripcion?: string;
+  activo?: boolean;
+}
+
+export interface UpdateTipoEmpleadoDto {
+  nombre?: string;
+  descripcion?: string;
+  activo?: boolean;
+}
+
+// Tipos para Empleado
+export interface Empleado {
+  id: number;
+  nombre: string;
+  apellido: string;
+  dni: string;
+  tipoEmpleadoId: number;
+  sexo: 'masculino' | 'femenino' | 'otro';
+  telefono?: string;
+  email?: string;
+  direccion?: string;
+  fechaIngreso: Date;
+  imagen?: string;
+  activo: boolean;
+  creadoEn: Date;
+  actualizadoEn: Date;
+  tipoEmpleado?: TipoEmpleado;
+}
+
+export interface CreateEmpleadoDto {
+  nombre: string;
+  apellido: string;
+  dni: string;
+  tipoEmpleadoId: number;
+  sexo: 'masculino' | 'femenino' | 'otro';
+  telefono?: string;
+  email?: string;
+  direccion?: string;
+  fechaIngreso: Date;
+  imagen?: string;
+  activo?: boolean;
+}
+
+export interface UpdateEmpleadoDto {
+  nombre?: string;
+  apellido?: string;
+  dni?: string;
+  tipoEmpleadoId?: number;
+  sexo?: 'masculino' | 'femenino' | 'otro';
+  telefono?: string;
+  email?: string;
+  direccion?: string;
+  fechaIngreso?: Date;
+  imagen?: string;
+  activo?: boolean;
+}
+
 // Tipos para Equipo (coinciden con el backend)
 export interface Equipo {
   id: number;
   patente: string;
   modelo: string;
+  categoriaId: number;
   capacidadKg: number;
   estado: 'disponible' | 'ocupado' | 'mantenimiento';
   fechaUltimoMantenimiento?: Date;
+  conductorId?: number;
   imagenes?: EquipoImagen[];
+  categoria?: Categoria;
+  conductor?: Empleado;
 }
 
 export interface CreateEquipoDto {
   patente: string;
   modelo: string;
+  categoriaId: number;
   capacidadKg: number;
   estado?: 'disponible' | 'ocupado' | 'mantenimiento';
   fechaUltimoMantenimiento?: Date;
+  conductorId?: number;
   imagenes?: EquipoImagen[];
 }
 
 export interface UpdateEquipoDto {
   patente?: string;
   modelo?: string;
+  categoriaId?: number;
   capacidadKg?: number;
   estado?: 'disponible' | 'ocupado' | 'mantenimiento';
   fechaUltimoMantenimiento?: Date;
+  conductorId?: number;
   imagenes?: EquipoImagen[];
 }
 

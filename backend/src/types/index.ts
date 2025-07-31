@@ -126,6 +126,92 @@ export interface UpdateContactoDto {
   activo?: boolean;
 }
 
+// Tipos para Categoria
+export interface Categoria extends BaseEntity {
+  nombre: string;
+  descripcion?: string;
+  activa: boolean;
+  creadoEn: Date;
+}
+
+export interface CreateCategoriaDto {
+  nombre: string;
+  descripcion?: string;
+  activa?: boolean;
+}
+
+export interface UpdateCategoriaDto {
+  nombre?: string;
+  descripcion?: string;
+  activa?: boolean;
+}
+
+// Tipos para TipoEmpleado
+export interface TipoEmpleado extends BaseEntity {
+  nombre: string;
+  descripcion?: string;
+  activo: boolean;
+  creadoEn: Date;
+}
+
+export interface CreateTipoEmpleadoDto {
+  nombre: string;
+  descripcion?: string;
+  activo?: boolean;
+}
+
+export interface UpdateTipoEmpleadoDto {
+  nombre?: string;
+  descripcion?: string;
+  activo?: boolean;
+}
+
+// Tipos para Empleado
+export interface Empleado extends BaseEntity {
+  nombre: string;
+  apellido: string;
+  dni: string;
+  tipoEmpleadoId: number;
+  sexo: 'masculino' | 'femenino' | 'otro';
+  telefono?: string;
+  email?: string;
+  direccion?: string;
+  fechaIngreso: Date;
+  imagen?: string;
+  activo: boolean;
+  creadoEn: Date;
+  actualizadoEn: Date;
+  tipoEmpleado?: TipoEmpleado;
+}
+
+export interface CreateEmpleadoDto {
+  nombre: string;
+  apellido: string;
+  dni: string;
+  tipoEmpleadoId: number | string;
+  sexo: 'masculino' | 'femenino' | 'otro';
+  telefono?: string;
+  email?: string;
+  direccion?: string;
+  fechaIngreso: Date;
+  imagen?: string;
+  activo?: boolean;
+}
+
+export interface UpdateEmpleadoDto {
+  nombre?: string;
+  apellido?: string;
+  dni?: string;
+  tipoEmpleadoId?: number | string;
+  sexo?: 'masculino' | 'femenino' | 'otro';
+  telefono?: string;
+  email?: string;
+  direccion?: string;
+  fechaIngreso?: Date;
+  imagen?: string;
+  activo?: boolean;
+}
+
 // Tipos para imágenes de equipos
 export interface EquipoImagen {
   descripcion: string;
@@ -133,31 +219,39 @@ export interface EquipoImagen {
   destacada: boolean;
 }
 
-// Tipos para Equipo
+// Tipos para Equipo (actualizados)
 export interface Equipo extends BaseEntity {
   patente: string;
   modelo: string;
+  categoriaId: number;
   capacidadKg: number;
   estado: 'disponible' | 'mantenimiento' | 'ocupado';
   fechaUltimoMantenimiento?: Date;
+  conductorId?: number;
   imagenes?: EquipoImagen[];
+  categoria?: Categoria;
+  conductor?: Empleado;
 }
 
 export interface CreateEquipoDto {
   patente: string;
   modelo: string;
+  categoriaId: number;
   capacidadKg: number;
   estado?: 'disponible' | 'mantenimiento' | 'ocupado';
   fechaUltimoMantenimiento?: Date;
+  conductorId?: number;
   imagenes?: EquipoImagen[];
 }
 
 export interface UpdateEquipoDto {
   patente?: string;
   modelo?: string;
+  categoriaId?: number;
   capacidadKg?: number;
   estado?: 'disponible' | 'mantenimiento' | 'ocupado';
   fechaUltimoMantenimiento?: Date;
+  conductorId?: number;
   imagenes?: EquipoImagen[];
 }
 

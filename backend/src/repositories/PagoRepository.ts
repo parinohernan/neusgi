@@ -33,7 +33,7 @@ export class PagoRepository implements IBaseRepository<Pago, CreatePagoDto, Upda
       if (montoMin !== undefined) where.monto.gte = montoMin;
       if (montoMax !== undefined) where.monto.lte = montoMax;
     }
-
+    
     // Filtros de fecha de pago
     if (fechaPagoDesde || fechaPagoHasta) {
       where.fechaPago = {};
@@ -377,7 +377,7 @@ export class PagoRepository implements IBaseRepository<Pago, CreatePagoDto, Upda
 
   async update(id: number, data: UpdatePagoDto): Promise<Pago | null> {
     const updateData: any = {};
-    
+
     if (data.facturaId !== undefined) updateData.facturaId = data.facturaId;
     if (data.monto !== undefined) updateData.monto = data.monto;
     if (data.fechaPago !== undefined) updateData.fechaPago = data.fechaPago;

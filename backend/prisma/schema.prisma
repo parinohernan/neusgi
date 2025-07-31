@@ -73,14 +73,61 @@ model Contacto {
   @@map("contactos")
 }
 
+model Categoria {
+  id          Int      @id @default(autoincrement())
+  nombre      String   @unique @db.VarChar(50)
+  descripcion String?  @db.Text
+  activa      Boolean  @default(true)
+  creadoEn    DateTime @default(now()) @map("creado_en")
+  equipos     Equipo[]
+
+  @@map("categorias")
+}
+
+model TipoEmpleado {
+  id          Int        @id @default(autoincrement())
+  nombre      String     @unique @db.VarChar(50)
+  descripcion String?    @db.Text
+  activo      Boolean    @default(true)
+  creadoEn    DateTime   @default(now()) @map("creado_en")
+  empleados   Empleado[]
+
+  @@map("tipos_empleado")
+}
+
+model Empleado {
+  id              Int           @id @default(autoincrement())
+  nombre          String        @db.VarChar(100)
+  apellido        String        @db.VarChar(100)
+  dni             String        @unique @db.VarChar(20)
+  tipoEmpleadoId  Int           @map("tipo_empleado_id")
+  sexo            Sexo          @default(masculino)
+  telefono        String?       @db.VarChar(20)
+  email           String?       @db.VarChar(100)
+  direccion       String?       @db.Text
+  fechaIngreso    DateTime      @map("fecha_ingreso")
+  imagen          String?       @db.VarChar(255)
+  activo          Boolean       @default(true)
+  creadoEn        DateTime      @default(now()) @map("creado_en")
+  actualizadoEn   DateTime      @updatedAt @map("actualizado_en")
+  tipoEmpleado    TipoEmpleado  @relation(fields: [tipoEmpleadoId], references: [id])
+  equipos         Equipo[]
+
+  @@map("empleados")
+}
+
 model Equipo {
   id                       Int                 @id @default(autoincrement())
   patente                  String              @unique @db.VarChar(20)
   modelo                   String              @db.VarChar(50)
+  categoriaId              Int                 @map("categoria_id")
   capacidadKg              Decimal             @map("capacidad_kg") @db.Decimal(10, 2)
   estado                   EstadoEquipo        @default(disponible)
   fechaUltimoMantenimiento DateTime?           @map("fecha_ultimo_mantenimiento")
+  conductorId              Int?                @map("conductor_id")
   imagenes                 String?             @db.Text
+  categoria                Categoria           @relation(fields: [categoriaId], references: [id])
+  conductor                Empleado?           @relation(fields: [conductorId], references: [id])
   presupuestos             PresupuestoEquipo[]
 
   @@map("equipos")
@@ -346,4 +393,10 @@ enum EstadoCuentaCorriente {
   activo
   cancelado
   vencido
+}
+
+enum Sexo {
+  masculino
+  femenino
+  otro
 }

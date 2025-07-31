@@ -7,6 +7,8 @@ import rateLimit from 'express-rate-limit';
 import { createUsuarioRoutes } from '@/routes/usuarios';
 import { createAuthRoutes } from '@/routes/auth';
 import { createEquipoRoutes } from '@/routes/equipos';
+import { createCategoriaRoutes } from '@/routes/categorias';
+import { createEmpleadoRoutes } from '@/routes/empleados';
 import clientesRoutes from '@/routes/clientes';
 import presupuestosRoutes from '@/routes/presupuestos';
 import ordenesCompraRoutes from '@/routes/ordenes-compra';
@@ -19,11 +21,17 @@ import cuentaCorrienteRoutes from '@/routes/cuenta-corriente';
 import { UsuarioController } from '@/controllers/UsuarioController';
 import { AuthController } from '@/controllers/AuthController';
 import { EquipoController } from '@/controllers/EquipoController';
+import { CategoriaController } from '@/controllers/CategoriaController';
+import { EmpleadoController } from '@/controllers/EmpleadoController';
 import { UsuarioService } from '@/services/UsuarioService';
 import { AuthService } from '@/services/AuthService';
 import { EquipoService } from '@/services/EquipoService';
+import { CategoriaService } from '@/services/CategoriaService';
+import { EmpleadoService } from '@/services/EmpleadoService';
 import { UsuarioRepository } from '@/repositories/UsuarioRepository';
 import { EquipoRepository } from '@/repositories/EquipoRepository';
+import { CategoriaRepository } from '@/repositories/CategoriaRepository';
+import { EmpleadoRepository } from '@/repositories/EmpleadoRepository';
 import Database from '@/config/database';
 
 export class App {
@@ -111,21 +119,29 @@ export class App {
     // Repositorios
     const usuarioRepository = new UsuarioRepository(prisma);
     const equipoRepository = new EquipoRepository(prisma);
+    const categoriaRepository = new CategoriaRepository(prisma);
+    const empleadoRepository = new EmpleadoRepository(prisma);
     
     // Servicios
     const usuarioService = new UsuarioService(usuarioRepository);
     const authService = new AuthService(usuarioService);
     const equipoService = new EquipoService(equipoRepository);
+    const categoriaService = new CategoriaService(categoriaRepository);
+    const empleadoService = new EmpleadoService(empleadoRepository);
     
     // Controladores
     const usuarioController = new UsuarioController(usuarioService);
     const authController = new AuthController(authService);
     const equipoController = new EquipoController(equipoService);
+    const categoriaController = new CategoriaController(categoriaService);
+    const empleadoController = new EmpleadoController(empleadoService);
 
     // Rutas
     router.use('/auth', createAuthRoutes(authController));
     router.use('/usuarios', createUsuarioRoutes(usuarioController));
     router.use('/equipos', createEquipoRoutes(equipoController));
+    router.use('/categorias', createCategoriaRoutes(categoriaController));
+    router.use('/empleados', createEmpleadoRoutes(empleadoController));
     router.use('/clientes', clientesRoutes);
     router.use('/presupuestos', presupuestosRoutes);
     router.use('/ordenes-compra', ordenesCompraRoutes);
@@ -146,6 +162,8 @@ export class App {
           auth: '/api/v1/auth',
           usuarios: '/api/v1/usuarios',
           equipos: '/api/v1/equipos',
+          categorias: '/api/v1/categorias',
+          empleados: '/api/v1/empleados',
           clientes: '/api/v1/clientes',
           presupuestos: '/api/v1/presupuestos',
           ordenesCompra: '/api/v1/ordenes-compra',

@@ -99,23 +99,68 @@ async function main() {
     }
   }
 
+  // Crear categorías por defecto
+  const categorias = [
+    { nombre: 'Batea', descripcion: 'Equipos tipo batea para transporte de materiales' },
+    { nombre: 'Volcador', descripcion: 'Equipos tipo volcador para descarga de materiales' },
+    { nombre: 'Regador', descripcion: 'Equipos tipo regador para riego y limpieza' },
+  ];
+
+  for (const categoriaData of categorias) {
+    const existingCategoria = await prisma.categoria.findUnique({
+      where: { nombre: categoriaData.nombre }
+    });
+
+    if (!existingCategoria) {
+      const categoria = await prisma.categoria.create({
+        data: categoriaData
+      });
+      console.log('✅ Categoría creada:', categoria.nombre);
+    }
+  }
+
+  // Crear tipos de empleado por defecto
+  const tiposEmpleado = [
+    { nombre: 'Conductor', descripcion: 'Operadores de equipos y vehículos' },
+    { nombre: 'Mecánico', descripcion: 'Personal de mantenimiento y reparación' },
+    { nombre: 'Administración', descripcion: 'Personal administrativo' },
+    { nombre: 'Supervisor', descripcion: 'Supervisores de obra y equipos' },
+    { nombre: 'Otros', descripcion: 'Otros tipos de empleados' },
+  ];
+
+  for (const tipoData of tiposEmpleado) {
+    const existingTipo = await prisma.tipoEmpleado.findUnique({
+      where: { nombre: tipoData.nombre }
+    });
+
+    if (!existingTipo) {
+      const tipo = await prisma.tipoEmpleado.create({
+        data: tipoData
+      });
+      console.log('✅ Tipo de empleado creado:', tipo.nombre);
+    }
+  }
+
   // Crear algunos equipos de ejemplo
   const equipos = [
     {
       patente: 'ABC123',
       modelo: 'Mercedes-Benz Actros 1844',
+      categoriaId: 1, // Batea
       capacidadKg: 18000.00,
       estado: 'disponible' as const
     },
     {
       patente: 'XYZ789',
       modelo: 'Scania R420',
+      categoriaId: 2, // Volcador
       capacidadKg: 20000.00,
       estado: 'disponible' as const
     },
     {
       patente: 'DEF456',
       modelo: 'Volvo FH16 750',
+      categoriaId: 1, // Batea
       capacidadKg: 25000.00,
       estado: 'disponible' as const
     }

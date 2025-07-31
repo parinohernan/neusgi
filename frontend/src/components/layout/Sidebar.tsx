@@ -1,5 +1,5 @@
 import React from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import { 
   BarChart3, 
   FileText, 
@@ -11,6 +11,7 @@ import {
   Calendar,
   MapPin,
   Settings,
+  UserCheck,
   LogOut
 } from 'lucide-react';
 import { useAuth } from '../../stores/authStore';
@@ -59,6 +60,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
       active: location.pathname.startsWith('/equipos')
     },
     { 
+      path: '/empleados', 
+      label: 'Empleados', 
+      icon: UserCheck,
+      active: location.pathname.startsWith('/empleados')
+    },
+    { 
       path: '/partes-diario', 
       label: 'Partes Diarios', 
       icon: Calendar,
@@ -102,13 +109,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
           const IconComponent = item.icon;
           return (
             <div key={item.path} className="sidebar-item">
-              <a 
-                href={item.path} 
+              <Link 
+                to={item.path} 
                 className={`sidebar-link ${item.active ? 'is-active' : ''}`}
               >
                 <IconComponent className="sidebar-icon" />
                 {item.label}
-              </a>
+              </Link>
             </div>
           );
         })}

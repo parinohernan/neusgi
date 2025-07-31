@@ -81,7 +81,7 @@ export const useNotifications = () => {
   }, [showNotification]);
 
   const error = useCallback((message: string, options?: Omit<NotificationOptions, 'type'>) => {
-    showNotification(message, { ...options, type: 'danger' });
+    showNotification(message, { ...options, type: 'error' });
   }, [showNotification]);
 
   const warning = useCallback((message: string, options?: Omit<NotificationOptions, 'type'>) => {

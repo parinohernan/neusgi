@@ -266,7 +266,7 @@ export class ParteDiarioRepository implements IBaseRepository<ParteDiario, Creat
 
   async update(id: number, data: UpdateParteDiarioDto): Promise<ParteDiario | null> {
     const updateData: any = {};
-    
+
     if (data.ordenCompraId !== undefined) updateData.ordenCompraId = data.ordenCompraId;
     if (data.fecha !== undefined) updateData.fecha = data.fecha;
     if (data.kmInicial !== undefined) updateData.kmInicial = data.kmInicial;

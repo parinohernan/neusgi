@@ -26,6 +26,8 @@ export class EquipoRepository implements IBaseRepository<Equipo, CreateEquipoDto
       ...prismaEquipo,
       capacidadKg: Number(prismaEquipo.capacidadKg),
       imagenes,
+      categoria: prismaEquipo.categoria,
+      conductor: prismaEquipo.conductor,
     };
   }
 
@@ -43,14 +45,13 @@ export class EquipoRepository implements IBaseRepository<Equipo, CreateEquipoDto
         skip,
         take: limit,
         orderBy: { [sortBy]: sortOrder },
-        select: {
-          id: true,
-          patente: true,
-          modelo: true,
-          capacidadKg: true,
-          estado: true,
-          fechaUltimoMantenimiento: true,
-          imagenes: true,
+        include: {
+          categoria: true,
+          conductor: {
+            include: {
+              tipoEmpleado: true
+            }
+          }
         },
       }),
       this.prisma.equipo.count({ where }),
@@ -68,14 +69,13 @@ export class EquipoRepository implements IBaseRepository<Equipo, CreateEquipoDto
   async findById(id: number): Promise<Equipo | null> {
     const equipo = await this.prisma.equipo.findUnique({
       where: { id },
-      select: {
-        id: true,
-        patente: true,
-        modelo: true,
-        capacidadKg: true,
-        estado: true,
-        fechaUltimoMantenimiento: true,
-        imagenes: true,
+      include: {
+        categoria: true,
+        conductor: {
+          include: {
+            tipoEmpleado: true
+          }
+        }
       },
     });
 
@@ -85,14 +85,13 @@ export class EquipoRepository implements IBaseRepository<Equipo, CreateEquipoDto
   async findByPatente(patente: string): Promise<Equipo | null> {
     const equipo = await this.prisma.equipo.findUnique({
       where: { patente },
-      select: {
-        id: true,
-        patente: true,
-        modelo: true,
-        capacidadKg: true,
-        estado: true,
-        fechaUltimoMantenimiento: true,
-        imagenes: true,
+      include: {
+        categoria: true,
+        conductor: {
+          include: {
+            tipoEmpleado: true
+          }
+        }
       },
     });
 
@@ -102,14 +101,13 @@ export class EquipoRepository implements IBaseRepository<Equipo, CreateEquipoDto
   async findDisponibles(): Promise<Equipo[]> {
     const equipos = await this.prisma.equipo.findMany({
       where: { estado: 'disponible' },
-      select: {
-        id: true,
-        patente: true,
-        modelo: true,
-        capacidadKg: true,
-        estado: true,
-        fechaUltimoMantenimiento: true,
-        imagenes: true,
+      include: {
+        categoria: true,
+        conductor: {
+          include: {
+            tipoEmpleado: true
+          }
+        }
       },
     });
 
@@ -120,6 +118,7 @@ export class EquipoRepository implements IBaseRepository<Equipo, CreateEquipoDto
     const createData: any = {
       patente: data.patente,
       modelo: data.modelo,
+      categoriaId: data.categoriaId,
       capacidadKg: data.capacidadKg,
       estado: data.estado || 'disponible',
     };
@@ -128,20 +127,23 @@ export class EquipoRepository implements IBaseRepository<Equipo, CreateEquipoDto
       createData.fechaUltimoMantenimiento = data.fechaUltimoMantenimiento;
     }
 
+    if (data.conductorId) {
+      createData.conductorId = data.conductorId;
+    }
+
     if (data.imagenes && data.imagenes.length > 0) {
       createData.imagenes = JSON.stringify(data.imagenes);
     }
 
     const equipo = await this.prisma.equipo.create({
       data: createData,
-      select: {
-        id: true,
-        patente: true,
-        modelo: true,
-        capacidadKg: true,
-        estado: true,
-        fechaUltimoMantenimiento: true,
-        imagenes: true,
+      include: {
+        categoria: true,
+        conductor: {
+          include: {
+            tipoEmpleado: true
+          }
+        }
       },
     });
 
@@ -153,22 +155,23 @@ export class EquipoRepository implements IBaseRepository<Equipo, CreateEquipoDto
 
     if (data.patente) updateData.patente = data.patente;
     if (data.modelo) updateData.modelo = data.modelo;
+    if (data.categoriaId) updateData.categoriaId = data.categoriaId;
     if (data.capacidadKg) updateData.capacidadKg = data.capacidadKg;
     if (data.estado) updateData.estado = data.estado;
     if (data.fechaUltimoMantenimiento) updateData.fechaUltimoMantenimiento = data.fechaUltimoMantenimiento;
+    if (data.conductorId !== undefined) updateData.conductorId = data.conductorId;
     if (data.imagenes) updateData.imagenes = JSON.stringify(data.imagenes);
 
     const equipo = await this.prisma.equipo.update({
       where: { id },
       data: updateData,
-      select: {
-        id: true,
-        patente: true,
-        modelo: true,
-        capacidadKg: true,
-        estado: true,
-        fechaUltimoMantenimiento: true,
-        imagenes: true,
+      include: {
+        categoria: true,
+        conductor: {
+          include: {
+            tipoEmpleado: true
+          }
+        }
       },
     });
 

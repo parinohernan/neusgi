@@ -17,6 +17,8 @@ import { PresupuestosPage } from '../pages/presupuestos/PresupuestosPage';
 import { NuevoPresupuestoPage } from '../pages/presupuestos/NuevoPresupuestoPage';
 import { EditarPresupuestoPage } from '../pages/presupuestos/EditarPresupuestoPage';
 import { DetallePresupuestoPage } from '../pages/presupuestos/DetallePresupuestoPage';
+import { EmpleadosPage } from '../pages/empleados/EmpleadosPage';
+import { NuevoEmpleadoPage } from '../pages/empleados/NuevoEmpleadoPage';
 
 // ----------------------------------------------------------------------------
 // COMPONENTE PRINCIPAL DE RUTAS
@@ -130,6 +132,34 @@ export const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <div>Página de Equipos (Pendiente)</div>
+          </ProtectedRoute>
+        }
+      />
+      
+      {/* Rutas de empleados */}
+      <Route
+        path="/empleados/nuevo"
+        element={
+          <ProtectedRoute>
+            <NuevoEmpleadoPage />
+          </ProtectedRoute>
+        }
+      />
+      
+      <Route
+        path="/empleados"
+        element={
+          <ProtectedRoute>
+            <EmpleadosPage />
+          </ProtectedRoute>
+        }
+      />
+      
+      <Route
+        path="/empleados/*"
+        element={
+          <ProtectedRoute>
+            <div>Página de Empleados (Pendiente)</div>
           </ProtectedRoute>
         }
       />

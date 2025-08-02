@@ -256,6 +256,38 @@ export interface UpdateEquipoDto {
 }
 
 // Tipos para Presupuesto
+export interface PresupuestoItem extends BaseEntity {
+  presupuestoId: number;
+  numero: number;
+  descripcion: string;
+  cantidad: number;
+  unidad: string;
+  precioUnitario: number;
+  precioTotal: number;
+  observaciones?: string;
+}
+
+export interface CreatePresupuestoItemDto {
+  presupuestoId: number;
+  numero: number;
+  descripcion: string;
+  cantidad: number;
+  unidad: string;
+  precioUnitario: number;
+  precioTotal: number;
+  observaciones?: string;
+}
+
+export interface UpdatePresupuestoItemDto {
+  numero?: number;
+  descripcion?: string;
+  cantidad?: number;
+  unidad?: string;
+  precioUnitario?: number;
+  precioTotal?: number;
+  observaciones?: string;
+}
+
 export interface Presupuesto extends BaseEntity {
   clienteId: number;
   contactoId: number;
@@ -273,6 +305,7 @@ export interface Presupuesto extends BaseEntity {
     estado: 'disponible' | 'mantenimiento' | 'ocupado';
     imagenes?: EquipoImagen[];
   }[];
+  items?: PresupuestoItem[];
 }
 
 // Tipo extendido para Presupuesto con relaciones incluidas
@@ -316,6 +349,7 @@ export interface CreatePresupuestoDto {
   validoHasta: Date;
   estado?: 'pendiente' | 'aceptado' | 'rechazado';
   equipoIds?: number[];
+  items?: CreatePresupuestoItemDto[];
 }
 
 export interface UpdatePresupuestoDto {
@@ -327,6 +361,7 @@ export interface UpdatePresupuestoDto {
   validoHasta?: Date;
   estado?: 'pendiente' | 'aceptado' | 'rechazado';
   equipoIds?: number[];
+  items?: CreatePresupuestoItemDto[];
 }
 
 // Tipos para OrdenCompra

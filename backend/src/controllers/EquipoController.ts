@@ -84,6 +84,7 @@ export class EquipoController {
   // POST /equipos
   async create(req: Request, res: Response): Promise<void> {
     try {
+      console.log('Datos recibidos:', JSON.stringify(req.body, null, 2));
       const createData: CreateEquipoDto = req.body;
       
       const equipo = await this.equipoService.create(createData);
@@ -96,6 +97,7 @@ export class EquipoController {
 
       res.status(201).json(response);
     } catch (error) {
+      console.error('Error al crear equipo:', error);
       const response: ApiResponse<null> = {
         success: false,
         error: error instanceof Error ? error.message : 'Error interno del servidor',

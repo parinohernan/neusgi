@@ -148,6 +148,7 @@ model Presupuesto {
   contacto    Contacto            @relation(fields: [contactoId], references: [id])
   usuario     Usuario             @relation(fields: [usuarioId], references: [id])
   equipos     PresupuestoEquipo[]
+  items       PresupuestoItem[]
 
   @@index([clienteId], map: "presupuestos_cliente_id_fkey")
   @@index([contactoId], map: "presupuestos_contacto_id_fkey")
@@ -165,6 +166,22 @@ model PresupuestoEquipo {
   @@index([equipoId], map: "presupuestos_equipos_equipoId_fkey")
   @@index([presupuestoId], map: "presupuestos_equipos_presupuestoId_fkey")
   @@map("presupuestos_equipos")
+}
+
+model PresupuestoItem {
+  id              Int         @id @default(autoincrement())
+  presupuestoId   Int         @map("presupuesto_id")
+  numero          Int         // Número de orden del item
+  descripcion     String      @db.Text
+  cantidad        Decimal     @db.Decimal(10, 2)
+  unidad          String      @db.VarChar(20) // días, horas, km, etc.
+  precioUnitario  Decimal     @map("precio_unitario") @db.Decimal(12, 2)
+  precioTotal     Decimal     @map("precio_total") @db.Decimal(12, 2)
+  observaciones   String?     @db.Text
+  presupuesto     Presupuesto @relation(fields: [presupuestoId], references: [id])
+
+  @@index([presupuestoId], map: "presupuestos_items_presupuesto_id_fkey")
+  @@map("presupuestos_items")
 }
 
 model OrdenCompra {

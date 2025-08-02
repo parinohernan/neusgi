@@ -18,21 +18,18 @@ export class PresupuestoService implements IBaseService<Presupuesto, CreatePresu
       'number.positive': 'El ID del cliente debe ser positivo',
       'any.required': 'El ID del cliente es requerido',
     }),
-    equipoId: Joi.number().integer().positive().required().messages({
-      'number.base': 'El ID del equipo debe ser un número',
-      'number.integer': 'El ID del equipo debe ser un número entero',
-      'number.positive': 'El ID del equipo debe ser positivo',
-      'any.required': 'El ID del equipo es requerido',
+    equipoIds: Joi.array().items(Joi.number().integer().positive()).min(1).required().messages({
+      'array.min': 'Debe seleccionar al menos un equipo',
+      'any.required': 'Los equipos son requeridos',
     }),
-    usuarioId: Joi.number().integer().positive().required().messages({
+    usuarioId: Joi.number().integer().positive().optional().messages({
       'number.base': 'El ID del usuario debe ser un número',
       'number.integer': 'El ID del usuario debe ser un número entero',
       'number.positive': 'El ID del usuario debe ser positivo',
-      'any.required': 'El ID del usuario es requerido',
     }),
-    descripcion: Joi.string().min(10).max(500).required().messages({
+    descripcion: Joi.string().min(10).max(1000).required().messages({
       'string.min': 'La descripción debe tener al menos 10 caracteres',
-      'string.max': 'La descripción no puede exceder 500 caracteres',
+      'string.max': 'La descripción no puede exceder 1000 caracteres',
       'any.required': 'La descripción es requerida',
     }),
     costo: Joi.number().positive().precision(2).required().messages({
@@ -49,6 +46,19 @@ export class PresupuestoService implements IBaseService<Presupuesto, CreatePresu
     estado: Joi.string().valid('pendiente', 'aceptado', 'rechazado').optional().messages({
       'string.valid': 'El estado debe ser: pendiente, aceptado o rechazado',
     }),
+    items: Joi.array().items(Joi.object({
+      id: Joi.number().integer().optional(), // Permitir id para actualizaciones
+      presupuestoId: Joi.number().integer().optional(),
+      numero: Joi.number().integer().positive().required(),
+      descripcion: Joi.string().required(),
+      cantidad: Joi.number().min(0).required(),
+      unidad: Joi.string().required(),
+      precioUnitario: Joi.number().min(0).required(),
+      precioTotal: Joi.number().min(0).required(),
+      observaciones: Joi.string().optional().allow('', null), // Permitir null
+    })).optional().messages({
+      'array.base': 'Los items deben ser un array',
+    }),
   });
 
   private updateSchema = Joi.object({
@@ -57,19 +67,18 @@ export class PresupuestoService implements IBaseService<Presupuesto, CreatePresu
       'number.integer': 'El ID del cliente debe ser un número entero',
       'number.positive': 'El ID del cliente debe ser positivo',
     }),
-    equipoId: Joi.number().integer().positive().optional().messages({
-      'number.base': 'El ID del equipo debe ser un número',
-      'number.integer': 'El ID del equipo debe ser un número entero',
-      'number.positive': 'El ID del equipo debe ser positivo',
+    equipoIds: Joi.array().items(Joi.number().integer().positive()).min(1).optional().allow(null).messages({
+      'array.min': 'Debe seleccionar al menos un equipo',
+      'array.base': 'Los equipos deben ser un array',
     }),
     usuarioId: Joi.number().integer().positive().optional().messages({
       'number.base': 'El ID del usuario debe ser un número',
       'number.integer': 'El ID del usuario debe ser un número entero',
       'number.positive': 'El ID del usuario debe ser positivo',
     }),
-    descripcion: Joi.string().min(10).max(500).optional().messages({
+    descripcion: Joi.string().min(10).max(1000).optional().messages({
       'string.min': 'La descripción debe tener al menos 10 caracteres',
-      'string.max': 'La descripción no puede exceder 500 caracteres',
+      'string.max': 'La descripción no puede exceder 1000 caracteres',
     }),
     costo: Joi.number().positive().precision(2).optional().messages({
       'number.base': 'El costo debe ser un número',
@@ -81,6 +90,19 @@ export class PresupuestoService implements IBaseService<Presupuesto, CreatePresu
     }),
     estado: Joi.string().valid('pendiente', 'aceptado', 'rechazado').optional().messages({
       'string.valid': 'El estado debe ser: pendiente, aceptado o rechazado',
+    }),
+    items: Joi.array().items(Joi.object({
+      id: Joi.number().integer().optional(), // Permitir id para actualizaciones
+      presupuestoId: Joi.number().integer().optional(),
+      numero: Joi.number().integer().positive().required(),
+      descripcion: Joi.string().required(),
+      cantidad: Joi.number().min(0).required(),
+      unidad: Joi.string().required(),
+      precioUnitario: Joi.number().min(0).required(),
+      precioTotal: Joi.number().min(0).required(),
+      observaciones: Joi.string().optional().allow('', null), // Permitir null
+    })).optional().messages({
+      'array.base': 'Los items deben ser un array',
     }),
   });
 
@@ -115,15 +137,26 @@ export class PresupuestoService implements IBaseService<Presupuesto, CreatePresu
   }
 
   async update(id: number, data: UpdatePresupuestoDto): Promise<Presupuesto | null> {
+    console.log('=== DEBUG PRESUPUESTO SERVICE UPDATE ===');
+    console.log('ID:', id);
+    console.log('Data received:', JSON.stringify(data, null, 2));
+    
     if (!id || isNaN(id)) {
       throw new Error('ID de presupuesto inválido');
     }
 
     // Validar datos
+    console.log('=== DEBUG VALIDATION ===');
     const validation = this.validateUpdate(data);
+    console.log('Validation result:', validation);
+    
     if (!validation.isValid) {
+      console.log('=== DEBUG VALIDATION FAILED ===');
+      console.log('Validation errors:', validation.errors);
       throw new Error(`Datos inválidos: ${validation.errors.map((e: any) => e.message).join(', ')}`);
     }
+
+    console.log('=== DEBUG VALIDATION PASSED ===');
 
     // Verificar si el presupuesto existe
     const presupuestoExistente = await this.presupuestoRepository.findById(id);
@@ -146,7 +179,33 @@ export class PresupuestoService implements IBaseService<Presupuesto, CreatePresu
       }
     }
 
-    return this.presupuestoRepository.update(id, data);
+    console.log('=== DEBUG CALLING REPOSITORY UPDATE ===');
+    // Actualizar el presupuesto
+    await this.presupuestoRepository.update(id, data);
+
+    // Si se proporcionaron items, actualizarlos
+    if (data.items && Array.isArray(data.items)) {
+      console.log('=== DEBUG UPDATING ITEMS ===');
+      console.log('Items to update:', data.items);
+      
+      // Eliminar items existentes
+      await this.presupuestoRepository.deleteItemsByPresupuestoId(id);
+      
+      // Crear nuevos items
+      if (data.items.length > 0) {
+        const itemsToCreate = data.items.map(item => ({
+          ...item,
+          presupuestoId: id,
+          precioTotal: item.cantidad * item.precioUnitario
+        }));
+        
+        await this.presupuestoRepository.createItems(itemsToCreate);
+      }
+    }
+
+    console.log('=== DEBUG RETURNING UPDATED PRESUPUESTO ===');
+    // Retornar el presupuesto actualizado con items
+    return this.presupuestoRepository.findById(id);
   }
 
   async delete(id: number): Promise<boolean> {

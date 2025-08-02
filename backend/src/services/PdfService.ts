@@ -3,6 +3,15 @@ import { PresupuestoWithRelations, Empresa } from '@/types';
 
 export class PdfService {
   private static async generateHtml(presupuesto: PresupuestoWithRelations, empresa?: Empresa): Promise<string> {
+    console.log('=== DEBUG PDF GENERATION ===');
+    console.log('Presupuesto ID:', presupuesto.id);
+    console.log('Presupuesto descripcion:', presupuesto.descripcion);
+    console.log('Presupuesto descripcion length:', presupuesto.descripcion?.length || 0);
+    console.log('Presupuesto descripcion is empty:', !presupuesto.descripcion || presupuesto.descripcion.trim() === '');
+    console.log('Items count:', presupuesto.items?.length || 0);
+    console.log('Items:', JSON.stringify(presupuesto.items, null, 2));
+    console.log('Costo:', presupuesto.costo);
+    
     const costoFormateado = new Intl.NumberFormat('es-AR', {
       style: 'currency',
       currency: 'ARS'
@@ -156,6 +165,12 @@ export class PdfService {
             font-size: 12pt;
           }
           
+          .service-details {
+            margin: 15px 0;
+            line-height: 1.6;
+            font-size: 12pt;
+          }
+          
           .service-list {
             margin-left: 36px;
           }
@@ -247,6 +262,7 @@ export class PdfService {
             </td>
             <td rowspan="2" class="title-cell">
               <div class="title">PRESUPUESTO</div>
+              <div style="font-size: 8pt; color: #666; margin-top: 2px;">V.0.1</div>
             </td>
             <td rowspan="2" class="form-cell">
               PG-20<br>FORM.03
@@ -279,15 +295,31 @@ export class PdfService {
         
         <div class="service-description">
           <p>Por medio de la presente cotizamos los siguientes servicios de acuerdo con lo solicitado:</p>
-          <ol class="service-list">
-            <li>Alquiler de equipo ${presupuesto.equipos?.[0]?.modelo || 'N/A'} - ${presupuesto.equipos?.[0]?.patente || 'N/A'}
-              <ul>
-                <li>El equipo dispone de aire acondicionado, calefacción central y butacas reclinables.</li>
-                <li>Elementos de seguridad y todo los reglamentario correspondiente a ley de transporte.</li>
-              </ul>
-            </li>
-            <li>Jornada laboral: lunes a viernes, Horario laboral logístico: de 07:00 a 18:00 hs</li>
-          </ol>
+          <div class="service-details">
+            ${(() => {
+              console.log('=== DEBUG SERVICE DESCRIPTION ===');
+              console.log('presupuesto.descripcion:', presupuesto.descripcion);
+              console.log('presupuesto.descripcion type:', typeof presupuesto.descripcion);
+              
+              if (presupuesto.descripcion && presupuesto.descripcion.trim() !== '') {
+                console.log('Using custom description');
+                return presupuesto.descripcion.replace(/\n/g, '<br>');
+              } else {
+                console.log('Using default description');
+                return `
+                <ol class="service-list">
+                  <li>Alquiler de equipo ${presupuesto.equipos?.[0]?.modelo || 'N/A'} - ${presupuesto.equipos?.[0]?.patente || 'N/A'}
+                    <ul>
+                      <li>El equipo dispone de aire acondicionado, calefacción central y butacas reclinables.</li>
+                      <li>Elementos de seguridad y todo los reglamentario correspondiente a ley de transporte.</li>
+                    </ul>
+                  </li>
+                  <li>Jornada laboral: lunes a viernes, Horario laboral logístico: de 07:00 a 18:00 hs</li>
+                </ol>
+                `;
+              }
+            })()}
+          </div>
         </div>
         
         <div class="equipment-section">
@@ -335,33 +367,73 @@ export class PdfService {
             <td style="width: 202px;"><strong>Descripción</strong></td>
             <td style="width: 47px;"><strong>Cantidad</strong></td>
             <td style="width: 25px;"><strong>UNI</strong></td>
-            <td style="width: 96px;"><strong>Precio Unitario / día</strong></td>
-            <td style="width: 110px;"><strong>Precio Total mensual</strong></td>
+            <td style="width: 96px;"><strong>Precio Unitario</strong></td>
+            <td style="width: 110px;"><strong>Precio Total</strong></td>
           </tr>
-          <tr style="height: 24pt;">
-            <td><strong>1</strong></td>
-            <td>ALQUILER MENSUAL EQUIPO y gas oil (${empresaData.ciudad} - Puesto Hez)</td>
-            <td><strong>Mensual</strong></td>
-            <td><strong>1</strong></td>
-            <td><strong>$${costoFormateado.replace('$', '').replace(',', '.')}</strong></td>
-            <td><strong>$${costoFormateado.replace('$', '').replace(',', '.')} + iva</strong></td>
-          </tr>
-          <tr style="height: 19pt;">
-            <td><strong>2</strong></td>
-            <td>KM. PROYECTADO 60 km promedio, lunes a viernes</td>
-            <td></td>
-            <td></td>
-            <td><strong>$</strong></td>
-            <td><strong>$ -</strong></td>
-          </tr>
-          <tr style="height: 13pt;">
-            <td><strong>3</strong></td>
-            <td>Costo por excedente de kilometraje</td>
-            <td><strong>KM</strong></td>
-            <td></td>
-            <td><strong>$ 821,04</strong></td>
-            <td><strong>$</strong></td>
-          </tr>
+          ${presupuesto.items && presupuesto.items.length > 0 ? 
+            presupuesto.items.map(item => {
+              const precioUnitarioFormateado = new Intl.NumberFormat('es-AR', {
+                style: 'currency',
+                currency: 'ARS'
+              }).format(Number(item.precioUnitario));
+              
+              const precioTotalFormateado = new Intl.NumberFormat('es-AR', {
+                style: 'currency',
+                currency: 'ARS'
+              }).format(Number(item.precioTotal));
+              
+              return `
+                <tr style="height: 24pt;">
+                  <td><strong>${item.numero}</strong></td>
+                  <td>${item.descripcion}</td>
+                  <td><strong>${item.cantidad}</strong></td>
+                  <td><strong>${item.unidad}</strong></td>
+                  <td><strong>${precioUnitarioFormateado}</strong></td>
+                  <td><strong>${precioTotalFormateado}</strong></td>
+                </tr>
+                ${item.observaciones ? `
+                  <tr style="height: 16pt;">
+                    <td></td>
+                    <td colspan="5" style="font-size: 10pt; font-style: italic;">
+                      ${item.observaciones}
+                    </td>
+                  </tr>
+                ` : ''}
+              `;
+            }).join('') : 
+            `
+            <tr style="height: 24pt;">
+              <td><strong>1</strong></td>
+              <td>ALQUILER MENSUAL EQUIPO y gas oil (${empresaData.ciudad} - Puesto Hez)</td>
+              <td><strong>Mensual</strong></td>
+              <td><strong>1</strong></td>
+              <td><strong>$${costoFormateado.replace('$', '').replace(',', '.')}</strong></td>
+              <td><strong>$${costoFormateado.replace('$', '').replace(',', '.')} + iva</strong></td>
+            </tr>
+            <tr style="height: 19pt;">
+              <td><strong>2</strong></td>
+              <td>KM. PROYECTADO 60 km promedio, lunes a viernes</td>
+              <td></td>
+              <td></td>
+              <td><strong>$</strong></td>
+              <td><strong>$ -</strong></td>
+            </tr>
+            <tr style="height: 13pt;">
+              <td><strong>3</strong></td>
+              <td>Costo por excedente de kilometraje</td>
+              <td><strong>KM</strong></td>
+              <td></td>
+              <td><strong>$ 821,04</strong></td>
+              <td><strong>$</strong></td>
+            </tr>
+            `
+          }
+          ${presupuesto.items && presupuesto.items.length > 0 ? `
+            <tr style="height: 20pt; background-color: #f0f0f0;">
+              <td colspan="5" style="text-align: right;"><strong>TOTAL:</strong></td>
+              <td><strong>${costoFormateado} + IVA</strong></td>
+            </tr>
+          ` : ''}
         </table>
         
         <div class="conditions">
@@ -398,6 +470,9 @@ export class PdfService {
   }
 
   static async generatePresupuestoPdf(presupuesto: PresupuestoWithRelations, empresa?: Empresa): Promise<Buffer> {
+    console.log('🚀🚀🚀 GENERANDO PDF - INICIO 🚀🚀🚀');
+    console.log('Presupuesto ID:', presupuesto.id);
+    
     const browser = await puppeteer.launch({
       headless: true,
       args: ['--no-sandbox', '--disable-setuid-sandbox']
@@ -421,6 +496,9 @@ export class PdfService {
           left: '20mm'
         }
       });
+
+      console.log('✅✅✅ PDF GENERADO EXITOSAMENTE ✅✅✅');
+      console.log('Tamaño del PDF:', pdf.length, 'bytes');
 
       return Buffer.from(pdf);
     } finally {

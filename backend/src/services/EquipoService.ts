@@ -19,8 +19,12 @@ export class EquipoService implements IBaseService<Equipo, CreateEquipoDto, Upda
   }
 
   async create(data: CreateEquipoDto): Promise<Equipo> {
+    console.log('EquipoService.create - Datos recibidos:', JSON.stringify(data, null, 2));
+    
     // Validar datos antes de crear
     const validation = this.validateCreate(data);
+    console.log('EquipoService.create - Resultado validación:', validation);
+    
     if (!validation.isValid) {
       throw new Error(`Datos inválidos: ${validation.errors.map(e => e.message).join(', ')}`);
     }
@@ -31,7 +35,11 @@ export class EquipoService implements IBaseService<Equipo, CreateEquipoDto, Upda
       throw new Error('Ya existe un equipo con esa patente');
     }
 
-    return this.equipoRepository.create(data);
+    console.log('EquipoService.create - Llamando al repositorio');
+    const result = await this.equipoRepository.create(data);
+    console.log('EquipoService.create - Resultado del repositorio:', JSON.stringify(result, null, 2));
+    
+    return result;
   }
 
   async update(id: number, data: UpdateEquipoDto): Promise<Equipo | null> {
@@ -85,6 +93,11 @@ export class EquipoService implements IBaseService<Equipo, CreateEquipoDto, Upda
         'string.max': 'El modelo no puede exceder 50 caracteres',
         'any.required': 'El modelo es requerido',
       }),
+      categoriaId: Joi.number().positive().required().messages({
+        'number.base': 'La categoría debe ser un número',
+        'number.positive': 'La categoría debe ser positiva',
+        'any.required': 'La categoría es requerida',
+      }),
       capacidadKg: Joi.number().positive().required().messages({
         'number.base': 'La capacidad debe ser un número',
         'number.positive': 'La capacidad debe ser positiva',
@@ -93,8 +106,31 @@ export class EquipoService implements IBaseService<Equipo, CreateEquipoDto, Upda
       estado: Joi.string().valid('disponible', 'mantenimiento', 'ocupado').optional().messages({
         'any.only': 'El estado debe ser disponible, mantenimiento u ocupado',
       }),
+      conductorId: Joi.number().positive().optional().messages({
+        'number.base': 'El conductor debe ser un número',
+        'number.positive': 'El conductor debe ser positivo',
+      }),
       fechaUltimoMantenimiento: Joi.date().optional().messages({
         'date.base': 'La fecha de mantenimiento debe ser válida',
+      }),
+      imagenes: Joi.array().items(
+        Joi.object({
+          descripcion: Joi.string().min(1).max(200).required().messages({
+            'string.min': 'La descripción debe tener al menos 1 carácter',
+            'string.max': 'La descripción no puede exceder 200 caracteres',
+            'any.required': 'La descripción es requerida',
+          }),
+          url: Joi.string().uri().required().messages({
+            'string.uri': 'La URL debe ser válida',
+            'any.required': 'La URL es requerida',
+          }),
+          destacada: Joi.boolean().required().messages({
+            'boolean.base': 'El campo destacada debe ser un booleano',
+            'any.required': 'El campo destacada es requerido',
+          }),
+        })
+      ).max(10).optional().messages({
+        'array.max': 'No se pueden agregar más de 10 imágenes',
       }),
     });
 
@@ -122,12 +158,20 @@ export class EquipoService implements IBaseService<Equipo, CreateEquipoDto, Upda
         'string.min': 'El modelo debe tener al menos 2 caracteres',
         'string.max': 'El modelo no puede exceder 50 caracteres',
       }),
+      categoriaId: Joi.number().positive().optional().messages({
+        'number.base': 'La categoría debe ser un número',
+        'number.positive': 'La categoría debe ser positiva',
+      }),
       capacidadKg: Joi.number().positive().optional().messages({
         'number.base': 'La capacidad debe ser un número',
         'number.positive': 'La capacidad debe ser positiva',
       }),
       estado: Joi.string().valid('disponible', 'mantenimiento', 'ocupado').optional().messages({
         'any.only': 'El estado debe ser disponible, mantenimiento u ocupado',
+      }),
+      conductorId: Joi.number().positive().optional().messages({
+        'number.base': 'El conductor debe ser un número',
+        'number.positive': 'El conductor debe ser positivo',
       }),
       fechaUltimoMantenimiento: Joi.date().optional().messages({
         'date.base': 'La fecha de mantenimiento debe ser válida',

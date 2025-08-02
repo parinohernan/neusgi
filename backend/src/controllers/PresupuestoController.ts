@@ -72,6 +72,11 @@ export class PresupuestoController {
         return;
       }
 
+      console.log('=== DEBUG GET PRESUPUESTO ===');
+      console.log('Presupuesto ID:', id);
+      console.log('Items count:', presupuesto.items?.length || 0);
+      console.log('Items:', presupuesto.items);
+
       const response: ApiResponse<typeof presupuesto> = {
         success: true,
         data: presupuesto,
@@ -125,6 +130,10 @@ export class PresupuestoController {
   // PUT /presupuestos/:id
   async update(req: Request, res: Response): Promise<void> {
     try {
+      console.log('=== DEBUG UPDATE PRESUPUESTO ===');
+      console.log('ID:', req.params['id']);
+      console.log('Body:', JSON.stringify(req.body, null, 2));
+      
       const id = parseInt(req.params['id'] || '0');
       
       if (isNaN(id)) {
@@ -137,6 +146,9 @@ export class PresupuestoController {
       }
 
       const updateData: UpdatePresupuestoDto = req.body;
+      
+      console.log('=== DEBUG UPDATE SERVICE CALL ===');
+      console.log('Calling presupuestoService.update with:', JSON.stringify(updateData, null, 2));
       
       const presupuesto = await this.presupuestoService.update(id, updateData);
       
@@ -157,6 +169,10 @@ export class PresupuestoController {
 
       res.status(200).json(response);
     } catch (error) {
+      console.log('=== DEBUG UPDATE ERROR ===');
+      console.log('Error:', error);
+      console.log('Error message:', error instanceof Error ? error.message : 'Unknown error');
+      
       const response: ApiResponse<null> = {
         success: false,
         error: error instanceof Error ? error.message : 'Error interno del servidor',
@@ -430,6 +446,8 @@ export class PresupuestoController {
   // GET /presupuestos/:id/pdf
   async generatePdf(req: Request, res: Response): Promise<void> {
     try {
+      console.log('🔍🔍🔍 CONTROLLER GENERATE PDF - INICIO 🔍🔍🔍');
+      
       const id = parseInt(req.params['id'] || '0');
       
       if (isNaN(id)) {
@@ -440,6 +458,8 @@ export class PresupuestoController {
         res.status(400).json(response);
         return;
       }
+
+      console.log('🔍 Presupuesto ID:', id);
 
       const presupuesto = await this.presupuestoService.getById(id);
       
@@ -452,11 +472,18 @@ export class PresupuestoController {
         return;
       }
 
+      console.log('🔍 Presupuesto encontrado, items count:', presupuesto.items?.length || 0);
+
       // Obtener datos de la empresa
       const empresa = await this.empresaService.getEmpresaActiva();
       
+      console.log('🔍 Empresa obtenida, llamando a PdfService...');
+      
       // Generar PDF
       const pdfBuffer = await PdfService.generatePresupuestoPdf(presupuesto, empresa || undefined);
+      
+      console.log('🔍🔍🔍 CONTROLLER GENERATE PDF - PDF GENERADO 🔍🔍🔍');
+      console.log('🔍 Tamaño del PDF:', pdfBuffer.length, 'bytes');
       
       // Configurar headers para descarga
       res.setHeader('Content-Type', 'application/pdf');
@@ -466,7 +493,7 @@ export class PresupuestoController {
       // Enviar PDF
       res.send(pdfBuffer);
     } catch (error) {
-      console.error('Error generando PDF:', error);
+      console.error('❌❌❌ ERROR GENERANDO PDF:', error);
       const response: ApiResponse<null> = {
         success: false,
         error: error instanceof Error ? error.message : 'Error generando PDF',

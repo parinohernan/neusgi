@@ -18,6 +18,7 @@ import certificadosRoutes from '@/routes/certificados';
 import facturasRoutes from '@/routes/facturas';
 import pagosRoutes from '@/routes/pagos';
 import cuentaCorrienteRoutes from '@/routes/cuenta-corriente';
+import { createPresupuestoItemRoutes } from '@/routes/presupuesto-items';
 import { UsuarioController } from '@/controllers/UsuarioController';
 import { AuthController } from '@/controllers/AuthController';
 import { EquipoController } from '@/controllers/EquipoController';
@@ -144,6 +145,7 @@ export class App {
     router.use('/empleados', createEmpleadoRoutes(empleadoController));
     router.use('/clientes', clientesRoutes);
     router.use('/presupuestos', presupuestosRoutes);
+    router.use('/presupuesto-items', createPresupuestoItemRoutes());
     router.use('/ordenes-compra', ordenesCompraRoutes);
     router.use('/partes-diario', partesDiarioRoutes);
     router.use('/remitos', remitosRoutes);
@@ -166,6 +168,7 @@ export class App {
           empleados: '/api/v1/empleados',
           clientes: '/api/v1/clientes',
           presupuestos: '/api/v1/presupuestos',
+          presupuestoItems: '/api/v1/presupuesto-items',
           ordenesCompra: '/api/v1/ordenes-compra',
           partesDiario: '/api/v1/partes-diario',
           remitos: '/api/v1/remitos',

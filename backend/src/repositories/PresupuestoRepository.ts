@@ -29,10 +29,19 @@ export class PresupuestoRepository implements IBaseRepository<Presupuesto, Creat
       };
     }) || [];
 
+    // Procesar items si existen
+    const items = prismaPresupuesto.items?.map((item: any) => ({
+      ...item,
+      cantidad: Number(item.cantidad),
+      precioUnitario: Number(item.precioUnitario),
+      precioTotal: Number(item.precioTotal),
+    })) || [];
+
     return {
       ...prismaPresupuesto,
       costo: Number(prismaPresupuesto.costo),
       equipos,
+      items,
     };
   }
 
@@ -93,9 +102,25 @@ export class PresupuestoRepository implements IBaseRepository<Presupuesto, Creat
                   capacidadKg: true,
                   estado: true,
                   imagenes: true,
+                  categoria: {
+                    select: {
+                      id: true,
+                      nombre: true,
+                    },
+                  },
+                  conductor: {
+                    select: {
+                      id: true,
+                      nombre: true,
+                      apellido: true,
+                    },
+                  },
                 },
               },
             },
+          },
+          items: {
+            orderBy: { numero: 'asc' },
           },
           usuario: {
             select: {
@@ -151,9 +176,25 @@ export class PresupuestoRepository implements IBaseRepository<Presupuesto, Creat
                 capacidadKg: true,
                 estado: true,
                 imagenes: true,
+                categoria: {
+                  select: {
+                    id: true,
+                    nombre: true,
+                  },
+                },
+                conductor: {
+                  select: {
+                    id: true,
+                    nombre: true,
+                    apellido: true,
+                  },
+                },
               },
             },
           },
+        },
+        items: {
+          orderBy: { numero: 'asc' },
         },
         usuario: {
           select: {
@@ -201,9 +242,25 @@ export class PresupuestoRepository implements IBaseRepository<Presupuesto, Creat
                 capacidadKg: true,
                 estado: true,
                 imagenes: true,
+                categoria: {
+                  select: {
+                    id: true,
+                    nombre: true,
+                  },
+                },
+                conductor: {
+                  select: {
+                    id: true,
+                    nombre: true,
+                    apellido: true,
+                  },
+                },
               },
             },
           },
+        },
+        items: {
+          orderBy: { numero: 'asc' },
         },
         usuario: {
           select: {
@@ -332,8 +389,8 @@ export class PresupuestoRepository implements IBaseRepository<Presupuesto, Creat
     const presupuesto = await this.prisma.presupuesto.create({
       data: {
         clienteId: data.clienteId,
-        contactoId: data.contactoId,
-        usuarioId: data.usuarioId,
+        contactoId: data.contactoId || 1, // Valor por defecto si no se proporciona
+        usuarioId: data.usuarioId || 1, // Valor por defecto si no se proporciona
         descripcion: data.descripcion,
         costo: data.costo,
         validoHasta: data.validoHasta,
@@ -341,6 +398,17 @@ export class PresupuestoRepository implements IBaseRepository<Presupuesto, Creat
         equipos: {
           create: data.equipoIds?.map(equipoId => ({
             equipoId
+          })) || []
+        },
+        items: {
+          create: data.items?.map(item => ({
+            numero: item.numero,
+            descripcion: item.descripcion,
+            cantidad: item.cantidad,
+            unidad: item.unidad,
+            precioUnitario: item.precioUnitario,
+            precioTotal: item.precioTotal,
+            observaciones: item.observaciones || null
           })) || []
         }
       },
@@ -377,6 +445,7 @@ export class PresupuestoRepository implements IBaseRepository<Presupuesto, Creat
             },
           },
         },
+        items: true,
         usuario: {
           select: {
             id: true,
@@ -666,5 +735,18 @@ export class PresupuestoRepository implements IBaseRepository<Presupuesto, Creat
       vencidos,
       valorTotal: Number(valorTotal._sum.costo) || 0,
     };
+  }
+
+  // Métodos para manejar items del presupuesto
+  async deleteItemsByPresupuestoId(presupuestoId: number): Promise<void> {
+    await this.prisma.presupuestoItem.deleteMany({
+      where: { presupuestoId }
+    });
+  }
+
+  async createItems(items: any[]): Promise<void> {
+    await this.prisma.presupuestoItem.createMany({
+      data: items
+    });
   }
 } 

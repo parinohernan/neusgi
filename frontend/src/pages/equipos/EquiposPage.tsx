@@ -32,8 +32,8 @@ export const EquiposPage: React.FC = () => {
   // Estados para filtros y búsqueda
   const [searchTerm, setSearchTerm] = useState('');
   const [estadoFilter, setEstadoFilter] = useState<'todos' | 'disponible' | 'en_uso' | 'mantenimiento' | 'fuera_servicio'>('todos');
-  const [tipoFilter, setTipoFilter] = useState<'todos' | 'camion' | 'excavadora' | 'retroexcavadora' | 'pala_cargadora' | 'compactador' | 'otro'>('todos');
-  const [sortBy, setSortBy] = useState<'patente' | 'modelo' | 'estado' | 'tipo'>('patente');
+  const [categoriaFilter, setCategoriaFilter] = useState<string>('todos');
+  const [sortBy, setSortBy] = useState<'patente' | 'modelo' | 'estado' | 'categoria'>('patente');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
   // Estado para los datos reales
@@ -82,9 +82,9 @@ export const EquiposPage: React.FC = () => {
                            equipo.modelo.toLowerCase().includes(searchTerm.toLowerCase());
       
       const matchesEstado = estadoFilter === 'todos' || equipo.estado === estadoFilter;
-      const matchesTipo = tipoFilter === 'todos' || equipo.tipo === tipoFilter;
+      const matchesCategoria = categoriaFilter === 'todos' || equipo.categoria?.nombre === categoriaFilter;
       
-      return matchesSearch && matchesEstado && matchesTipo;
+      return matchesSearch && matchesEstado && matchesCategoria;
     });
 
     // Ordenar
@@ -105,9 +105,9 @@ export const EquiposPage: React.FC = () => {
           aValue = a.estado;
           bValue = b.estado;
           break;
-        case 'tipo':
-          aValue = a.tipo;
-          bValue = b.tipo;
+        case 'categoria':
+          aValue = a.categoria?.nombre || '';
+          bValue = b.categoria?.nombre || '';
           break;
         default:
           break;
@@ -116,11 +116,14 @@ export const EquiposPage: React.FC = () => {
       if (typeof aValue === 'string' && typeof bValue === 'string') {
         return sortOrder === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
       }
-      return sortOrder === 'asc' ? (aValue as number) - (bValue as number) : (bValue as number) - (aValue as number);
+      if (typeof aValue === 'number' && typeof bValue === 'number') {
+        return sortOrder === 'asc' ? aValue - bValue : bValue - aValue;
+      }
+      return 0;
     });
 
     return filtered;
-  }, [equipos, searchTerm, estadoFilter, tipoFilter, sortBy, sortOrder]);
+  }, [equipos, searchTerm, estadoFilter, categoriaFilter, sortBy, sortOrder]);
 
   // Acciones
   const handleNuevoEquipo = () => {
@@ -169,7 +172,7 @@ export const EquiposPage: React.FC = () => {
     }
   };
 
-  const handleSort = (field: 'patente' | 'modelo' | 'estado' | 'tipo') => {
+  const handleSort = (field: 'patente' | 'modelo' | 'estado' | 'categoria') => {
     if (sortBy === field) {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
     } else {
@@ -178,7 +181,7 @@ export const EquiposPage: React.FC = () => {
     }
   };
 
-  const getSortIcon = (field: 'patente' | 'modelo' | 'estado' | 'tipo') => {
+  const getSortIcon = (field: 'patente' | 'modelo' | 'estado' | 'categoria') => {
     if (sortBy !== field) return null;
     return sortOrder === 'asc' ? <ArrowUp size={16} /> : <ArrowDown size={16} />;
   };
@@ -348,8 +351,8 @@ export const EquiposPage: React.FC = () => {
                   <div className="control">
                     <div className="select is-fullwidth">
                       <select
-                        value={tipoFilter}
-                        onChange={(e) => setTipoFilter(e.target.value as any)}
+                        value={categoriaFilter}
+                        onChange={(e) => setCategoriaFilter(e.target.value)}
                       >
                         <option value="todos">Todos</option>
                         <option value="camion">Camión</option>
@@ -524,12 +527,12 @@ export const EquiposPage: React.FC = () => {
                       <th>
                         <button 
                           className="button is-small is-text"
-                          onClick={() => handleSort('tipo')}
+                          onClick={() => handleSort('categoria')}
                         >
                           <span className="icon-text">
-                            <span>Tipo</span>
+                            <span>Categoría</span>
                             <span className="icon">
-                              {getSortIcon('tipo')}
+                              {getSortIcon('categoria')}
                             </span>
                           </span>
                         </button>
@@ -566,7 +569,7 @@ export const EquiposPage: React.FC = () => {
                         </td>
                         <td>{equipo.modelo}</td>
                         <td>{equipo.capacidadKg.toLocaleString()} kg</td>
-                        <td>{getTipoLabel(equipo.tipo)}</td>
+                        <td>{equipo.categoria?.nombre || 'Sin categoría'}</td>
                         <td>
                           <div className="level">
                             <div className="level-left">
@@ -577,33 +580,27 @@ export const EquiposPage: React.FC = () => {
                           </div>
                         </td>
                         <td>
-                          <div className="buttons are-small">
-                            <button 
-                              className="button is-info is-light"
+                          <div className="flex space-x-2">
+                            <button
                               onClick={() => handleVerEquipo(equipo.id)}
+                              className="text-blue-600 hover:text-blue-900"
                               title="Ver detalles"
                             >
-                              <span className="icon">
-                                <Eye size={14} />
-                              </span>
+                              <Eye size={16} />
                             </button>
-                            <button 
-                              className="button is-warning is-light"
+                            <button
                               onClick={() => handleEditarEquipo(equipo.id)}
+                              className="text-green-600 hover:text-green-900"
                               title="Editar"
                             >
-                              <span className="icon">
-                                <Edit size={14} />
-                              </span>
+                              <Edit size={16} />
                             </button>
-                            <button 
-                              className="button is-danger is-light"
+                            <button
                               onClick={() => handleEliminarEquipo(equipo.id)}
+                              className="text-red-600 hover:text-red-900"
                               title="Eliminar"
                             >
-                              <span className="icon">
-                                <Trash2 size={14} />
-                              </span>
+                              <Trash2 size={16} />
                             </button>
                           </div>
                         </td>
@@ -623,7 +620,7 @@ export const EquiposPage: React.FC = () => {
                     No se encontraron equipos
                   </p>
                   <p className="subtitle is-6 has-text-grey-light">
-                    {searchTerm || estadoFilter !== 'todos' || tipoFilter !== 'todos' 
+                    {searchTerm || estadoFilter !== 'todos' || categoriaFilter !== 'todos' 
                       ? 'Intenta ajustar los filtros de búsqueda'
                       : 'No hay equipos registrados en el sistema'
                     }

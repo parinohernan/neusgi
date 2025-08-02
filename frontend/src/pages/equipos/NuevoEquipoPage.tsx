@@ -1,22 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useNavigate } from 'react-router-dom';
 import { 
   Truck, 
-  Plus, 
   Save, 
   X, 
   ArrowLeft,
-  Wrench,
-  AlertTriangle,
-  CheckCircle,
-  Clock
+  CheckCircle
 } from 'lucide-react';
 import { useNotifications } from '../../stores/uiStore';
+import { useAuth } from '../../stores/authStore';
 import { equipoService } from '../../services/equipoService';
-import type { CreateEquipoDto, EquipoImagen } from '../../types';
+import { categoriaService } from '../../services/categoriaService';
+import { empleadoService } from '../../services/empleadoService';
+import type { CreateEquipoDto, EquipoImagen, Categoria, Empleado } from '../../types';
 import { Sidebar } from '../../components/layout';
 import { ImageUploader } from '../../components/ui/ImageUploader';
 
@@ -29,10 +28,12 @@ const equipoSchema = z.object({
   modelo: z.string()
     .min(2, 'El modelo debe tener al menos 2 caracteres')
     .max(100, 'El modelo no puede exceder 100 caracteres'),
+  categoriaId: z.number().min(1, 'Debe seleccionar una categoría'),
   capacidadKg: z.number()
     .min(1, 'La capacidad debe ser mayor a 0')
     .max(100000, 'La capacidad no puede exceder 100,000 kg'),
   estado: z.enum(['disponible', 'ocupado', 'mantenimiento']),
+  conductorId: z.number().optional(),
 });
 
 type EquipoFormData = z.infer<typeof equipoSchema>;
@@ -40,8 +41,12 @@ type EquipoFormData = z.infer<typeof equipoSchema>;
 export const NuevoEquipoPage: React.FC = () => {
   const navigate = useNavigate();
   const { success, error } = useNotifications();
+  const { isAuthenticated } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagenes, setImagenes] = useState<EquipoImagen[]>([]);
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [conductores, setConductores] = useState<Empleado[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const {
     register,
@@ -53,18 +58,51 @@ export const NuevoEquipoPage: React.FC = () => {
     mode: 'onChange',
   });
 
+  // Cargar datos al montar el componente
+  useEffect(() => {
+    const cargarDatos = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Cargar datos en paralelo
+        const [categoriasData, conductoresData] = await Promise.all([
+          categoriaService.getActivas(),
+          empleadoService.getConductores()
+        ]);
+        
+        setCategorias(categoriasData);
+        setConductores(conductoresData);
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Error al cargar los datos';
+        error(errorMessage);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    cargarDatos();
+  }, []); // Array de dependencias vacío para ejecutar solo una vez
+
   const onSubmit = async (data: EquipoFormData) => {
+    console.log('NuevoEquipoPage - Estado de autenticación:', isAuthenticated);
+    console.log('NuevoEquipoPage - Datos del formulario:', data);
+    
     setIsSubmitting(true);
     try {
       // Preparar datos para la API
       const equipoData: CreateEquipoDto = {
         patente: data.patente.toUpperCase(),
         modelo: data.modelo,
+        categoriaId: data.categoriaId,
         capacidadKg: data.capacidadKg,
         estado: data.estado,
-        imagenes: imagenes,
-        // usuarioId se asignará automáticamente desde el backend
+        conductorId: data.conductorId || undefined,
       };
+
+      // Solo agregar imágenes si hay alguna
+      if (imagenes && imagenes.length > 0) {
+        equipoData.imagenes = imagenes;
+      }
 
       // Llamar a la API
       const nuevoEquipo = await equipoService.create(equipoData);
@@ -86,6 +124,28 @@ export const NuevoEquipoPage: React.FC = () => {
   const handleReset = () => {
     reset();
   };
+
+  // Mostrar loading mientras se cargan los datos
+  if (isLoading) {
+    return (
+      <div className="main-container">
+        <Sidebar 
+          title="NEUSGI" 
+          subtitle="Gestión de Equipos" 
+        />
+        <main className="content-area">
+          <div className="has-text-centered py-6">
+            <div className="icon is-large">
+              <div className="fa fa-spinner fa-spin"></div>
+            </div>
+            <p className="title is-4 has-text-grey-light mt-4">
+              Cargando datos...
+            </p>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="main-container">
@@ -192,8 +252,40 @@ export const NuevoEquipoPage: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Capacidad y Tipo */}
+                  {/* Categoría y Capacidad */}
                   <div className="columns">
+                    <div className="column is-6">
+                      <div className="field">
+                        <label className="label">
+                          <span className="icon-text">
+                            <span className="icon">
+                              <Truck size={16} />
+                            </span>
+                            <span>Categoría *</span>
+                          </span>
+                        </label>
+                        <div className="control">
+                          <div className={`select is-fullwidth ${errors.categoriaId ? 'is-danger' : ''}`}>
+                            <select {...register('categoriaId', { valueAsNumber: true })}>
+                              <option value="">Seleccionar categoría</option>
+                              {isLoading ? (
+                                <option value="" disabled>Cargando categorías...</option>
+                              ) : (
+                                (categorias || []).map((categoria) => (
+                                  <option key={categoria.id} value={categoria.id}>
+                                    {categoria.nombre}
+                                  </option>
+                                ))
+                              )}
+                            </select>
+                          </div>
+                        </div>
+                        {errors.categoriaId && (
+                          <p className="help is-danger">{errors.categoriaId.message}</p>
+                        )}
+                      </div>
+                    </div>
+                    
                     <div className="column is-6">
                       <div className="field">
                         <label className="label">
@@ -219,6 +311,38 @@ export const NuevoEquipoPage: React.FC = () => {
                         )}
                       </div>
                     </div>
+                  </div>
+
+                  {/* Conductor y Estado */}
+                  <div className="columns">
+                    <div className="column is-6">
+                      <div className="field">
+                        <label className="label">
+                          <span className="icon-text">
+                            <span className="icon">
+                              <Truck size={16} />
+                            </span>
+                            <span>Conductor</span>
+                          </span>
+                        </label>
+                        <div className="control">
+                          <div className="select is-fullwidth">
+                            <select {...register('conductorId', { valueAsNumber: true })}>
+                              <option value="">Sin conductor asignado</option>
+                              {isLoading ? (
+                                <option value="" disabled>Cargando conductores...</option>
+                              ) : (
+                                (conductores || []).map((conductor) => (
+                                  <option key={conductor.id} value={conductor.id}>
+                                    {conductor.nombre} {conductor.apellido} - {conductor.dni}
+                                  </option>
+                                ))
+                              )}
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                     
                     <div className="column is-6">
                       <div className="field">
@@ -233,7 +357,6 @@ export const NuevoEquipoPage: React.FC = () => {
                         <div className="control">
                           <div className={`select is-fullwidth ${errors.estado ? 'is-danger' : ''}`}>
                             <select {...register('estado')}>
-                              <option value="">Seleccionar estado</option>
                               <option value="disponible">Disponible</option>
                               <option value="ocupado">Ocupado</option>
                               <option value="mantenimiento">Mantenimiento</option>

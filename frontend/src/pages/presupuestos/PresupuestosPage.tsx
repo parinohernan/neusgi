@@ -107,7 +107,7 @@ export const PresupuestosPage: React.FC = () => {
     
     const cumpleEstado = !filtroEstado || presupuesto.estado === filtroEstado;
     const cumpleCliente = !filtroCliente || presupuesto.clienteId.toString() === filtroCliente;
-    const cumpleEquipo = !filtroEquipo || presupuesto.equipoId.toString() === filtroEquipo;
+    const cumpleEquipo = !filtroEquipo || (presupuesto.equipoId && presupuesto.equipoId.toString() === filtroEquipo);
     
     return cumpleBusqueda && cumpleEstado && cumpleCliente && cumpleEquipo;
   });
@@ -119,7 +119,8 @@ export const PresupuestosPage: React.FC = () => {
   };
 
   // Obtener patente del equipo
-  const getEquipoPatente = (equipoId: number) => {
+  const getEquipoPatente = (equipoId?: number) => {
+    if (!equipoId) return 'Sin equipo';
     const equipo = equipos.find(e => e.id === equipoId);
     return equipo?.patente || 'Equipo no encontrado';
   };

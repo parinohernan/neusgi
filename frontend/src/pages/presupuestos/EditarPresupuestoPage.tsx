@@ -12,7 +12,6 @@ import {
   Truck, 
   DollarSign, 
   Calendar,
-  Info,
   Loader2
 } from 'lucide-react';
 import { Sidebar } from '../../components/layout';
@@ -20,17 +19,17 @@ import { presupuestoService } from '../../services/presupuestoService';
 import { clienteService } from '../../services/clienteService';
 import { equipoService } from '../../services/equipoService';
 import { useNotifications } from '../../hooks/useNotifications';
-import type { Cliente, Equipo, UpdatePresupuestoDto } from '../../types';
+import { PresupuestoItemGrid } from '../../components/features/PresupuestoItemGrid';
+import type { Cliente, Equipo, UpdatePresupuestoDto, PresupuestoItem } from '../../types';
 
-// Schema de validación para presupuesto (igual que en NuevoPresupuestoPage)
+// Schema de validación para presupuesto (actualizado para incluir items)
 const presupuestoSchema = z.object({
   clienteId: z.number().min(1, 'Debe seleccionar un cliente'),
-  equipoId: z.number().min(1, 'Debe seleccionar un equipo'),
   descripcion: z.string()
     .min(10, 'La descripción debe tener al menos 10 caracteres')
     .max(1000, 'La descripción no puede exceder 1000 caracteres'),
   costo: z.number()
-    .min(1, 'El costo debe ser mayor a 0')
+    .min(0, 'El costo debe ser mayor o igual a 0')
     .max(10000000, 'El costo no puede exceder $10,000,000'),
   validoHasta: z.string()
     .min(1, 'Debe seleccionar una fecha de validez'),
@@ -49,18 +48,93 @@ export const EditarPresupuestoPage: React.FC = () => {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [equipos, setEquipos] = useState<Equipo[]>([]);
-  const [isLoadingData, setIsLoadingData] = useState(true);
+  const [equiposSeleccionados, setEquiposSeleccionados] = useState<number[]>([]);
+  const [items, setItems] = useState<PresupuestoItem[]>([]);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
   const {
     register,
     handleSubmit,
-    formState: { errors, isValid },
+    formState: { errors },
     setValue,
     watch,
   } = useForm<PresupuestoFormData>({
     resolver: zodResolver(presupuestoSchema),
     mode: 'onChange',
   });
+
+  // Función para validar todos los campos
+  const validateAllFields = () => {
+    const errors: string[] = [];
+    
+    // Validar cliente
+    if (!watch('clienteId') || watch('clienteId') === 0) {
+      errors.push('Debe seleccionar un cliente');
+    }
+    
+    // Validar equipos - asegurar que sea un array válido
+    let equiposValidos = false;
+    
+    if (Array.isArray(equiposSeleccionados) && equiposSeleccionados.length > 0) {
+      equiposValidos = equiposSeleccionados.every(id => typeof id === 'number' && !isNaN(id));
+    } else if (presupuesto && presupuesto.equipos && presupuesto.equipos.length > 0) {
+      // Fallback: usar los equipos del presupuesto original
+      equiposValidos = true;
+    } else if (presupuesto && presupuesto.equipoId) {
+      // Fallback: usar el equipo del presupuesto original
+      equiposValidos = true;
+    }
+    
+    if (!equiposValidos) {
+      console.log('=== DEBUG VALIDATION ===');
+      console.log('equiposSeleccionados type:', typeof equiposSeleccionados);
+      console.log('equiposSeleccionados value:', equiposSeleccionados);
+      console.log('Array.isArray(equiposSeleccionados):', Array.isArray(equiposSeleccionados));
+      console.log('presupuesto.equipos:', presupuesto?.equipos);
+      console.log('presupuesto.equipoId:', presupuesto?.equipoId);
+      errors.push('Debe seleccionar al menos un equipo');
+    }
+    
+    // Validar descripción
+    const descripcion = watch('descripcion');
+    if (!descripcion || descripcion.length < 10) {
+      errors.push('La descripción debe tener al menos 10 caracteres');
+    }
+    
+    // Validar fecha de validez
+    const validoHasta = watch('validoHasta');
+    if (!validoHasta) {
+      errors.push('Debe seleccionar una fecha de validez');
+    } else {
+      const fecha = new Date(validoHasta);
+      if (fecha <= new Date()) {
+        errors.push('La fecha de validez debe ser futura');
+      }
+    }
+    
+    // Validar items
+    if (items.length === 0) {
+      errors.push('Debe agregar al menos un item al presupuesto');
+    } else {
+      items.forEach((item, index) => {
+        if (!item.descripcion.trim()) {
+          errors.push(`Item ${index + 1}: La descripción es requerida`);
+        }
+        if (item.cantidad < 0) {
+          errors.push(`Item ${index + 1}: La cantidad no puede ser negativa`);
+        }
+        if (item.precioUnitario < 0) {
+          errors.push(`Item ${index + 1}: El precio unitario no puede ser negativo`);
+        }
+        if (!item.unidad.trim()) {
+          errors.push(`Item ${index + 1}: La unidad es requerida`);
+        }
+      });
+    }
+    
+    setValidationErrors(errors);
+    return errors.length === 0;
+  };
 
   // Cargar datos del presupuesto al montar el componente
   useEffect(() => {
@@ -78,12 +152,42 @@ export const EditarPresupuestoPage: React.FC = () => {
         const presupuestoData = await presupuestoService.getById(parseInt(id));
         setPresupuesto(presupuestoData);
         
+        console.log('=== DEBUG FRONTEND ===');
+        console.log('Presupuesto cargado:', presupuestoData);
+        console.log('Items count:', presupuestoData.items?.length || 0);
+        console.log('Items:', presupuestoData.items);
+        
         // Pre-llenar el formulario con los datos del presupuesto
         setValue('clienteId', presupuestoData.clienteId);
-        setValue('equipoId', presupuestoData.equipoId);
         setValue('descripcion', presupuestoData.descripcion);
         setValue('costo', presupuestoData.costo);
         setValue('validoHasta', new Date(presupuestoData.validoHasta).toISOString().split('T')[0]);
+        
+        // Cargar equipos seleccionados
+        if (presupuestoData.equipos && presupuestoData.equipos.length > 0) {
+          const equiposIds = presupuestoData.equipos.map((equipo: any) => equipo.id);
+          console.log('=== DEBUG EQUIPOS ===');
+          console.log('presupuestoData.equipos:', presupuestoData.equipos);
+          console.log('equiposIds:', equiposIds);
+          setEquiposSeleccionados(equiposIds);
+        } else if (presupuestoData.equipoId) {
+          // Compatibilidad con presupuestos antiguos que solo tenían un equipo
+          console.log('=== DEBUG EQUIPO ANTIGUO ===');
+          console.log('presupuestoData.equipoId:', presupuestoData.equipoId);
+          setEquiposSeleccionados([presupuestoData.equipoId]);
+        } else {
+          console.log('=== DEBUG SIN EQUIPOS ===');
+          console.log('No se encontraron equipos en el presupuesto');
+          setEquiposSeleccionados([]);
+        }
+
+        // Cargar items del presupuesto
+        if (presupuestoData.items && presupuestoData.items.length > 0) {
+          console.log('Estableciendo items:', presupuestoData.items);
+          setItems(presupuestoData.items);
+        } else {
+          console.log('No se encontraron items para cargar');
+        }
         
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Error al cargar el presupuesto';
@@ -100,7 +204,6 @@ export const EditarPresupuestoPage: React.FC = () => {
   useEffect(() => {
     const cargarDatos = async () => {
       try {
-        setIsLoadingData(true);
         const [clientesData, equiposData] = await Promise.all([
           clienteService.getAll(),
           equipoService.getAll()
@@ -111,13 +214,20 @@ export const EditarPresupuestoPage: React.FC = () => {
       } catch (err) {
         error('Error al cargar los datos');
         console.error('Error cargando datos:', err);
-      } finally {
-        setIsLoadingData(false);
       }
     };
 
     cargarDatos();
   }, [error]);
+
+  // Validar campos cuando cambien los equipos o items
+  useEffect(() => {
+    console.log('=== DEBUG VALIDATION EFFECT ===');
+    console.log('equiposSeleccionados en effect:', equiposSeleccionados);
+    console.log('equiposSeleccionados type:', typeof equiposSeleccionados);
+    console.log('Array.isArray(equiposSeleccionados):', Array.isArray(equiposSeleccionados));
+    validateAllFields();
+  }, [equiposSeleccionados, items, watch('clienteId'), watch('descripcion'), watch('validoHasta')]);
 
   // Mostrar notificación de error cuando loadError cambie
   useEffect(() => {
@@ -129,16 +239,53 @@ export const EditarPresupuestoPage: React.FC = () => {
   const onSubmit = async (data: PresupuestoFormData) => {
     if (!id) return;
     
+    console.log('=== DEBUG ONSUBMIT ===');
+    console.log('equiposSeleccionados al inicio:', equiposSeleccionados);
+    console.log('equiposSeleccionados type:', typeof equiposSeleccionados);
+    console.log('Array.isArray(equiposSeleccionados):', Array.isArray(equiposSeleccionados));
+    
+    // Validar todos los campos antes de enviar
+    if (!validateAllFields()) {
+      error('Por favor, corrija los errores antes de continuar');
+      return;
+    }
+    
     setIsSubmitting(true);
     try {
+      // Calcular el costo total de los items
+      const costoTotal = items.reduce((total, item) => total + item.precioTotal, 0);
+
+      // Asegurar que equipoIds sea un array válido - corrección más robusta
+      let equipoIdsArray: number[] = [];
+      
+      if (Array.isArray(equiposSeleccionados)) {
+        equipoIdsArray = equiposSeleccionados.filter(id => typeof id === 'number' && !isNaN(id));
+      } else if (equiposSeleccionados && typeof equiposSeleccionados === 'number') {
+        equipoIdsArray = [equiposSeleccionados];
+      } else if (presupuesto && presupuesto.equipos && presupuesto.equipos.length > 0) {
+        // Fallback: usar los equipos del presupuesto original
+        equipoIdsArray = presupuesto.equipos.map((equipo: any) => equipo.id);
+      } else if (presupuesto && presupuesto.equipoId) {
+        // Fallback: usar el equipo del presupuesto original
+        equipoIdsArray = [presupuesto.equipoId];
+      }
+
+      console.log('equipoIdsArray final:', equipoIdsArray);
+
       // Preparar datos para la API
       const presupuestoData: UpdatePresupuestoDto = {
         clienteId: data.clienteId,
-        equipoId: data.equipoId,
+        equipoIds: equipoIdsArray,
         descripcion: data.descripcion,
-        costo: data.costo,
+        costo: costoTotal,
         validoHasta: new Date(data.validoHasta),
+        items: items,
       };
+
+      console.log('=== DEBUG UPDATE PRESUPUESTO ===');
+      console.log('equiposSeleccionados:', equiposSeleccionados);
+      console.log('equipoIdsArray:', equipoIdsArray);
+      console.log('presupuestoData:', presupuestoData);
 
       // Llamar a la API
       const presupuestoActualizado = await presupuestoService.update(parseInt(id), presupuestoData);
@@ -160,10 +307,21 @@ export const EditarPresupuestoPage: React.FC = () => {
   const handleReset = () => {
     if (presupuesto) {
       setValue('clienteId', presupuesto.clienteId);
-      setValue('equipoId', presupuesto.equipoId);
       setValue('descripcion', presupuesto.descripcion);
       setValue('costo', presupuesto.costo);
       setValue('validoHasta', new Date(presupuesto.validoHasta).toISOString().split('T')[0]);
+      
+      // Restaurar equipos seleccionados
+      if (presupuesto.equipos && presupuesto.equipos.length > 0) {
+        setEquiposSeleccionados(presupuesto.equipos.map((equipo: any) => equipo.id));
+      } else if (presupuesto.equipoId) {
+        setEquiposSeleccionados([presupuesto.equipoId]);
+      }
+
+      // Restaurar items
+      if (presupuesto.items && presupuesto.items.length > 0) {
+        setItems(presupuesto.items);
+      }
     }
   };
 
@@ -223,11 +381,6 @@ export const EditarPresupuestoPage: React.FC = () => {
   const getClienteNombre = (clienteId: number) => {
     const cliente = clientes.find(c => c.id === clienteId);
     return cliente ? cliente.nombreEmpresa : 'Cliente no encontrado';
-  };
-
-  const getEquipoPatente = (equipoId: number) => {
-    const equipo = equipos.find(e => e.id === equipoId);
-    return equipo ? equipo.patente : 'Equipo no encontrado';
   };
 
   return (
@@ -320,23 +473,55 @@ export const EditarPresupuestoPage: React.FC = () => {
                             <span className="icon">
                               <Truck size={16} />
                             </span>
-                            <span>Equipo *</span>
+                            <span>Equipos *</span>
                           </span>
                         </label>
                         <div className="control">
-                          <div className={`select is-fullwidth ${errors.equipoId ? 'is-danger' : ''}`}>
-                            <select {...register('equipoId', { valueAsNumber: true })}>
-                              <option value="">Seleccionar equipo</option>
-                              {equipos.map((equipo) => (
-                                <option key={equipo.id} value={equipo.id}>
-                                  {equipo.patente} - {equipo.modelo}
-                                </option>
-                              ))}
+                          <div className={`select is-fullwidth ${validationErrors.some(e => e.includes('equipo')) ? 'is-danger' : ''}`}>
+                            <select 
+                              onChange={(e) => {
+                                const equipoId = parseInt(e.target.value);
+                                if (equipoId && !equiposSeleccionados.includes(equipoId)) {
+                                  setEquiposSeleccionados([...equiposSeleccionados, equipoId]);
+                                }
+                              }}
+                              value=""
+                            >
+                              <option value="">Agregar equipo</option>
+                              {equipos
+                                .filter(equipo => !equiposSeleccionados.includes(equipo.id))
+                                .map(equipo => (
+                                  <option key={equipo.id} value={equipo.id}>
+                                    {equipo.patente} - {equipo.modelo} ({equipo.capacidadKg}kg)
+                                  </option>
+                                ))
+                              }
                             </select>
                           </div>
                         </div>
-                        {errors.equipoId && (
-                          <p className="help is-danger">{errors.equipoId.message}</p>
+                        
+                        {/* Lista de equipos seleccionados */}
+                        {equiposSeleccionados.length > 0 && (
+                          <div className="mt-3">
+                            <div className="tags">
+                              {equiposSeleccionados.map(equipoId => {
+                                const equipo = equipos.find(e => e.id === equipoId);
+                                return equipo ? (
+                                  <span key={equipoId} className="tag is-info is-medium">
+                                    {equipo.patente} - {equipo.modelo}
+                                    <button
+                                      className="delete is-small ml-2"
+                                      onClick={() => setEquiposSeleccionados(equiposSeleccionados.filter(id => id !== equipoId))}
+                                    />
+                                  </span>
+                                ) : null;
+                              })}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {validationErrors.some(e => e.includes('equipo')) && (
+                          <p className="help is-danger">{validationErrors.find(e => e.includes('equipo'))}</p>
                         )}
                       </div>
                     </div>
@@ -374,7 +559,7 @@ export const EditarPresupuestoPage: React.FC = () => {
                             <span className="icon">
                               <DollarSign size={16} />
                             </span>
-                            <span>Costo *</span>
+                            <span>Costo Total *</span>
                           </span>
                         </label>
                         <div className="control">
@@ -385,6 +570,8 @@ export const EditarPresupuestoPage: React.FC = () => {
                             placeholder="0.00"
                             min="0"
                             step="0.01"
+                            readOnly
+                            value={items.reduce((total, item) => total + item.precioTotal, 0)}
                           />
                         </div>
                         {errors.costo && (
@@ -417,6 +604,35 @@ export const EditarPresupuestoPage: React.FC = () => {
                     </div>
                   </div>
 
+                  {/* Items del Presupuesto */}
+                  <div className="field">
+                    <label className="label">
+                      <span className="icon-text">
+                        <span className="icon">
+                          <DollarSign size={16} />
+                        </span>
+                        <span>Items del Presupuesto *</span>
+                      </span>
+                    </label>
+                    <PresupuestoItemGrid
+                      items={items}
+                      onItemsChange={setItems}
+                      presupuestoId={parseInt(id || '0')}
+                    />
+                  </div>
+
+                  {/* Errores de validación generales */}
+                  {validationErrors.length > 0 && (
+                    <div className="notification is-danger is-light">
+                      <h4 className="title is-6">Errores de validación:</h4>
+                      <ul>
+                        {validationErrors.map((error, index) => (
+                          <li key={index}>{error}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
                   {/* Botones de acción */}
                   <div className="field is-grouped is-grouped-right">
                     <p className="control">
@@ -446,7 +662,7 @@ export const EditarPresupuestoPage: React.FC = () => {
                       <button
                         type="submit"
                         className={`button is-primary ${isSubmitting ? 'is-loading' : ''}`}
-                        disabled={!isValid || isSubmitting}
+                        disabled={validationErrors.length > 0 || isSubmitting}
                       >
                         <span className="icon">
                           <Save size={16} />
@@ -476,10 +692,11 @@ export const EditarPresupuestoPage: React.FC = () => {
                       <ul>
                         <li><strong>ID:</strong> #{presupuesto.id}</li>
                         <li><strong>Cliente:</strong> {getClienteNombre(presupuesto.clienteId)}</li>
-                        <li><strong>Equipo:</strong> {getEquipoPatente(presupuesto.equipoId)}</li>
+                        <li><strong>Equipos:</strong> {equiposSeleccionados.length}</li>
                         <li><strong>Costo:</strong> {formatearMoneda(presupuesto.costo)}</li>
                         <li><strong>Estado:</strong> {presupuesto.estado}</li>
                         <li><strong>Válido hasta:</strong> {new Date(presupuesto.validoHasta).toLocaleDateString()}</li>
+                        <li><strong>Items:</strong> {items.length}</li>
                       </ul>
                     </div>
                   )}
@@ -491,6 +708,7 @@ export const EditarPresupuestoPage: React.FC = () => {
                       <li>El estado del presupuesto no se puede modificar aquí</li>
                       <li>Puedes restaurar los valores originales</li>
                       <li>La fecha de validez debe ser futura</li>
+                      <li>El costo se calcula automáticamente de los items</li>
                     </ul>
                   </div>
 
@@ -498,9 +716,9 @@ export const EditarPresupuestoPage: React.FC = () => {
                     <h4 className="title is-6">Campos Editables</h4>
                     <ul>
                       <li><strong>Cliente:</strong> Cambiar cliente asignado</li>
-                      <li><strong>Equipo:</strong> Cambiar equipo asignado</li>
+                      <li><strong>Equipos:</strong> Cambiar equipos asignados</li>
                       <li><strong>Descripción:</strong> Modificar detalles del servicio</li>
-                      <li><strong>Costo:</strong> Actualizar precio</li>
+                      <li><strong>Items:</strong> Agregar, editar o eliminar items</li>
                       <li><strong>Validez:</strong> Extender fecha de validez</li>
                     </ul>
                   </div>

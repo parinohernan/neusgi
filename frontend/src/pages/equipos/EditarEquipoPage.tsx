@@ -13,11 +13,13 @@ import {
 } from 'lucide-react';
 import { useNotifications } from '../../stores/uiStore';
 import { equipoService } from '../../services/equipoService';
-import type { UpdateEquipoDto, EquipoImagen } from '../../types';
+import { categoriaService } from '../../services/categoriaService';
+import { empleadoService } from '../../services/empleadoService';
+import type { UpdateEquipoDto, EquipoImagen, Categoria, Empleado } from '../../types';
 import { Sidebar } from '../../components/layout';
 import { ImageUploader } from '../../components/ui/ImageUploader';
 
-// Schema de validación para equipo (igual que en NuevoEquipoPage)
+// Schema de validación para equipo
 const equipoSchema = z.object({
   patente: z.string()
     .min(4, 'La patente debe tener al menos 4 caracteres')
@@ -26,10 +28,12 @@ const equipoSchema = z.object({
   modelo: z.string()
     .min(2, 'El modelo debe tener al menos 2 caracteres')
     .max(100, 'El modelo no puede exceder 100 caracteres'),
+  categoriaId: z.number().min(1, 'Debe seleccionar una categoría'),
   capacidadKg: z.number()
     .min(1, 'La capacidad debe ser mayor a 0')
     .max(100000, 'La capacidad no puede exceder 100,000 kg'),
   estado: z.enum(['disponible', 'ocupado', 'mantenimiento']),
+  conductorId: z.number().optional(),
 });
 
 type EquipoFormData = z.infer<typeof equipoSchema>;
@@ -44,6 +48,8 @@ export const EditarEquipoPage: React.FC = () => {
   const [equipo, setEquipo] = useState<any>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [imagenes, setImagenes] = useState<EquipoImagen[]>([]);
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [conductores, setConductores] = useState<Empleado[]>([]);
 
   const {
     register,
@@ -57,7 +63,7 @@ export const EditarEquipoPage: React.FC = () => {
 
   // Cargar datos del equipo al montar el componente
   useEffect(() => {
-    const cargarEquipo = async () => {
+    const cargarDatos = async () => {
       if (!id) {
         setLoadError('ID de equipo no válido');
         setIsLoading(false);
@@ -68,25 +74,35 @@ export const EditarEquipoPage: React.FC = () => {
         setIsLoading(true);
         setLoadError(null);
         
-        const equipoData = await equipoService.getById(parseInt(id));
+        // Cargar datos en paralelo
+        const [equipoData, categoriasData, conductoresData] = await Promise.all([
+          equipoService.getById(parseInt(id)),
+          categoriaService.getActivas(),
+          empleadoService.getConductores()
+        ]);
+        
         setEquipo(equipoData);
+        setCategorias(categoriasData);
+        setConductores(conductoresData);
         setImagenes(equipoData.imagenes || []);
         
         // Pre-llenar el formulario con los datos del equipo
         setValue('patente', equipoData.patente);
         setValue('modelo', equipoData.modelo);
+        setValue('categoriaId', equipoData.categoriaId);
         setValue('capacidadKg', equipoData.capacidadKg);
         setValue('estado', equipoData.estado);
+        setValue('conductorId', equipoData.conductorId);
         
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Error al cargar el equipo';
+        const errorMessage = err instanceof Error ? err.message : 'Error al cargar los datos';
         setLoadError(errorMessage);
       } finally {
         setIsLoading(false);
       }
     };
 
-    cargarEquipo();
+    cargarDatos();
   }, [id, setValue]);
 
   // Mostrar notificación de error cuando loadError cambie
@@ -105,8 +121,10 @@ export const EditarEquipoPage: React.FC = () => {
       const equipoData: UpdateEquipoDto = {
         patente: data.patente.toUpperCase(),
         modelo: data.modelo,
+        categoriaId: data.categoriaId,
         capacidadKg: data.capacidadKg,
         estado: data.estado,
+        conductorId: data.conductorId || undefined,
         imagenes: imagenes,
       };
 
@@ -131,8 +149,10 @@ export const EditarEquipoPage: React.FC = () => {
     if (equipo) {
       setValue('patente', equipo.patente);
       setValue('modelo', equipo.modelo);
+      setValue('categoriaId', equipo.categoriaId);
       setValue('capacidadKg', equipo.capacidadKg);
       setValue('estado', equipo.estado);
+      setValue('conductorId', equipo.conductorId);
     }
   };
 
@@ -286,8 +306,40 @@ export const EditarEquipoPage: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Capacidad y Estado */}
+                  {/* Categoría y Capacidad */}
                   <div className="columns">
+                    <div className="column is-6">
+                      <div className="field">
+                        <label className="label">
+                          <span className="icon-text">
+                            <span className="icon">
+                              <Truck size={16} />
+                            </span>
+                            <span>Categoría *</span>
+                          </span>
+                        </label>
+                        <div className="control">
+                          <div className={`select is-fullwidth ${errors.categoriaId ? 'is-danger' : ''}`}>
+                            <select {...register('categoriaId', { valueAsNumber: true })}>
+                              <option value="">Seleccionar categoría</option>
+                              {isLoading ? (
+                                <option value="" disabled>Cargando categorías...</option>
+                              ) : (
+                                (categorias || []).map((categoria) => (
+                                  <option key={categoria.id} value={categoria.id}>
+                                    {categoria.nombre}
+                                  </option>
+                                ))
+                              )}
+                            </select>
+                          </div>
+                        </div>
+                        {errors.categoriaId && (
+                          <p className="help is-danger">{errors.categoriaId.message}</p>
+                        )}
+                      </div>
+                    </div>
+                    
                     <div className="column is-6">
                       <div className="field">
                         <label className="label">
@@ -311,6 +363,38 @@ export const EditarEquipoPage: React.FC = () => {
                         {errors.capacidadKg && (
                           <p className="help is-danger">{errors.capacidadKg.message}</p>
                         )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Conductor y Estado */}
+                  <div className="columns">
+                    <div className="column is-6">
+                      <div className="field">
+                        <label className="label">
+                          <span className="icon-text">
+                            <span className="icon">
+                              <Truck size={16} />
+                            </span>
+                            <span>Conductor</span>
+                          </span>
+                        </label>
+                        <div className="control">
+                          <div className="select is-fullwidth">
+                            <select {...register('conductorId', { valueAsNumber: true })}>
+                              <option value="">Sin conductor asignado</option>
+                              {isLoading ? (
+                                <option value="" disabled>Cargando conductores...</option>
+                              ) : (
+                                (conductores || []).map((conductor) => (
+                                  <option key={conductor.id} value={conductor.id}>
+                                    {conductor.nombre} {conductor.apellido} - {conductor.dni}
+                                  </option>
+                                ))
+                              )}
+                            </select>
+                          </div>
+                        </div>
                       </div>
                     </div>
                     
@@ -420,8 +504,10 @@ export const EditarEquipoPage: React.FC = () => {
                         <li><strong>ID:</strong> {equipo.id}</li>
                         <li><strong>Patente:</strong> {equipo.patente}</li>
                         <li><strong>Modelo:</strong> {equipo.modelo}</li>
+                        <li><strong>Categoría:</strong> {equipo.categoria?.nombre || 'Sin categoría'}</li>
                         <li><strong>Capacidad:</strong> {equipo.capacidadKg.toLocaleString()} kg</li>
                         <li><strong>Estado:</strong> {equipo.estado}</li>
+                        <li><strong>Conductor:</strong> {equipo.conductor ? `${equipo.conductor.nombre} ${equipo.conductor.apellido}` : 'Sin conductor'}</li>
                       </ul>
                     </div>
                   )}

@@ -23,13 +23,37 @@ export const empleadoService = {
   // Obtener empleados activos
   getActivos: async (): Promise<Empleado[]> => {
     const response = await api.get('/empleados/activos');
-    return (response.data as any).data;
+    
+    // Si response.data es directamente un array, devolverlo
+    if (Array.isArray(response.data)) {
+      return response.data;
+    }
+    
+    // Si tiene la estructura { success: true, data: [...] }
+    if (response.data && typeof response.data === 'object' && 'data' in response.data) {
+      return (response.data as any).data;
+    }
+    
+    // Fallback: devolver response.data directamente
+    return response.data as Empleado[];
   },
 
   // Obtener conductores
   getConductores: async (): Promise<Empleado[]> => {
     const response = await api.get('/empleados/conductores');
-    return (response.data as any).data;
+    
+    // Si response.data es directamente un array, devolverlo
+    if (Array.isArray(response.data)) {
+      return response.data;
+    }
+    
+    // Si tiene la estructura { success: true, data: [...] }
+    if (response.data && typeof response.data === 'object' && 'data' in response.data) {
+      return (response.data as any).data;
+    }
+    
+    // Fallback: devolver response.data directamente
+    return response.data as Empleado[];
   },
 
   // Obtener empleado por ID

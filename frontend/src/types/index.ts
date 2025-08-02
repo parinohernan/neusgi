@@ -180,7 +180,7 @@ export interface UpdateEquipoDto {
 export interface Presupuesto {
   id: number;
   clienteId: number;
-  equipoId: number;
+  equipoId?: number; // Para compatibilidad con presupuestos antiguos
   usuarioId: number;
   descripcion: string;
   costo: number;
@@ -189,7 +189,9 @@ export interface Presupuesto {
   creadoEn: Date;
   // Relaciones
   cliente?: Cliente;
-  equipo?: Equipo;
+  equipo?: Equipo; // Para compatibilidad con presupuestos antiguos
+  equipos?: Equipo[]; // Para presupuestos con múltiples equipos
+  items?: PresupuestoItem[]; // Items del presupuesto
   usuario?: {
     id: number;
     nombre: string;
@@ -200,22 +202,58 @@ export interface Presupuesto {
 
 export interface CreatePresupuestoDto {
   clienteId: number;
-  equipoId: number;
+  equipoIds: number[];
   usuarioId?: number; // Se asigna automáticamente desde el backend
   descripcion: string;
   costo: number;
   validoHasta: Date;
   estado?: 'pendiente' | 'aceptado' | 'rechazado';
+  items?: CreatePresupuestoItemDto[];
 }
 
 export interface UpdatePresupuestoDto {
   clienteId?: number;
-  equipoId?: number;
+  equipoIds?: number[];
   usuarioId?: number;
   descripcion?: string;
   costo?: number;
   validoHasta?: Date;
   estado?: 'pendiente' | 'aceptado' | 'rechazado';
+  items?: CreatePresupuestoItemDto[];
+}
+
+// Tipos para items de presupuesto
+export interface PresupuestoItem {
+  id: number;
+  presupuestoId: number;
+  numero: number;
+  descripcion: string;
+  cantidad: number;
+  unidad: string;
+  precioUnitario: number;
+  precioTotal: number;
+  observaciones?: string;
+}
+
+export interface CreatePresupuestoItemDto {
+  presupuestoId: number;
+  numero: number;
+  descripcion: string;
+  cantidad: number;
+  unidad: string;
+  precioUnitario: number;
+  precioTotal: number;
+  observaciones?: string;
+}
+
+export interface UpdatePresupuestoItemDto {
+  numero?: number;
+  descripcion?: string;
+  cantidad?: number;
+  unidad?: string;
+  precioUnitario?: number;
+  precioTotal?: number;
+  observaciones?: string;
 }
 
 // Mantener Client para compatibilidad

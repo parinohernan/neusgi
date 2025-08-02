@@ -392,7 +392,84 @@ export const DetallePresupuestoPage: React.FC = () => {
             )}
 
             {/* Información del equipo */}
-            {presupuesto.equipo && (
+            {presupuesto.equipos && presupuesto.equipos.length > 0 ? (
+              <div className="card mb-4">
+                <div className="card-header">
+                  <p className="card-header-title">
+                    <span className="icon">
+                      <Truck size={20} />
+                    </span>
+                    Equipos Asignados ({presupuesto.equipos.length})
+                  </p>
+                </div>
+                <div className="card-content">
+                  {presupuesto.equipos.map((equipo: any, index: number) => (
+                    <div key={equipo.id} className={`${index > 0 ? 'mt-4 pt-4' : ''} ${index > 0 ? 'border-top' : ''}`}>
+                      <div className="columns">
+                        <div className="column is-4">
+                          <div className="field">
+                            <label className="label is-small">Patente</label>
+                            <div className="control">
+                              <p className="has-text-weight-semibold">{equipo.patente}</p>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="column is-4">
+                          <div className="field">
+                            <label className="label is-small">Modelo</label>
+                            <div className="control">
+                              <p className="has-text-weight-medium">{equipo.modelo}</p>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="column is-4">
+                          <div className="field">
+                            <label className="label is-small">Capacidad</label>
+                            <div className="control">
+                              <p className="has-text-weight-medium">{equipo.capacidadKg} kg</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="columns">
+                        <div className="column is-6">
+                          <div className="field">
+                            <label className="label is-small">Categoría</label>
+                            <div className="control">
+                              <p className="has-text-weight-medium">
+                                {equipo.categoria?.nombre || 'Sin categoría'}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="column is-6">
+                          <div className="field">
+                            <label className="label is-small">Estado</label>
+                            <div className="control">
+                              <span className={`tag ${equipo.estado === 'disponible' ? 'is-success' : 'is-warning'}`}>
+                                {equipo.estado === 'disponible' ? 'Disponible' : 'Ocupado'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {equipo.conductor && (
+                        <div className="field">
+                          <label className="label is-small">Conductor Asignado</label>
+                          <div className="control">
+                            <p className="has-text-weight-medium">
+                              {equipo.conductor.nombre} {equipo.conductor.apellido}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : presupuesto.equipo ? (
               <div className="card mb-4">
                 <div className="card-header">
                   <p className="card-header-title">
@@ -437,6 +514,69 @@ export const DetallePresupuestoPage: React.FC = () => {
                         {presupuesto.equipo.estado === 'disponible' ? 'Disponible' : 'Ocupado'}
                       </span>
                     </div>
+                  </div>
+                </div>
+              </div>
+            ) : null}
+
+            {/* Items del Presupuesto */}
+            {presupuesto.items && presupuesto.items.length > 0 && (
+              <div className="card mb-4">
+                <div className="card-header">
+                  <p className="card-header-title">
+                    <span className="icon">
+                      <DollarSign size={20} />
+                    </span>
+                    Items del Presupuesto ({presupuesto.items.length})
+                  </p>
+                </div>
+                <div className="card-content">
+                  <div className="table-container">
+                    <table className="table is-fullwidth is-striped">
+                      <thead>
+                        <tr>
+                          <th>N°</th>
+                          <th>Descripción</th>
+                          <th>Cantidad</th>
+                          <th>Unidad</th>
+                          <th>Precio Unit.</th>
+                          <th>Total</th>
+                          <th>Observaciones</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {presupuesto.items.map((item: any) => (
+                          <tr key={item.id}>
+                            <td className="has-text-weight-semibold">{item.numero}</td>
+                            <td>{item.descripcion}</td>
+                            <td className="has-text-centered">{item.cantidad}</td>
+                            <td className="has-text-centered">{item.unidad}</td>
+                            <td className="has-text-right">{formatearMoneda(item.precioUnitario)}</td>
+                            <td className="has-text-right has-text-weight-semibold">
+                              {formatearMoneda(item.precioTotal)}
+                            </td>
+                            <td>
+                              {item.observaciones ? (
+                                <span className="has-text-grey-light">{item.observaciones}</span>
+                              ) : (
+                                <span className="has-text-grey-light">-</span>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                      <tfoot>
+                        <tr className="has-background-light">
+                          <td colSpan={5} className="has-text-right has-text-weight-semibold">
+                            <strong>TOTAL:</strong>
+                          </td>
+                          <td className="has-text-right has-text-weight-bold has-text-success">
+                            <strong>{formatearMoneda(presupuesto.costo)}</strong>
+                          </td>
+                          <td></td>
+                        </tr>
+                      </tfoot>
+                    </table>
                   </div>
                 </div>
               </div>

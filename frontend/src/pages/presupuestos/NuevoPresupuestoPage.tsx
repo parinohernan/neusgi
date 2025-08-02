@@ -19,18 +19,15 @@ import { presupuestoService } from '../../services/presupuestoService';
 import { clienteService } from '../../services/clienteService';
 import { equipoService } from '../../services/equipoService';
 import { useNotifications } from '../../hooks/useNotifications';
-import type { Cliente, Equipo } from '../../types';
+import { PresupuestoItemGrid } from '../../components/features/PresupuestoItemGrid';
+import type { Cliente, Equipo, PresupuestoItem } from '../../types';
 
 // Schema de validación para presupuesto
 const presupuestoSchema = z.object({
   clienteId: z.number().min(1, 'Debe seleccionar un cliente'),
-  equipoId: z.number().min(1, 'Debe seleccionar un equipo'),
   descripcion: z.string()
     .min(10, 'La descripción debe tener al menos 10 caracteres')
     .max(1000, 'La descripción no puede exceder 1000 caracteres'),
-  costo: z.number()
-    .min(1, 'El costo debe ser mayor a 0')
-    .max(10000000, 'El costo no puede exceder $10,000,000'),
   validoHasta: z.string()
     .min(1, 'Debe seleccionar una fecha de validez'),
 });
@@ -43,7 +40,10 @@ export const NuevoPresupuestoPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [equipos, setEquipos] = useState<Equipo[]>([]);
+  const [equiposSeleccionados, setEquiposSeleccionados] = useState<number[]>([]);
+  const [items, setItems] = useState<PresupuestoItem[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(true);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
   const {
     register,
@@ -51,10 +51,74 @@ export const NuevoPresupuestoPage: React.FC = () => {
     formState: { errors, isValid },
     reset,
     watch,
+    getValues,
   } = useForm<PresupuestoFormData>({
     resolver: zodResolver(presupuestoSchema),
     mode: 'onChange',
   });
+
+  // Función para validar todos los campos
+  const validateAllFields = (): boolean => {
+    const errors: string[] = [];
+    const formData = getValues();
+
+    // Validar cliente
+    if (!formData.clienteId || formData.clienteId <= 0) {
+      errors.push('Debe seleccionar un cliente');
+    }
+
+    // Validar equipos
+    if (equiposSeleccionados.length === 0) {
+      errors.push('Debe seleccionar al menos un equipo');
+    }
+
+    // Validar descripción
+    if (!formData.descripcion || formData.descripcion.length < 10) {
+      errors.push('La descripción debe tener al menos 10 caracteres');
+    }
+
+    // Validar fecha de validez
+    if (!formData.validoHasta) {
+      errors.push('Debe seleccionar una fecha de validez');
+    }
+
+    // Validar items
+    if (items.length === 0) {
+      errors.push('Debe agregar al menos un item al presupuesto');
+    }
+
+    setValidationErrors(errors);
+    return errors.length === 0;
+  };
+
+  // Funciones para verificar el estado de cada campo
+  const isClienteValid = () => {
+    const formData = getValues();
+    return formData.clienteId && formData.clienteId > 0;
+  };
+
+  const isEquiposValid = () => {
+    return equiposSeleccionados.length > 0;
+  };
+
+  const isDescripcionValid = () => {
+    const formData = getValues();
+    return formData.descripcion && formData.descripcion.length >= 10;
+  };
+
+  const isFechaValid = () => {
+    const formData = getValues();
+    return formData.validoHasta && formData.validoHasta.length > 0;
+  };
+
+  const isItemsValid = () => {
+    return items.length > 0;
+  };
+
+  // Validar cuando cambien los equipos, items o campos del formulario
+  useEffect(() => {
+    validateAllFields();
+  }, [equiposSeleccionados, items, watch('clienteId'), watch('descripcion'), watch('validoHasta')]);
 
   // Cargar datos iniciales
   useEffect(() => {
@@ -82,14 +146,34 @@ export const NuevoPresupuestoPage: React.FC = () => {
   const onSubmit = async (data: PresupuestoFormData) => {
     setIsSubmitting(true);
     try {
+      // Validar todos los campos
+      if (!validateAllFields()) {
+        error('Por favor, complete todos los campos requeridos');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Calcular el costo total desde los items
+      const costoTotal = items.reduce((sum, item) => sum + item.precioTotal, 0);
+
       // Preparar datos para la API
       const presupuestoData = {
         clienteId: data.clienteId,
-        equipoId: data.equipoId,
+        equipoIds: equiposSeleccionados,
         descripcion: data.descripcion,
-        costo: data.costo,
+        costo: costoTotal,
         validoHasta: new Date(data.validoHasta),
         estado: 'pendiente' as const,
+        items: items.map(item => ({
+          presupuestoId: 0, // Se asignará desde el backend
+          numero: item.numero,
+          descripcion: item.descripcion,
+          cantidad: item.cantidad,
+          unidad: item.unidad,
+          precioUnitario: item.precioUnitario,
+          precioTotal: item.precioTotal,
+          observaciones: item.observaciones
+        }))
       };
 
       // Llamar a la API
@@ -111,6 +195,9 @@ export const NuevoPresupuestoPage: React.FC = () => {
 
   const handleReset = () => {
     reset();
+    setEquiposSeleccionados([]);
+    setItems([]);
+    setValidationErrors([]);
   };
 
   // Obtener cliente seleccionado
@@ -118,8 +205,8 @@ export const NuevoPresupuestoPage: React.FC = () => {
   const cliente = clientes.find(c => c.id === clienteSeleccionado);
 
   // Obtener equipo seleccionado
-  const equipoSeleccionado = watch('equipoId');
-  const equipo = equipos.find(e => e.id === equipoSeleccionado);
+
+
 
   // Formatear moneda
   const formatearMoneda = (monto: number) => {
@@ -198,8 +285,24 @@ export const NuevoPresupuestoPage: React.FC = () => {
                 </p>
               </div>
               <div className="card-content">
-                <form onSubmit={handleSubmit(onSubmit)}>
-                  {/* Cliente y Equipo */}
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                  {/* Errores de validación generales */}
+                  {validationErrors.length > 0 && (
+                    <div className="notification is-danger is-light">
+                      <button 
+                        className="delete" 
+                        onClick={() => setValidationErrors([])}
+                      />
+                      <strong>Por favor, complete los siguientes campos:</strong>
+                      <ul className="mt-2">
+                        {validationErrors.map((error, index) => (
+                          <li key={index}>• {error}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Cliente y Equipos */}
                   <div className="columns">
                     <div className="column is-6">
                       <div className="field">
@@ -212,10 +315,10 @@ export const NuevoPresupuestoPage: React.FC = () => {
                           </span>
                         </label>
                         <div className="control">
-                          <div className={`select is-fullwidth ${errors.clienteId ? 'is-danger' : ''}`}>
+                          <div className={`select is-fullwidth ${errors.clienteId ? 'is-danger' : isClienteValid() ? 'is-success' : ''}`}>
                             <select {...register('clienteId', { valueAsNumber: true })}>
                               <option value="">Seleccionar cliente</option>
-                              {clientes.map(cliente => (
+                              {clientes.map((cliente) => (
                                 <option key={cliente.id} value={cliente.id}>
                                   {cliente.nombreEmpresa}
                                 </option>
@@ -225,6 +328,9 @@ export const NuevoPresupuestoPage: React.FC = () => {
                         </div>
                         {errors.clienteId && (
                           <p className="help is-danger">{errors.clienteId.message}</p>
+                        )}
+                        {isClienteValid() && (
+                          <p className="help is-success">✓ Cliente seleccionado</p>
                         )}
                       </div>
                     </div>
@@ -240,11 +346,19 @@ export const NuevoPresupuestoPage: React.FC = () => {
                           </span>
                         </label>
                         <div className="control">
-                          <div className={`select is-fullwidth ${errors.equipoId ? 'is-danger' : ''}`}>
-                            <select {...register('equipoId', { valueAsNumber: true })}>
-                              <option value="">Seleccionar equipo</option>
+                          <div className={`select is-fullwidth ${validationErrors.some(e => e.includes('equipo')) ? 'is-danger' : isEquiposValid() ? 'is-success' : ''}`}>
+                            <select 
+                              onChange={(e) => {
+                                const equipoId = parseInt(e.target.value);
+                                if (equipoId && !equiposSeleccionados.includes(equipoId)) {
+                                  setEquiposSeleccionados([...equiposSeleccionados, equipoId]);
+                                }
+                              }}
+                              value=""
+                            >
+                              <option value="">Agregar equipo</option>
                               {equipos
-                                .filter(equipo => equipo.estado === 'disponible')
+                                .filter(equipo => equipo.estado === 'disponible' && !equiposSeleccionados.includes(equipo.id))
                                 .map(equipo => (
                                   <option key={equipo.id} value={equipo.id}>
                                     {equipo.patente} - {equipo.modelo} ({equipo.capacidadKg}kg)
@@ -254,8 +368,32 @@ export const NuevoPresupuestoPage: React.FC = () => {
                             </select>
                           </div>
                         </div>
-                        {errors.equipoId && (
-                          <p className="help is-danger">{errors.equipoId.message}</p>
+                        
+                        {/* Lista de equipos seleccionados */}
+                        {equiposSeleccionados.length > 0 && (
+                          <div className="mt-3">
+                            <div className="tags">
+                              {equiposSeleccionados.map(equipoId => {
+                                const equipo = equipos.find(e => e.id === equipoId);
+                                return equipo ? (
+                                  <span key={equipoId} className="tag is-info is-medium">
+                                    {equipo.patente} - {equipo.modelo}
+                                    <button
+                                      className="delete is-small ml-2"
+                                      onClick={() => setEquiposSeleccionados(equiposSeleccionados.filter(id => id !== equipoId))}
+                                    />
+                                  </span>
+                                ) : null;
+                              })}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {validationErrors.some(e => e.includes('equipo')) && (
+                          <p className="help is-danger">Debe seleccionar al menos un equipo</p>
+                        )}
+                        {isEquiposValid() && (
+                          <p className="help is-success">✓ {equiposSeleccionados.length} equipo(s) seleccionado(s)</p>
                         )}
                       </div>
                     </div>
@@ -274,13 +412,27 @@ export const NuevoPresupuestoPage: React.FC = () => {
                     <div className="control">
                       <textarea
                         {...register('descripcion')}
-                        className={`textarea ${errors.descripcion ? 'is-danger' : ''}`}
+                        className={`textarea ${errors.descripcion ? 'is-danger' : isDescripcionValid() ? 'is-success' : ''}`}
                         placeholder="Describe detalladamente el servicio a realizar, incluyendo origen, destino, fechas, condiciones especiales..."
                         rows={6}
                       />
                     </div>
                     {errors.descripcion && (
                       <p className="help is-danger">{errors.descripcion.message}</p>
+                    )}
+                    {isDescripcionValid() && (
+                      <p className="help is-success">✓ Descripción válida</p>
+                    )}
+                  </div>
+
+                  {/* Grilla de Items */}
+                  <div className={`field ${isItemsValid() ? 'has-success' : ''}`}>
+                    <PresupuestoItemGrid
+                      items={items}
+                      onItemsChange={setItems}
+                    />
+                    {isItemsValid() && (
+                      <p className="help is-success">✓ {items.length} item(s) agregado(s)</p>
                     )}
                   </div>
 
@@ -298,17 +450,14 @@ export const NuevoPresupuestoPage: React.FC = () => {
                         </label>
                         <div className="control">
                           <input
-                            {...register('costo', { valueAsNumber: true })}
                             type="number"
-                            className={`input ${errors.costo ? 'is-danger' : ''}`}
-                            placeholder="0.00"
-                            min="0"
-                            step="0.01"
+                            className="input"
+                            value={items.reduce((sum, item) => sum + item.precioTotal, 0).toFixed(2)}
+                            readOnly
+                            style={{ backgroundColor: '#f5f5f5' }}
                           />
                         </div>
-                        {errors.costo && (
-                          <p className="help is-danger">{errors.costo.message}</p>
-                        )}
+                        <p className="help">Calculado automáticamente desde los items</p>
                       </div>
                     </div>
                     
@@ -326,12 +475,15 @@ export const NuevoPresupuestoPage: React.FC = () => {
                           <input
                             {...register('validoHasta')}
                             type="date"
-                            className={`input ${errors.validoHasta ? 'is-danger' : ''}`}
+                            className={`input ${errors.validoHasta ? 'is-danger' : isFechaValid() ? 'is-success' : ''}`}
                             min={fechaMinima}
                           />
                         </div>
                         {errors.validoHasta && (
                           <p className="help is-danger">{errors.validoHasta.message}</p>
+                        )}
+                        {isFechaValid() && (
+                          <p className="help is-success">✓ Fecha de validez seleccionada</p>
                         )}
                       </div>
                     </div>
@@ -366,7 +518,7 @@ export const NuevoPresupuestoPage: React.FC = () => {
                       <button
                         type="submit"
                         className="button is-primary"
-                        disabled={isSubmitting || !isValid}
+                        disabled={isSubmitting || validationErrors.length > 0}
                       >
                         <span className="icon">
                           <Save size={16} />
@@ -411,25 +563,32 @@ export const NuevoPresupuestoPage: React.FC = () => {
               </div>
             )}
 
-            {/* Información del equipo */}
-            {equipo && (
+            {/* Información de los equipos */}
+            {equiposSeleccionados.length > 0 && (
               <div className="card mb-4">
                 <div className="card-header">
                   <p className="card-header-title">
                     <span className="icon">
                       <Truck size={16} />
                     </span>
-                    Equipo Seleccionado
+                    Equipos Seleccionados ({equiposSeleccionados.length})
                   </p>
                 </div>
                 <div className="card-content">
                   <div className="content">
-                    <p className="has-text-weight-semibold">{equipo.patente}</p>
-                    <p className="has-text-grey">Modelo: {equipo.modelo}</p>
-                    <p className="has-text-grey">Capacidad: {equipo.capacidadKg} kg</p>
-                    <span className={`tag ${equipo.estado === 'disponible' ? 'is-success' : 'is-warning'}`}>
-                      {equipo.estado === 'disponible' ? 'Disponible' : 'Ocupado'}
-                    </span>
+                    {equiposSeleccionados.map(equipoId => {
+                      const equipo = equipos.find(e => e.id === equipoId);
+                      return equipo ? (
+                        <div key={equipoId} className="mb-3">
+                          <p className="has-text-weight-semibold">{equipo.patente}</p>
+                          <p className="has-text-grey">Modelo: {equipo.modelo}</p>
+                          <p className="has-text-grey">Capacidad: {equipo.capacidadKg} kg</p>
+                          <span className={`tag ${equipo.estado === 'disponible' ? 'is-success' : 'is-warning'}`}>
+                            {equipo.estado === 'disponible' ? 'Disponible' : 'Ocupado'}
+                          </span>
+                        </div>
+                      ) : null;
+                    })}
                   </div>
                 </div>
               </div>

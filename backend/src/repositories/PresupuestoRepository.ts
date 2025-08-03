@@ -395,6 +395,10 @@ export class PresupuestoRepository implements IBaseRepository<Presupuesto, Creat
         costo: data.costo,
         validoHasta: data.validoHasta,
         estado: data.estado || 'pendiente',
+        plazoEntrega: data.plazoEntrega || 'Inmediato',
+        lugarEntrega: data.lugarEntrega || 'Rincon de los Sauces',
+        formaPago: data.formaPago || '30 días FF',
+        validez: data.validez || '3 días',
         equipos: {
           create: data.equipoIds?.map(equipoId => ({
             equipoId
@@ -470,6 +474,10 @@ export class PresupuestoRepository implements IBaseRepository<Presupuesto, Creat
     if (data.costo !== undefined) updateData.costo = data.costo;
     if (data.validoHasta !== undefined) updateData.validoHasta = data.validoHasta;
     if (data.estado !== undefined) updateData.estado = data.estado;
+    if (data.plazoEntrega !== undefined) updateData.plazoEntrega = data.plazoEntrega;
+    if (data.lugarEntrega !== undefined) updateData.lugarEntrega = data.lugarEntrega;
+    if (data.formaPago !== undefined) updateData.formaPago = data.formaPago;
+    if (data.validez !== undefined) updateData.validez = data.validez;
 
     // Si se proporcionan nuevos equipos, actualizar la relación
     if (data.equipoIds) {

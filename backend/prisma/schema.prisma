@@ -134,21 +134,25 @@ model Equipo {
 }
 
 model Presupuesto {
-  id          Int                 @id @default(autoincrement())
-  clienteId   Int                 @map("cliente_id")
-  usuarioId   Int                 @map("usuario_id")
-  descripcion String              @db.Text
-  costo       Decimal             @db.Decimal(12, 2)
-  validoHasta DateTime            @map("valido_hasta")
-  estado      EstadoPresupuesto   @default(pendiente)
-  creadoEn    DateTime            @default(now()) @map("creado_en")
-  contactoId  Int                 @map("contacto_id")
-  ordenCompra OrdenCompra?
-  cliente     Cliente             @relation(fields: [clienteId], references: [id])
-  contacto    Contacto            @relation(fields: [contactoId], references: [id])
-  usuario     Usuario             @relation(fields: [usuarioId], references: [id])
-  equipos     PresupuestoEquipo[]
-  items       PresupuestoItem[]
+  id            Int                 @id @default(autoincrement())
+  clienteId     Int                 @map("cliente_id")
+  usuarioId     Int                 @map("usuario_id")
+  descripcion   String              @db.Text
+  costo         Decimal             @db.Decimal(12, 2)
+  validoHasta   DateTime            @map("valido_hasta")
+  estado        EstadoPresupuesto   @default(pendiente)
+  creadoEn      DateTime            @default(now()) @map("creado_en")
+  contactoId    Int                 @map("contacto_id")
+  plazoEntrega  String              @default("Inmediato") @map("plazo_entrega") @db.VarChar(100)
+  lugarEntrega  String              @default("Rincon de los Sauces") @map("lugar_entrega") @db.VarChar(200)
+  formaPago     String              @default("30 días FF") @map("forma_pago") @db.VarChar(100)
+  validez       String              @default("3 días") @map("validez") @db.VarChar(100)
+  ordenCompra   OrdenCompra?
+  cliente       Cliente             @relation(fields: [clienteId], references: [id])
+  contacto      Contacto            @relation(fields: [contactoId], references: [id])
+  usuario       Usuario             @relation(fields: [usuarioId], references: [id])
+  equipos       PresupuestoEquipo[]
+  items         PresupuestoItem[]
 
   @@index([clienteId], map: "presupuestos_cliente_id_fkey")
   @@index([contactoId], map: "presupuestos_contacto_id_fkey")

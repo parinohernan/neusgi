@@ -46,6 +46,18 @@ export class PresupuestoService implements IBaseService<Presupuesto, CreatePresu
     estado: Joi.string().valid('pendiente', 'aceptado', 'rechazado').optional().messages({
       'string.valid': 'El estado debe ser: pendiente, aceptado o rechazado',
     }),
+    plazoEntrega: Joi.string().max(100).optional().messages({
+      'string.max': 'El plazo de entrega no puede exceder 100 caracteres',
+    }),
+    lugarEntrega: Joi.string().max(200).optional().messages({
+      'string.max': 'El lugar de entrega no puede exceder 200 caracteres',
+    }),
+    formaPago: Joi.string().max(100).optional().messages({
+      'string.max': 'La forma de pago no puede exceder 100 caracteres',
+    }),
+    validez: Joi.string().max(100).optional().messages({
+      'string.max': 'La validez no puede exceder 100 caracteres',
+    }),
     items: Joi.array().items(Joi.object({
       id: Joi.number().integer().optional(), // Permitir id para actualizaciones
       presupuestoId: Joi.number().integer().optional(),
@@ -90,6 +102,18 @@ export class PresupuestoService implements IBaseService<Presupuesto, CreatePresu
     }),
     estado: Joi.string().valid('pendiente', 'aceptado', 'rechazado').optional().messages({
       'string.valid': 'El estado debe ser: pendiente, aceptado o rechazado',
+    }),
+    plazoEntrega: Joi.string().max(100).optional().messages({
+      'string.max': 'El plazo de entrega no puede exceder 100 caracteres',
+    }),
+    lugarEntrega: Joi.string().max(200).optional().messages({
+      'string.max': 'El lugar de entrega no puede exceder 200 caracteres',
+    }),
+    formaPago: Joi.string().max(100).optional().messages({
+      'string.max': 'La forma de pago no puede exceder 100 caracteres',
+    }),
+    validez: Joi.string().max(100).optional().messages({
+      'string.max': 'La validez no puede exceder 100 caracteres',
     }),
     items: Joi.array().items(Joi.object({
       id: Joi.number().integer().optional(), // Permitir id para actualizaciones

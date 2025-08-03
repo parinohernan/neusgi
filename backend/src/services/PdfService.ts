@@ -49,8 +49,8 @@ export class PdfService {
       logo: null
     };
 
-    // Formatear fecha
-    const fecha = new Date().toLocaleDateString('es-AR', {
+    // Formatear fecha usando la fecha de creación del presupuesto
+    const fecha = new Date(presupuesto.creadoEn).toLocaleDateString('es-AR', {
       day: 'numeric',
       month: 'long',
       year: 'numeric'
@@ -437,10 +437,10 @@ export class PdfService {
         </table>
         
         <div class="conditions">
-          <p><strong>PLAZO DE ENTREGA:</strong> Inmediato</p>
-          <p><strong><em>LUGAR DE ENTREGA:</em></strong> ${empresaData.ciudad}</p>
-          <p><strong><em>FORMA DE PAGO:</em></strong> 30 días FF</p>
-          <p><strong><em>Validez de la oferta:</em></strong> 3 días.</p>
+          <p><strong>PLAZO DE ENTREGA:</strong> ${presupuesto.plazoEntrega || 'Inmediato'}</p>
+          <p><strong><em>LUGAR DE ENTREGA:</em></strong> ${presupuesto.lugarEntrega || empresaData.ciudad}</p>
+          <p><strong><em>FORMA DE PAGO:</em></strong> ${presupuesto.formaPago || '30 días FF'}</p>
+          <p><strong><em>Validez de la oferta:</em></strong> ${presupuesto.validez || '3 días'}.</p>
           <p>Estamos a vuestra disposición para las aclaraciones técnicas o económicas que considere necesarias</p>
         </div>
         

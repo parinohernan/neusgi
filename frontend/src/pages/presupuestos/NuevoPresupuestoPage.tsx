@@ -30,6 +30,10 @@ const presupuestoSchema = z.object({
     .max(1000, 'La descripción no puede exceder 1000 caracteres'),
   validoHasta: z.string()
     .min(1, 'Debe seleccionar una fecha de validez'),
+  plazoEntrega: z.string().max(100, 'El plazo de entrega no puede exceder 100 caracteres').optional(),
+  lugarEntrega: z.string().max(200, 'El lugar de entrega no puede exceder 200 caracteres').optional(),
+  formaPago: z.string().max(100, 'La forma de pago no puede exceder 100 caracteres').optional(),
+  validez: z.string().max(100, 'La validez no puede exceder 100 caracteres').optional(),
 });
 
 type PresupuestoFormData = z.infer<typeof presupuestoSchema>;
@@ -48,7 +52,7 @@ export const NuevoPresupuestoPage: React.FC = () => {
   const {
     register,
     handleSubmit,
-    formState: { errors, isValid },
+    formState: { errors },
     reset,
     watch,
     getValues,
@@ -164,6 +168,10 @@ export const NuevoPresupuestoPage: React.FC = () => {
         costo: costoTotal,
         validoHasta: new Date(data.validoHasta),
         estado: 'pendiente' as const,
+        plazoEntrega: data.plazoEntrega || 'Inmediato',
+        lugarEntrega: data.lugarEntrega || 'Rincon de los Sauces',
+        formaPago: data.formaPago || '30 días FF',
+        validez: data.validez || '3 días',
         items: items.map(item => ({
           presupuestoId: 0, // Se asignará desde el backend
           numero: item.numero,
@@ -194,7 +202,15 @@ export const NuevoPresupuestoPage: React.FC = () => {
   };
 
   const handleReset = () => {
-    reset();
+    reset({
+      clienteId: undefined,
+      descripcion: '',
+      validoHasta: '',
+      plazoEntrega: 'Inmediato',
+      lugarEntrega: 'Rincon de los Sauces',
+      formaPago: '30 días FF',
+      validez: '3 días'
+    });
     setEquiposSeleccionados([]);
     setItems([]);
     setValidationErrors([]);
@@ -203,18 +219,6 @@ export const NuevoPresupuestoPage: React.FC = () => {
   // Obtener cliente seleccionado
   const clienteSeleccionado = watch('clienteId');
   const cliente = clientes.find(c => c.id === clienteSeleccionado);
-
-  // Obtener equipo seleccionado
-
-
-
-  // Formatear moneda
-  const formatearMoneda = (monto: number) => {
-    return new Intl.NumberFormat('es-AR', {
-      style: 'currency',
-      currency: 'ARS'
-    }).format(monto);
-  };
 
   // Fecha mínima (hoy)
   const fechaMinima = new Date().toISOString().split('T')[0];
@@ -484,6 +488,94 @@ export const NuevoPresupuestoPage: React.FC = () => {
                         )}
                         {isFechaValid() && (
                           <p className="help is-success">✓ Fecha de validez seleccionada</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Condiciones del Presupuesto */}
+                  <div className="field">
+                    <label className="label">
+                      <span className="icon-text">
+                        <span className="icon">
+                          <Info size={16} />
+                        </span>
+                        <span>Condiciones del Presupuesto</span>
+                      </span>
+                    </label>
+                  </div>
+
+                  <div className="columns">
+                    <div className="column is-6">
+                      <div className="field">
+                        <label className="label">Plazo de Entrega</label>
+                        <div className="control">
+                          <input
+                            {...register('plazoEntrega')}
+                            type="text"
+                            className="input"
+                            placeholder="Ej: Inmediato, 15 días, etc."
+                            defaultValue="Inmediato"
+                          />
+                        </div>
+                        {errors.plazoEntrega && (
+                          <p className="help is-danger">{errors.plazoEntrega.message}</p>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="column is-6">
+                      <div className="field">
+                        <label className="label">Lugar de Entrega</label>
+                        <div className="control">
+                          <input
+                            {...register('lugarEntrega')}
+                            type="text"
+                            className="input"
+                            placeholder="Ej: Rincon de los Sauces, etc."
+                            defaultValue="Rincon de los Sauces"
+                          />
+                        </div>
+                        {errors.lugarEntrega && (
+                          <p className="help is-danger">{errors.lugarEntrega.message}</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="columns">
+                    <div className="column is-6">
+                      <div className="field">
+                        <label className="label">Forma de Pago</label>
+                        <div className="control">
+                          <input
+                            {...register('formaPago')}
+                            type="text"
+                            className="input"
+                            placeholder="Ej: 30 días FF, Contado, etc."
+                            defaultValue="30 días FF"
+                          />
+                        </div>
+                        {errors.formaPago && (
+                          <p className="help is-danger">{errors.formaPago.message}</p>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="column is-6">
+                      <div className="field">
+                        <label className="label">Validez de la Oferta</label>
+                        <div className="control">
+                          <input
+                            {...register('validez')}
+                            type="text"
+                            className="input"
+                            placeholder="Ej: 3 días, 7 días, etc."
+                            defaultValue="3 días"
+                          />
+                        </div>
+                        {errors.validez && (
+                          <p className="help is-danger">{errors.validez.message}</p>
                         )}
                       </div>
                     </div>

@@ -297,6 +297,10 @@ export interface Presupuesto extends BaseEntity {
   validoHasta: Date;
   estado: 'pendiente' | 'aceptado' | 'rechazado';
   creadoEn: Date;
+  plazoEntrega: string;
+  lugarEntrega: string;
+  formaPago: string;
+  validez: string;
   equipos?: {
     id: number;
     patente: string;
@@ -348,6 +352,10 @@ export interface CreatePresupuestoDto {
   costo: number;
   validoHasta: Date;
   estado?: 'pendiente' | 'aceptado' | 'rechazado';
+  plazoEntrega?: string;
+  lugarEntrega?: string;
+  formaPago?: string;
+  validez?: string;
   equipoIds?: number[];
   items?: CreatePresupuestoItemDto[];
 }
@@ -360,6 +368,10 @@ export interface UpdatePresupuestoDto {
   costo?: number;
   validoHasta?: Date;
   estado?: 'pendiente' | 'aceptado' | 'rechazado';
+  plazoEntrega?: string;
+  lugarEntrega?: string;
+  formaPago?: string;
+  validez?: string;
   equipoIds?: number[];
   items?: CreatePresupuestoItemDto[];
 }

@@ -295,12 +295,16 @@ export interface Presupuesto extends BaseEntity {
   descripcion: string;
   costo: number;
   validoHasta: Date;
-  estado: 'pendiente' | 'aceptado' | 'rechazado';
+  estado: 'pendiente' | 'aceptado' | 'rechazado' | 'activo' | 'concluido' | 'finalizado';
   creadoEn: Date;
   plazoEntrega: string;
   lugarEntrega: string;
   formaPago: string;
   validez: string;
+  // Relaciones
+  cliente?: Cliente;
+  contacto?: Contacto;
+  usuario?: Usuario;
   equipos?: {
     id: number;
     patente: string;
@@ -310,10 +314,11 @@ export interface Presupuesto extends BaseEntity {
     imagenes?: EquipoImagen[];
   }[];
   items?: PresupuestoItem[];
+  ordenCompra?: OrdenCompra;
 }
 
 // Tipo extendido para Presupuesto con relaciones incluidas
-export interface PresupuestoWithRelations extends Presupuesto {
+export interface PresupuestoWithRelations extends Omit<Presupuesto, 'contacto' | 'usuario'> {
   cliente?: {
     id: number;
     nombreEmpresa: string;
@@ -351,7 +356,7 @@ export interface CreatePresupuestoDto {
   descripcion: string;
   costo: number;
   validoHasta: Date;
-  estado?: 'pendiente' | 'aceptado' | 'rechazado';
+  estado?: 'pendiente' | 'aceptado' | 'rechazado' | 'activo' | 'concluido' | 'finalizado';
   plazoEntrega?: string;
   lugarEntrega?: string;
   formaPago?: string;
@@ -367,7 +372,7 @@ export interface UpdatePresupuestoDto {
   descripcion?: string;
   costo?: number;
   validoHasta?: Date;
-  estado?: 'pendiente' | 'aceptado' | 'rechazado';
+  estado?: 'pendiente' | 'aceptado' | 'rechazado' | 'activo' | 'concluido' | 'finalizado';
   plazoEntrega?: string;
   lugarEntrega?: string;
   formaPago?: string;
@@ -384,7 +389,10 @@ export interface OrdenCompra extends BaseEntity {
   origen: string;
   destino: string;
   observaciones?: string;
+  documentos?: string[]; // URLs de documentos
+  imagenes?: string[]; // URLs de imágenes
   estado: 'activa' | 'completada' | 'cancelada';
+  creadoEn: Date;
 }
 
 export interface CreateOrdenCompraDto {
@@ -394,6 +402,8 @@ export interface CreateOrdenCompraDto {
   origen: string;
   destino: string;
   observaciones?: string;
+  documentos?: string[]; // URLs de documentos
+  imagenes?: string[]; // URLs de imágenes
   estado?: 'activa' | 'completada' | 'cancelada';
 }
 
@@ -404,48 +414,58 @@ export interface UpdateOrdenCompraDto {
   origen?: string;
   destino?: string;
   observaciones?: string;
+  documentos?: string[]; // URLs de documentos
+  imagenes?: string[]; // URLs de imágenes
   estado?: 'activa' | 'completada' | 'cancelada';
 }
 
-// Tipos para ParteDiario
-export interface ParteDiario extends BaseEntity {
+// Tipos para ParteDiario (simplificado)
+export interface ParteDiario {
+  id: number;
   ordenCompraId: number;
   fecha: Date;
-  kmInicial: number;
-  kmFinal: number;
-  kmRecorridos: number;
-  horasTrabajadas: number;
-  combustibleConsumido?: number;
-  incidencias?: string;
+  conductorId?: number;
+  equipoId?: number;
   observaciones?: string;
-  archivosAdjuntos?: string[]; // URLs de archivos (imágenes o PDFs)
+  archivosAdjuntos?: string[]; // URLs de imágenes JSON
+  combustibleConsumido?: number;
+  horasTrabajadas?: number;
+  kmFinal?: number;
+  kmInicial?: number;
+  kmRecorridos?: number;
+  codigo?: string;
   creadoEn: Date;
+  ordenCompra?: OrdenCompra;
+  conductor?: Empleado;
+  equipo?: Equipo;
 }
 
 export interface CreateParteDiarioDto {
   ordenCompraId: number;
   fecha: Date;
-  kmInicial: number;
-  kmFinal: number;
-  kmRecorridos?: number; // Se calcula automáticamente si no se proporciona
-  horasTrabajadas: number;
-  combustibleConsumido?: number;
-  incidencias?: string;
+  conductorId?: number;
+  equipoId?: number;
   observaciones?: string;
-  archivosAdjuntos?: string[]; // URLs de archivos
+  archivosAdjuntos?: string[]; // URLs de imágenes
+  combustibleConsumido?: number;
+  horasTrabajadas?: number;
+  kmFinal?: number;
+  kmInicial?: number;
+  codigo?: string;
 }
 
 export interface UpdateParteDiarioDto {
   ordenCompraId?: number;
   fecha?: Date;
-  kmInicial?: number;
-  kmFinal?: number;
-  kmRecorridos?: number;
-  horasTrabajadas?: number;
-  combustibleConsumido?: number;
-  incidencias?: string;
+  conductorId?: number;
+  equipoId?: number;
   observaciones?: string;
-  archivosAdjuntos?: string[]; // URLs de archivos
+  archivosAdjuntos?: string[]; // URLs de imágenes
+  combustibleConsumido?: number;
+  horasTrabajadas?: number;
+  kmFinal?: number;
+  kmInicial?: number;
+  codigo?: string;
 }
 
 // Tipos para autenticación
@@ -493,7 +513,7 @@ export interface EquipoFilters extends PaginationQuery {
 }
 
 export interface PresupuestoFilters extends PaginationQuery {
-  estado?: 'pendiente' | 'aceptado' | 'rechazado';
+  estado?: 'pendiente' | 'aceptado' | 'rechazado' | 'activo' | 'concluido' | 'finalizado';
   clienteId?: number;
   equipoId?: number;
   fechaDesde?: string;
@@ -533,7 +553,12 @@ export interface Remito extends BaseEntity {
   archivosAdjuntos?: string[]; // URLs de archivos adjuntos
   observaciones?: string;
   estado: 'pendiente' | 'entregado' | 'cancelado';
+  conductorId?: number;
+  equipoId?: number;
   creadoEn: Date;
+  ordenCompra?: OrdenCompra;
+  conductor?: Empleado;
+  equipo?: Equipo;
 }
 
 export interface CreateRemitoDto {
@@ -544,6 +569,8 @@ export interface CreateRemitoDto {
   archivosAdjuntos?: string[]; // URLs de archivos adjuntos
   observaciones?: string;
   estado?: 'pendiente' | 'entregado' | 'cancelado';
+  conductorId?: number;
+  equipoId?: number;
 }
 
 export interface UpdateRemitoDto {
@@ -554,6 +581,8 @@ export interface UpdateRemitoDto {
   archivosAdjuntos?: string[]; // URLs de archivos adjuntos
   observaciones?: string;
   estado?: 'pendiente' | 'entregado' | 'cancelado';
+  conductorId?: number;
+  equipoId?: number;
 }
 
 export interface RemitoFilters extends PaginationQuery {

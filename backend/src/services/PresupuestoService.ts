@@ -1,13 +1,16 @@
 import Joi from 'joi';
 import { PresupuestoRepository } from '@/repositories/PresupuestoRepository';
-import { Presupuesto, CreatePresupuestoDto, UpdatePresupuestoDto, PresupuestoFilters, PaginatedResponse } from '@/types';
+import { EquipoRepository } from '@/repositories/EquipoRepository';
+import { Presupuesto, CreatePresupuestoDto, UpdatePresupuestoDto, PaginatedResponse } from '@/types';
 import { IBaseService } from './interfaces/IBaseService';
 
 export class PresupuestoService implements IBaseService<Presupuesto, CreatePresupuestoDto, UpdatePresupuestoDto> {
   private presupuestoRepository: PresupuestoRepository;
+  private equipoRepository: EquipoRepository;
 
-  constructor(presupuestoRepository: PresupuestoRepository) {
+  constructor(presupuestoRepository: PresupuestoRepository, equipoRepository: EquipoRepository) {
     this.presupuestoRepository = presupuestoRepository;
+    this.equipoRepository = equipoRepository;
   }
 
   // Esquemas de validación
@@ -130,7 +133,7 @@ export class PresupuestoService implements IBaseService<Presupuesto, CreatePresu
     }),
   });
 
-  async getAll(filters?: PresupuestoFilters): Promise<PaginatedResponse<Presupuesto>> {
+  async getAll(filters?: any): Promise<PaginatedResponse<Presupuesto>> {
     return this.presupuestoRepository.findAll(filters);
   }
 
@@ -302,19 +305,19 @@ export class PresupuestoService implements IBaseService<Presupuesto, CreatePresu
     return this.presupuestoRepository.findByEquipo(equipoId);
   }
 
-  async findByEstado(estado: 'pendiente' | 'aceptado' | 'rechazado'): Promise<Presupuesto[]> {
-    if (!['pendiente', 'aceptado', 'rechazado'].includes(estado)) {
+  async findByEstado(estado: 'pendiente' | 'aceptado' | 'rechazado' | 'activo' | 'concluido' | 'finalizado'): Promise<Presupuesto[]> {
+    if (!['pendiente', 'aceptado', 'rechazado', 'activo', 'concluido', 'finalizado'].includes(estado)) {
       throw new Error('Estado inválido');
     }
     return this.presupuestoRepository.findByEstado(estado);
   }
 
-  async cambiarEstado(id: number, estado: 'pendiente' | 'aceptado' | 'rechazado'): Promise<Presupuesto | null> {
+  async cambiarEstado(id: number, estado: 'pendiente' | 'aceptado' | 'rechazado' | 'activo' | 'concluido' | 'finalizado'): Promise<Presupuesto | null> {
     if (!id || isNaN(id)) {
       throw new Error('ID de presupuesto inválido');
     }
 
-    if (!['pendiente', 'aceptado', 'rechazado'].includes(estado)) {
+    if (!['pendiente', 'aceptado', 'rechazado', 'activo', 'concluido', 'finalizado'].includes(estado)) {
       throw new Error('Estado inválido');
     }
 
@@ -324,21 +327,50 @@ export class PresupuestoService implements IBaseService<Presupuesto, CreatePresu
       throw new Error('Presupuesto no encontrado');
     }
 
-    // Si se está cambiando a 'aceptado', verificar conflictos
-    if (estado === 'aceptado') {
-      const presupuestosAceptados = await this.presupuestoRepository.findByEquipo(presupuestoExistente.equipos?.[0]?.id || 0);
-      const presupuestosEnConflicto = presupuestosAceptados.filter(p => 
-        p.id !== id && 
-        p.estado === 'aceptado' &&
-        new Date(p.validoHasta) >= new Date()
-      );
-      
-      if (presupuestosEnConflicto.length > 0) {
-        throw new Error('Ya existe un presupuesto aceptado para este equipo en el período especificado');
+    return this.presupuestoRepository.cambiarEstado(id, estado);
+  }
+
+  async iniciarActividad(id: number): Promise<Presupuesto | null> {
+    if (!id || isNaN(id)) {
+      throw new Error('ID de presupuesto inválido');
+    }
+
+    // Verificar si el presupuesto existe
+    const presupuesto = await this.presupuestoRepository.findById(id);
+    if (!presupuesto) {
+      throw new Error('Presupuesto no encontrado');
+    }
+
+    // Verificar que el presupuesto esté aceptado
+    if (presupuesto.estado !== 'aceptado') {
+      throw new Error('Solo se puede iniciar actividad en presupuestos aceptados');
+    }
+
+    // Verificar que tenga orden de compra
+    if (!presupuesto.ordenCompra) {
+      throw new Error('El presupuesto debe tener una orden de compra para iniciar actividad');
+    }
+
+    // Verificar que los equipos estén disponibles
+    if (presupuesto.equipos && presupuesto.equipos.length > 0) {
+      for (const equipo of presupuesto.equipos) {
+        if (equipo.estado !== 'disponible') {
+          throw new Error(`El equipo ${equipo.patente} no está disponible (estado: ${equipo.estado})`);
+        }
       }
     }
 
-    return this.presupuestoRepository.cambiarEstado(id, estado);
+    // Cambiar estado del presupuesto a activo
+    const presupuestoActualizado = await this.presupuestoRepository.cambiarEstado(id, 'activo');
+    
+    if (presupuestoActualizado && presupuesto.equipos) {
+      // Cambiar estado de los equipos a ocupado
+      for (const equipo of presupuesto.equipos) {
+        await this.equipoRepository.update(equipo.id, { estado: 'ocupado' });
+      }
+    }
+
+    return presupuestoActualizado;
   }
 
   async getPresupuestosVencidos(): Promise<Presupuesto[]> {

@@ -185,13 +185,14 @@ export interface Presupuesto {
   descripcion: string;
   costo: number;
   validoHasta: Date;
-  estado: 'pendiente' | 'aceptado' | 'rechazado';
+  estado: 'pendiente' | 'aceptado' | 'rechazado' | 'activo' | 'concluido' | 'finalizado';
   creadoEn: Date;
   // Relaciones
   cliente?: Cliente;
   equipo?: Equipo; // Para compatibilidad con presupuestos antiguos
   equipos?: Equipo[]; // Para presupuestos con múltiples equipos
   items?: PresupuestoItem[]; // Items del presupuesto
+  ordenCompra?: OrdenCompra; // Orden de compra asociada
   usuario?: {
     id: number;
     nombre: string;
@@ -207,7 +208,7 @@ export interface CreatePresupuestoDto {
   descripcion: string;
   costo: number;
   validoHasta: Date;
-  estado?: 'pendiente' | 'aceptado' | 'rechazado';
+  estado?: 'pendiente' | 'aceptado' | 'rechazado' | 'activo' | 'concluido' | 'finalizado';
   items?: CreatePresupuestoItemDto[];
 }
 
@@ -218,7 +219,7 @@ export interface UpdatePresupuestoDto {
   descripcion?: string;
   costo?: number;
   validoHasta?: Date;
-  estado?: 'pendiente' | 'aceptado' | 'rechazado';
+  estado?: 'pendiente' | 'aceptado' | 'rechazado' | 'activo' | 'concluido' | 'finalizado';
   items?: CreatePresupuestoItemDto[];
 }
 
@@ -283,44 +284,151 @@ export interface Equipment {
 
 
 
+// Tipos para OrdenCompra (coinciden con el backend)
 export interface OrdenCompra {
-  id: string;
-  presupuestoId: string;
-  number: string;
-  status: OrdenCompraStatus;
-  approvedAt: string;
-  documentUrl?: string;
-  createdAt: string;
-  updatedAt: string;
+  id: number;
+  presupuestoId: number;
+  fechaInicio: Date;
+  fechaFin: Date;
+  origen: string;
+  destino: string;
+  observaciones?: string;
+  documentos?: string[]; // URLs de documentos
+  imagenes?: string[]; // URLs de imágenes
+  estado: 'activa' | 'completada' | 'cancelada';
+  creadoEn: Date;
   // Relaciones
-  presupuesto?: Presupuesto;
+  presupuesto?: {
+    id: number;
+    cliente?: {
+      id: number;
+      nombreEmpresa: string;
+      rutCuit: string;
+      email?: string;
+    };
+    contacto?: {
+      id: number;
+      titulo: string;
+      nombre: string;
+      sector?: string;
+      email?: string;
+      telefono?: string;
+    };
+  };
 }
 
+export interface CreateOrdenCompraDto {
+  presupuestoId: number;
+  fechaInicio: Date;
+  fechaFin: Date;
+  origen: string;
+  destino: string;
+  observaciones?: string;
+  documentos?: string[]; // URLs de documentos
+  imagenes?: string[]; // URLs de imágenes
+  estado?: 'activa' | 'completada' | 'cancelada';
+}
+
+export interface UpdateOrdenCompraDto {
+  presupuestoId?: number;
+  fechaInicio?: Date;
+  fechaFin?: Date;
+  origen?: string;
+  destino?: string;
+  observaciones?: string;
+  documentos?: string[]; // URLs de documentos
+  imagenes?: string[]; // URLs de imágenes
+  estado?: 'activa' | 'completada' | 'cancelada';
+}
+
+// Tipos para ParteDiario (simplificado)
 export interface ParteDiario {
-  id: string;
-  ordenCompraId: string;
-  date: string;
-  kilometers: number;
-  hours: number;
-  description: string;
-  location?: string;
-  createdAt: string;
-  updatedAt: string;
-  // Relaciones
+  id: number;
+  ordenCompraId: number;
+  fecha: Date;
+  conductorId?: number;
+  equipoId?: number;
+  observaciones?: string;
+  archivosAdjuntos?: string[];
+  combustibleConsumido?: number;
+  horasTrabajadas?: number;
+  kmFinal?: number;
+  kmInicial?: number;
+  kmRecorridos?: number;
+  codigo?: string;
+  creadoEn: Date;
   ordenCompra?: OrdenCompra;
+  conductor?: Empleado;
+  equipo?: Equipo;
+}
+
+export interface CreateParteDiarioDto {
+  ordenCompraId: number;
+  fecha: Date;
+  conductorId?: number;
+  equipoId?: number;
+  observaciones?: string;
+  archivosAdjuntos?: string[];
+  combustibleConsumido?: number;
+  horasTrabajadas?: number;
+  kmFinal?: number;
+  kmInicial?: number;
+  codigo?: string;
+}
+
+export interface UpdateParteDiarioDto {
+  ordenCompraId?: number;
+  fecha?: Date;
+  conductorId?: number;
+  equipoId?: number;
+  observaciones?: string;
+  archivosAdjuntos?: string[];
+  combustibleConsumido?: number;
+  horasTrabajadas?: number;
+  kmFinal?: number;
+  kmInicial?: number;
+  codigo?: string;
 }
 
 export interface Remito {
-  id: string;
-  ordenCompraId: string;
-  number: string;
-  date: string;
-  description: string;
-  documentUrl?: string;
-  createdAt: string;
-  updatedAt: string;
-  // Relaciones
+  id: number;
+  ordenCompraId: number;
+  codigo: string;
+  contenido: string;
+  pdfPath?: string;
+  archivosAdjuntos?: string[]; // URLs de archivos adjuntos
+  observaciones?: string;
+  estado: 'pendiente' | 'entregado' | 'cancelado';
+  conductorId?: number;
+  equipoId?: number;
+  creadoEn: Date;
   ordenCompra?: OrdenCompra;
+  conductor?: Empleado;
+  equipo?: Equipo;
+}
+
+export interface CreateRemitoDto {
+  ordenCompraId: number;
+  codigo: string;
+  contenido: string;
+  pdfPath?: string;
+  archivosAdjuntos?: string[]; // URLs de archivos adjuntos
+  observaciones?: string;
+  estado?: 'pendiente' | 'entregado' | 'cancelado';
+  conductorId?: number;
+  equipoId?: number;
+}
+
+export interface UpdateRemitoDto {
+  ordenCompraId?: number;
+  codigo?: string;
+  contenido?: string;
+  pdfPath?: string;
+  archivosAdjuntos?: string[]; // URLs de archivos adjuntos
+  observaciones?: string;
+  estado?: 'pendiente' | 'entregado' | 'cancelado';
+  conductorId?: number;
+  equipoId?: number;
 }
 
 export interface Factura {

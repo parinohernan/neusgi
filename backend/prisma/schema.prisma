@@ -112,6 +112,8 @@ model Empleado {
   actualizadoEn   DateTime      @updatedAt @map("actualizado_en")
   tipoEmpleado    TipoEmpleado  @relation(fields: [tipoEmpleadoId], references: [id])
   equipos         Equipo[]
+  partesDiario    ParteDiario[]
+  remitos         Remito[]
 
   @@map("empleados")
 }
@@ -129,6 +131,8 @@ model Equipo {
   categoria                Categoria           @relation(fields: [categoriaId], references: [id])
   conductor                Empleado?           @relation(fields: [conductorId], references: [id])
   presupuestos             PresupuestoEquipo[]
+  partesDiario             ParteDiario[]
+  remitos                  Remito[]
 
   @@map("equipos")
 }
@@ -196,7 +200,10 @@ model OrdenCompra {
   origen          String            @db.VarChar(100)
   destino         String            @db.VarChar(100)
   observaciones   String?           @db.Text
+  documentos      String?           @map("documentos") @db.LongText // URLs de documentos JSON
+  imagenes        String?           @map("imagenes") @db.LongText // URLs de imágenes JSON
   estado          EstadoOrdenCompra @default(activa)
+  creadoEn        DateTime          @default(now()) @map("creado_en")
   certificados    Certificado[]
   cuentaCorriente CuentaCorriente[]
   facturas        Factura[]
@@ -211,18 +218,25 @@ model ParteDiario {
   id                   Int         @id @default(autoincrement())
   ordenCompraId        Int         @map("orden_compra_id")
   fecha                DateTime
+  conductorId          Int?        @map("conductor_id")
+  equipoId             Int?        @map("equipo_id")
   incidencias          String?     @db.Text
   archivosAdjuntos     String?     @map("archivos_adjuntos") @db.LongText
   combustibleConsumido Decimal?    @map("combustible_consumido") @db.Decimal(8, 2)
   creadoEn             DateTime    @default(now()) @map("creado_en")
-  horasTrabajadas      Decimal     @map("horas_trabajadas") @db.Decimal(5, 2)
-  kmFinal              Int         @map("km_final")
-  kmInicial            Int         @map("km_inicial")
-  kmRecorridos         Int         @map("km_recorridos")
+  horasTrabajadas      Decimal?    @map("horas_trabajadas") @db.Decimal(5, 2)
+  kmFinal              Int?        @map("km_final")
+  kmInicial            Int?        @map("km_inicial")
+  kmRecorridos         Int?        @map("km_recorridos")
   observaciones        String?     @db.Text
+  codigo               String?     @unique @db.VarChar(50)
   ordenCompra          OrdenCompra @relation(fields: [ordenCompraId], references: [id])
+  conductor            Empleado?   @relation(fields: [conductorId], references: [id])
+  equipo               Equipo?     @relation(fields: [equipoId], references: [id])
 
   @@index([ordenCompraId], map: "partes_diario_orden_compra_id_fkey")
+  @@index([conductorId], map: "partes_diario_conductor_id_fkey")
+  @@index([equipoId], map: "partes_diario_equipo_id_fkey")
   @@map("partes_diario")
 }
 
@@ -236,9 +250,15 @@ model Remito {
   archivosAdjuntos String?      @map("archivos_adjuntos") @db.LongText
   estado           EstadoRemito @default(pendiente)
   observaciones    String?      @db.Text
+  conductorId      Int?         @map("conductor_id")
+  equipoId         Int?         @map("equipo_id")
   ordenCompra      OrdenCompra  @relation(fields: [ordenCompraId], references: [id])
+  conductor        Empleado?    @relation(fields: [conductorId], references: [id])
+  equipo           Equipo?      @relation(fields: [equipoId], references: [id])
 
   @@index([ordenCompraId], map: "remitos_orden_compra_id_fkey")
+  @@index([conductorId], map: "remitos_conductor_id_fkey")
+  @@index([equipoId], map: "remitos_equipo_id_fkey")
   @@map("remitos")
 }
 
@@ -353,6 +373,9 @@ enum EstadoPresupuesto {
   pendiente
   aceptado
   rechazado
+  activo
+  concluido
+  finalizado
 }
 
 enum EstadoOrdenCompra {

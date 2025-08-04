@@ -55,14 +55,20 @@ export const presupuestoService = {
   },
 
   // Obtener presupuestos por estado
-  async getByEstado(estado: 'pendiente' | 'aceptado' | 'rechazado'): Promise<Presupuesto[]> {
+  async getByEstado(estado: 'pendiente' | 'aceptado' | 'rechazado' | 'activo' | 'concluido' | 'finalizado'): Promise<Presupuesto[]> {
     const response = await api.get(`/presupuestos/estado/${estado}`);
     return response.data as Presupuesto[];
   },
 
   // Cambiar estado del presupuesto
-  async cambiarEstado(id: number, estado: 'pendiente' | 'aceptado' | 'rechazado'): Promise<Presupuesto> {
-    const response = await api.patch(`/presupuestos/${id}/estado`, { estado });
+  async cambiarEstado(id: number, estado: 'pendiente' | 'aceptado' | 'rechazado' | 'activo' | 'concluido' | 'finalizado'): Promise<Presupuesto> {
+    const response = await api.put(`/presupuestos/${id}/estado`, { estado });
+    return response.data as Presupuesto;
+  },
+
+  // Iniciar actividad
+  async iniciarActividad(id: number): Promise<Presupuesto> {
+    const response = await api.post(`/presupuestos/${id}/iniciar-actividad`);
     return response.data as Presupuesto;
   },
 

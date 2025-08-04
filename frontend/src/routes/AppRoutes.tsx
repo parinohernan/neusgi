@@ -17,8 +17,12 @@ import { PresupuestosPage } from '../pages/presupuestos/PresupuestosPage';
 import { NuevoPresupuestoPage } from '../pages/presupuestos/NuevoPresupuestoPage';
 import { EditarPresupuestoPage } from '../pages/presupuestos/EditarPresupuestoPage';
 import { DetallePresupuestoPage } from '../pages/presupuestos/DetallePresupuestoPage';
+import { NuevaOrdenCompraPage } from '../pages/ordenes-compra/NuevaOrdenCompraPage';
+import { EditarOrdenCompraPage } from '../pages/ordenes-compra/EditarOrdenCompraPage';
 import { EmpleadosPage } from '../pages/empleados/EmpleadosPage';
 import { NuevoEmpleadoPage } from '../pages/empleados/NuevoEmpleadoPage';
+import { NuevoParteDiarioPage } from '../pages/partes-diario/NuevoParteDiarioPage';
+import { DocumentosPage } from '../pages/presupuestos/DocumentosPage';
 
 // ----------------------------------------------------------------------------
 // COMPONENTE PRINCIPAL DE RUTAS
@@ -201,10 +205,55 @@ export const AppRoutes = () => {
       />
       
       <Route
+        path="/presupuestos/:presupuestoId/orden-compra/nueva"
+        element={
+          <ProtectedRoute>
+            <NuevaOrdenCompraPage />
+          </ProtectedRoute>
+        }
+      />
+      
+      <Route
+        path="/presupuestos/:presupuestoId/orden-compra/editar"
+        element={
+          <ProtectedRoute>
+            <EditarOrdenCompraPage />
+          </ProtectedRoute>
+        }
+      />
+      
+      <Route
+        path="/presupuestos/:presupuestoId/parte-diario/nuevo"
+        element={
+          <ProtectedRoute>
+            <NuevoParteDiarioPage />
+          </ProtectedRoute>
+        }
+      />
+      
+      <Route
+        path="/presupuestos/:presupuestoId/documentos"
+        element={
+          <ProtectedRoute>
+            <DocumentosPage />
+          </ProtectedRoute>
+        }
+      />
+      
+      <Route
         path="/presupuestos/*"
         element={
           <ProtectedRoute>
             <div>Página de Presupuestos (Pendiente)</div>
+          </ProtectedRoute>
+        }
+      />
+      
+      <Route
+        path="/ordenes-compra/nueva"
+        element={
+          <ProtectedRoute>
+            <NuevaOrdenCompraPage />
           </ProtectedRoute>
         }
       />

@@ -3,6 +3,7 @@ import { PresupuestoController } from '@/controllers/PresupuestoController';
 import { PresupuestoService } from '@/services/PresupuestoService';
 import { EmpresaService } from '@/services/EmpresaService';
 import { PresupuestoRepository } from '@/repositories/PresupuestoRepository';
+import { EquipoRepository } from '@/repositories/EquipoRepository';
 import { EmpresaRepository } from '@/repositories/EmpresaRepository';
 import Database from '@/config/database';
 import { AuthMiddleware } from '@/middleware/auth';
@@ -11,8 +12,9 @@ const router = Router();
 
 // Inicializar dependencias
 const presupuestoRepository = new PresupuestoRepository(Database.getInstance());
+const equipoRepository = new EquipoRepository(Database.getInstance());
 const empresaRepository = new EmpresaRepository(Database.getInstance());
-const presupuestoService = new PresupuestoService(presupuestoRepository);
+const presupuestoService = new PresupuestoService(presupuestoRepository, equipoRepository);
 const empresaService = new EmpresaService(empresaRepository);
 const presupuestoController = new PresupuestoController(presupuestoService, empresaService);
 
@@ -33,6 +35,9 @@ router.get('/estado/:estado', AuthMiddleware.requireRole(['admin', 'logistica'])
 
 // Rutas de gestión de estado
 router.put('/:id/estado', AuthMiddleware.requireRole(['admin', 'logistica']), presupuestoController.cambiarEstado.bind(presupuestoController));
+
+// Iniciar actividad
+router.post('/:id/iniciar-actividad', presupuestoController.iniciarActividad.bind(presupuestoController));
 
 // Rutas especiales
 router.get('/vencidos/lista', AuthMiddleware.requireRole(['admin', 'logistica']), presupuestoController.getPresupuestosVencidos.bind(presupuestoController));

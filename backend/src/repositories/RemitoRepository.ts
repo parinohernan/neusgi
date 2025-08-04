@@ -14,6 +14,8 @@ export class RemitoRepository implements IBaseRepository<Remito, CreateRemitoDto
     return {
       ...prismaRemito,
       archivosAdjuntos: prismaRemito.archivosAdjuntos ? JSON.parse(prismaRemito.archivosAdjuntos) : undefined,
+      conductorId: prismaRemito.conductorId as number | undefined,
+      equipoId: prismaRemito.equipoId as number | undefined,
     };
   }
 
@@ -260,6 +262,14 @@ export class RemitoRepository implements IBaseRepository<Remito, CreateRemitoDto
       createData.pdfPath = data.pdfPath;
     }
 
+    if (data.conductorId) {
+      createData.conductorId = data.conductorId;
+    }
+
+    if (data.equipoId) {
+      createData.equipoId = data.equipoId;
+    }
+
     if (data.archivosAdjuntos && data.archivosAdjuntos.length > 0) {
       createData.archivosAdjuntos = JSON.stringify(data.archivosAdjuntos);
     }
@@ -291,6 +301,8 @@ export class RemitoRepository implements IBaseRepository<Remito, CreateRemitoDto
             },
           },
         },
+        conductor: true,
+        equipo: true,
       },
     });
 
@@ -306,6 +318,8 @@ export class RemitoRepository implements IBaseRepository<Remito, CreateRemitoDto
     if (data.estado !== undefined) updateData.estado = data.estado;
     if (data.pdfPath !== undefined) updateData.pdfPath = data.pdfPath;
     if (data.observaciones !== undefined) updateData.observaciones = data.observaciones;
+    if (data.conductorId !== undefined) updateData.conductorId = data.conductorId;
+    if (data.equipoId !== undefined) updateData.equipoId = data.equipoId;
     if (data.archivosAdjuntos !== undefined) {
       updateData.archivosAdjuntos = data.archivosAdjuntos ? JSON.stringify(data.archivosAdjuntos) : null;
     }
@@ -338,6 +352,8 @@ export class RemitoRepository implements IBaseRepository<Remito, CreateRemitoDto
             },
           },
         },
+        conductor: true,
+        equipo: true,
       },
     });
 

@@ -550,3 +550,128 @@ body {
   background-color: var(--danger-color);
   color: var(--white);
 }
+
+/* Cards de presupuestos específicas */
+.presupuesto-card {
+  transition: var(--transition-normal);
+  border: 1px solid var(--gray);
+}
+
+.presupuesto-card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+  border-color: var(--primary-color);
+}
+
+.presupuesto-card .buttons {
+  border-top: 1px solid var(--gray);
+  padding-top: 1rem;
+  margin-top: 1rem;
+}
+
+.presupuesto-card .button {
+  margin-right: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  transition: var(--transition-fast);
+}
+
+.presupuesto-card .button:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Mejoras específicas para botones de acción */
+.presupuesto-card .button.is-success {
+  background-color: var(--success-color);
+  color: var(--white);
+  border-color: var(--success-color);
+}
+
+.presupuesto-card .button.is-warning {
+  background-color: var(--warning-color);
+  color: var(--white);
+  border-color: var(--warning-color);
+}
+
+.presupuesto-card .button.is-info {
+  background-color: var(--info-color);
+  color: var(--white);
+  border-color: var(--info-color);
+}
+
+.presupuesto-card .button.is-primary.is-light {
+  background-color: rgba(37, 99, 235, 0.15);
+  color: #1e40af;
+  border-color: #3b82f6;
+  font-weight: 600;
+}
+
+.presupuesto-card .button.is-info.is-light {
+  background-color: rgba(6, 182, 212, 0.15);
+  color: #0e7490;
+  border-color: #06b6d4;
+  font-weight: 600;
+}
+
+.presupuesto-card .button.is-success.is-light {
+  background-color: rgba(16, 185, 129, 0.15);
+  color: #047857;
+  border-color: #10b981;
+  font-weight: 600;
+}
+
+/* Estilos para botones en presupuestos */
+.presupuesto-card .button.is-primary.is-light,
+.presupuesto-card .button.is-info.is-light,
+.presupuesto-card .button.is-success.is-light {
+  background-color: #3273dc;
+  color: white;
+  font-weight: 600;
+}
+
+.presupuesto-card .button.is-primary.is-light {
+  background-color: #00d1b2;
+  color: white;
+  font-weight: 600;
+}
+
+.presupuesto-card .button.is-info.is-light {
+  background-color: #3298dc;
+  color: white;
+  font-weight: 600;
+}
+
+.presupuesto-card .button.is-success.is-light {
+  background-color: #48c774;
+  color: white;
+  font-weight: 600;
+}
+
+.presupuesto-card .card-footer {
+  border-top: 1px solid #dbdbdb;
+  padding: 0.75rem;
+}
+
+/* Estilos para botones en modales */
+.modal .button.is-info {
+  background-color: #3298dc;
+  color: white;
+  font-weight: 600;
+}
+
+.modal .button.is-info:hover {
+  background-color: #209cee;
+  color: white;
+}
+
+.modal .button.is-danger {
+  background-color: #f14668;
+  color: white;
+  font-weight: 600;
+}
+
+.modal .button.is-danger:hover {
+  background-color: #f03a5f;
+  color: white;
+}

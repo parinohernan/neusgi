@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import { OrdenCompraService } from '@/services/OrdenCompraService';
-import { CreateOrdenCompraDto, UpdateOrdenCompraDto, ApiResponse, OrdenCompraFilters } from '@/types';
 
 export class OrdenCompraController {
   private ordenCompraService: OrdenCompraService;
@@ -9,595 +8,185 @@ export class OrdenCompraController {
     this.ordenCompraService = ordenCompraService;
   }
 
-  // GET /ordenes-compra
   async getAll(req: Request, res: Response): Promise<void> {
     try {
-      const { page, limit, sortBy, sortOrder, estado, presupuestoId, clienteId, equipoId, fechaInicioDesde, fechaInicioHasta, fechaFinDesde, fechaFinHasta } = req.query;
-      const filters: OrdenCompraFilters = {};
+      const { page, limit, estado, presupuestoId, fechaInicioDesde, fechaInicioHasta } = req.query;
       
-      if (page) filters.page = parseInt(page as string);
-      if (limit) filters.limit = parseInt(limit as string);
-      if (sortBy) filters.sortBy = sortBy as string;
-      if (sortOrder) filters.sortOrder = sortOrder as 'asc' | 'desc';
-      if (estado) filters.estado = estado as 'activa' | 'completada' | 'cancelada';
-      if (presupuestoId) filters.presupuestoId = parseInt(presupuestoId as string);
-      if (clienteId) filters.clienteId = parseInt(clienteId as string);
-      if (equipoId) filters.equipoId = parseInt(equipoId as string);
-      if (fechaInicioDesde) filters.fechaInicioDesde = fechaInicioDesde as string;
-      if (fechaInicioHasta) filters.fechaInicioHasta = fechaInicioHasta as string;
-      if (fechaFinDesde) filters.fechaFinDesde = fechaFinDesde as string;
-      if (fechaFinHasta) filters.fechaFinHasta = fechaFinHasta as string;
-
-      const ordenesCompra = await this.ordenCompraService.getAll(filters);
-      
-      const response: ApiResponse<typeof ordenesCompra> = {
-        success: true,
-        data: ordenesCompra,
-        message: 'Órdenes de compra obtenidas exitosamente',
+      const filters = {
+        page: page ? parseInt(page as string) : 1,
+        limit: limit ? parseInt(limit as string) : 10,
+        estado: estado as string,
+        presupuestoId: presupuestoId ? parseInt(presupuestoId as string) : undefined,
+        fechaInicioDesde: fechaInicioDesde as string,
+        fechaInicioHasta: fechaInicioHasta as string,
       };
 
-      res.status(200).json(response);
+      const result = await this.ordenCompraService.getAll(filters);
+      res.json(result);
     } catch (error) {
-      const response: ApiResponse<null> = {
-        success: false,
-        error: error instanceof Error ? error.message : 'Error interno del servidor',
-      };
-      res.status(500).json(response);
+      console.error('Error obteniendo órdenes de compra:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Error interno del servidor',
+        error: error instanceof Error ? error.message : 'Error desconocido'
+      });
     }
   }
 
-  // GET /ordenes-compra/:id
   async getById(req: Request, res: Response): Promise<void> {
     try {
       const id = parseInt(req.params['id'] || '0');
-      
-      if (isNaN(id)) {
-        const response: ApiResponse<null> = {
-          success: false,
-          error: 'ID de orden de compra inválido',
-        };
-        res.status(400).json(response);
-        return;
-      }
-
       const ordenCompra = await this.ordenCompraService.getById(id);
       
       if (!ordenCompra) {
-        const response: ApiResponse<null> = {
-          success: false,
-          error: 'Orden de compra no encontrada',
-        };
-        res.status(404).json(response);
+        res.status(404).json({ 
+          success: false, 
+          message: 'Orden de compra no encontrada' 
+        });
         return;
       }
 
-      const response: ApiResponse<typeof ordenCompra> = {
-        success: true,
-        data: ordenCompra,
-        message: 'Orden de compra obtenida exitosamente',
-      };
-
-      res.status(200).json(response);
+      res.json({ success: true, data: ordenCompra });
     } catch (error) {
-      const response: ApiResponse<null> = {
-        success: false,
-        error: error instanceof Error ? error.message : 'Error interno del servidor',
-      };
-      res.status(500).json(response);
+      console.error('Error obteniendo orden de compra:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Error interno del servidor',
+        error: error instanceof Error ? error.message : 'Error desconocido'
+      });
     }
   }
 
-  // POST /ordenes-compra
   async create(req: Request, res: Response): Promise<void> {
     try {
-      const createData: CreateOrdenCompraDto = req.body;
-      
-      const ordenCompra = await this.ordenCompraService.create(createData);
-      
-      const response: ApiResponse<typeof ordenCompra> = {
-        success: true,
+      const ordenCompra = await this.ordenCompraService.create(req.body);
+      res.status(201).json({ 
+        success: true, 
         data: ordenCompra,
-        message: 'Orden de compra creada exitosamente',
-      };
-
-      res.status(201).json(response);
+        message: 'Orden de compra creada exitosamente'
+      });
     } catch (error) {
-      const response: ApiResponse<null> = {
-        success: false,
-        error: error instanceof Error ? error.message : 'Error interno del servidor',
-      };
-      res.status(400).json(response);
+      console.error('Error creando orden de compra:', error);
+      res.status(400).json({ 
+        success: false, 
+        message: 'Error al crear la orden de compra',
+        error: error instanceof Error ? error.message : 'Error desconocido'
+      });
     }
   }
 
-  // PUT /ordenes-compra/:id
   async update(req: Request, res: Response): Promise<void> {
     try {
       const id = parseInt(req.params['id'] || '0');
-      
-      if (isNaN(id)) {
-        const response: ApiResponse<null> = {
-          success: false,
-          error: 'ID de orden de compra inválido',
-        };
-        res.status(400).json(response);
-        return;
-      }
-
-      const updateData: UpdateOrdenCompraDto = req.body;
-      
-      const ordenCompra = await this.ordenCompraService.update(id, updateData);
+      const ordenCompra = await this.ordenCompraService.update(id, req.body);
       
       if (!ordenCompra) {
-        const response: ApiResponse<null> = {
-          success: false,
-          error: 'Orden de compra no encontrada',
-        };
-        res.status(404).json(response);
+        res.status(404).json({ 
+          success: false, 
+          message: 'Orden de compra no encontrada' 
+        });
         return;
       }
 
-      const response: ApiResponse<typeof ordenCompra> = {
-        success: true,
+      res.json({ 
+        success: true, 
         data: ordenCompra,
-        message: 'Orden de compra actualizada exitosamente',
-      };
-
-      res.status(200).json(response);
+        message: 'Orden de compra actualizada exitosamente'
+      });
     } catch (error) {
-      const response: ApiResponse<null> = {
-        success: false,
-        error: error instanceof Error ? error.message : 'Error interno del servidor',
-      };
-      res.status(400).json(response);
+      console.error('Error actualizando orden de compra:', error);
+      res.status(400).json({ 
+        success: false, 
+        message: 'Error al actualizar la orden de compra',
+        error: error instanceof Error ? error.message : 'Error desconocido'
+      });
     }
   }
 
-  // DELETE /ordenes-compra/:id
   async delete(req: Request, res: Response): Promise<void> {
     try {
       const id = parseInt(req.params['id'] || '0');
+      const success = await this.ordenCompraService.delete(id);
       
-      if (isNaN(id)) {
-        const response: ApiResponse<null> = {
-          success: false,
-          error: 'ID de orden de compra inválido',
-        };
-        res.status(400).json(response);
+      if (!success) {
+        res.status(404).json({ 
+          success: false, 
+          message: 'Orden de compra no encontrada' 
+        });
         return;
       }
 
-      const deleted = await this.ordenCompraService.delete(id);
-      
-      if (!deleted) {
-        const response: ApiResponse<null> = {
-          success: false,
-          error: 'Orden de compra no encontrada',
-        };
-        res.status(404).json(response);
-        return;
-      }
-
-      const response: ApiResponse<null> = {
-        success: true,
-        message: 'Orden de compra eliminada exitosamente',
-      };
-
-      res.status(200).json(response);
+      res.json({ 
+        success: true, 
+        message: 'Orden de compra eliminada exitosamente'
+      });
     } catch (error) {
-      const response: ApiResponse<null> = {
-        success: false,
-        error: error instanceof Error ? error.message : 'Error interno del servidor',
-      };
-      res.status(500).json(response);
+      console.error('Error eliminando orden de compra:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Error interno del servidor',
+        error: error instanceof Error ? error.message : 'Error desconocido'
+      });
     }
   }
 
-  // GET /ordenes-compra/presupuesto/:presupuestoId
   async findByPresupuesto(req: Request, res: Response): Promise<void> {
     try {
       const presupuestoId = parseInt(req.params['presupuestoId'] || '0');
-      
-      if (isNaN(presupuestoId)) {
-        const response: ApiResponse<null> = {
-          success: false,
-          error: 'ID de presupuesto inválido',
-        };
-        res.status(400).json(response);
-        return;
-      }
-
       const ordenesCompra = await this.ordenCompraService.findByPresupuesto(presupuestoId);
-      
-      const response: ApiResponse<typeof ordenesCompra> = {
-        success: true,
-        data: ordenesCompra,
-        message: 'Órdenes de compra del presupuesto obtenidas exitosamente',
-      };
-
-      res.status(200).json(response);
+      res.json({ success: true, data: ordenesCompra });
     } catch (error) {
-      const response: ApiResponse<null> = {
-        success: false,
-        error: error instanceof Error ? error.message : 'Error interno del servidor',
-      };
-      res.status(500).json(response);
+      console.error('Error obteniendo órdenes de compra por presupuesto:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Error interno del servidor',
+        error: error instanceof Error ? error.message : 'Error desconocido'
+      });
     }
   }
 
-  // GET /ordenes-compra/equipo/:equipoId
-  async findByEquipo(req: Request, res: Response): Promise<void> {
-    try {
-      const equipoId = parseInt(req.params['equipoId'] || '0');
-      
-      if (isNaN(equipoId)) {
-        const response: ApiResponse<null> = {
-          success: false,
-          error: 'ID de equipo inválido',
-        };
-        res.status(400).json(response);
-        return;
-      }
-
-      const ordenesCompra = await this.ordenCompraService.findByEquipo(equipoId);
-      
-      const response: ApiResponse<typeof ordenesCompra> = {
-        success: true,
-        data: ordenesCompra,
-        message: 'Órdenes de compra del equipo obtenidas exitosamente',
-      };
-
-      res.status(200).json(response);
-    } catch (error) {
-      const response: ApiResponse<null> = {
-        success: false,
-        error: error instanceof Error ? error.message : 'Error interno del servidor',
-      };
-      res.status(500).json(response);
-    }
-  }
-
-  // GET /ordenes-compra/cliente/:clienteId
-  async findByCliente(req: Request, res: Response): Promise<void> {
-    try {
-      const clienteId = parseInt(req.params['clienteId'] || '0');
-      
-      if (isNaN(clienteId)) {
-        const response: ApiResponse<null> = {
-          success: false,
-          error: 'ID de cliente inválido',
-        };
-        res.status(400).json(response);
-        return;
-      }
-
-      const ordenesCompra = await this.ordenCompraService.findByCliente(clienteId);
-      
-      const response: ApiResponse<typeof ordenesCompra> = {
-        success: true,
-        data: ordenesCompra,
-        message: 'Órdenes de compra del cliente obtenidas exitosamente',
-      };
-
-      res.status(200).json(response);
-    } catch (error) {
-      const response: ApiResponse<null> = {
-        success: false,
-        error: error instanceof Error ? error.message : 'Error interno del servidor',
-      };
-      res.status(500).json(response);
-    }
-  }
-
-  // GET /ordenes-compra/estado/:estado
   async findByEstado(req: Request, res: Response): Promise<void> {
     try {
-      const { estado } = req.params;
-      
-      if (!estado || !['activa', 'completada', 'cancelada'].includes(estado)) {
-        const response: ApiResponse<null> = {
-          success: false,
-          error: 'Estado inválido. Debe ser: activa, completada o cancelada',
-        };
-        res.status(400).json(response);
-        return;
-      }
-
-      const ordenesCompra = await this.ordenCompraService.findByEstado(estado as 'activa' | 'completada' | 'cancelada');
-      
-      const response: ApiResponse<typeof ordenesCompra> = {
-        success: true,
-        data: ordenesCompra,
-        message: 'Órdenes de compra obtenidas exitosamente',
-      };
-
-      res.status(200).json(response);
+      const estado = req.params['estado'] as 'activa' | 'completada' | 'cancelada';
+      const ordenesCompra = await this.ordenCompraService.findByEstado(estado);
+      res.json({ success: true, data: ordenesCompra });
     } catch (error) {
-      const response: ApiResponse<null> = {
-        success: false,
-        error: error instanceof Error ? error.message : 'Error interno del servidor',
-      };
-      res.status(500).json(response);
+      console.error('Error obteniendo órdenes de compra por estado:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Error interno del servidor',
+        error: error instanceof Error ? error.message : 'Error desconocido'
+      });
     }
   }
 
-  // PUT /ordenes-compra/:id/estado
   async cambiarEstado(req: Request, res: Response): Promise<void> {
     try {
       const id = parseInt(req.params['id'] || '0');
-      
-      if (isNaN(id)) {
-        const response: ApiResponse<null> = {
-          success: false,
-          error: 'ID de orden de compra inválido',
-        };
-        res.status(400).json(response);
-        return;
-      }
-
       const { estado } = req.body;
       
-      if (!estado || !['activa', 'completada', 'cancelada'].includes(estado)) {
-        const response: ApiResponse<null> = {
-          success: false,
-          error: 'Estado inválido. Debe ser: activa, completada o cancelada',
-        };
-        res.status(400).json(response);
-        return;
-      }
-
       const ordenCompra = await this.ordenCompraService.cambiarEstado(id, estado);
       
       if (!ordenCompra) {
-        const response: ApiResponse<null> = {
-          success: false,
-          error: 'Orden de compra no encontrada',
-        };
-        res.status(404).json(response);
+        res.status(404).json({ 
+          success: false, 
+          message: 'Orden de compra no encontrada' 
+        });
         return;
       }
 
-      const response: ApiResponse<typeof ordenCompra> = {
-        success: true,
+      res.json({ 
+        success: true, 
         data: ordenCompra,
-        message: 'Estado de la orden de compra actualizado exitosamente',
-      };
-
-      res.status(200).json(response);
+        message: 'Estado de orden de compra cambiado exitosamente'
+      });
     } catch (error) {
-      const response: ApiResponse<null> = {
-        success: false,
-        error: error instanceof Error ? error.message : 'Error interno del servidor',
-      };
-      res.status(400).json(response);
-    }
-  }
-
-  // GET /ordenes-compra/activas/lista
-  async getOrdenesActivas(_req: Request, res: Response): Promise<void> {
-    try {
-      const ordenesCompra = await this.ordenCompraService.getOrdenesActivas();
-      
-      const response: ApiResponse<typeof ordenesCompra> = {
-        success: true,
-        data: ordenesCompra,
-        message: 'Órdenes de compra activas obtenidas exitosamente',
-      };
-
-      res.status(200).json(response);
-    } catch (error) {
-      const response: ApiResponse<null> = {
-        success: false,
-        error: error instanceof Error ? error.message : 'Error interno del servidor',
-      };
-      res.status(500).json(response);
-    }
-  }
-
-  // GET /ordenes-compra/completadas/lista
-  async getOrdenesCompletadas(_req: Request, res: Response): Promise<void> {
-    try {
-      const ordenesCompra = await this.ordenCompraService.getOrdenesCompletadas();
-      
-      const response: ApiResponse<typeof ordenesCompra> = {
-        success: true,
-        data: ordenesCompra,
-        message: 'Órdenes de compra completadas obtenidas exitosamente',
-      };
-
-      res.status(200).json(response);
-    } catch (error) {
-      const response: ApiResponse<null> = {
-        success: false,
-        error: error instanceof Error ? error.message : 'Error interno del servidor',
-      };
-      res.status(500).json(response);
-    }
-  }
-
-  // GET /ordenes-compra/en-curso/lista
-  async getOrdenesEnCurso(_req: Request, res: Response): Promise<void> {
-    try {
-      const ordenesCompra = await this.ordenCompraService.getOrdenesEnCurso();
-      
-      const response: ApiResponse<typeof ordenesCompra> = {
-        success: true,
-        data: ordenesCompra,
-        message: 'Órdenes de compra en curso obtenidas exitosamente',
-      };
-
-      res.status(200).json(response);
-    } catch (error) {
-      const response: ApiResponse<null> = {
-        success: false,
-        error: error instanceof Error ? error.message : 'Error interno del servidor',
-      };
-      res.status(500).json(response);
-    }
-  }
-
-  // GET /ordenes-compra/vencidas/lista
-  async getOrdenesVencidas(_req: Request, res: Response): Promise<void> {
-    try {
-      const ordenesCompra = await this.ordenCompraService.getOrdenesVencidas();
-      
-      const response: ApiResponse<typeof ordenesCompra> = {
-        success: true,
-        data: ordenesCompra,
-        message: 'Órdenes de compra vencidas obtenidas exitosamente',
-      };
-
-      res.status(200).json(response);
-    } catch (error) {
-      const response: ApiResponse<null> = {
-        success: false,
-        error: error instanceof Error ? error.message : 'Error interno del servidor',
-      };
-      res.status(500).json(response);
-    }
-  }
-
-  // GET /ordenes-compra/estadisticas
-  async getEstadisticas(_req: Request, res: Response): Promise<void> {
-    try {
-      const estadisticas = await this.ordenCompraService.getEstadisticas();
-      
-      const response: ApiResponse<typeof estadisticas> = {
-        success: true,
-        data: estadisticas,
-        message: 'Estadísticas obtenidas exitosamente',
-      };
-
-      res.status(200).json(response);
-    } catch (error) {
-      const response: ApiResponse<null> = {
-        success: false,
-        error: error instanceof Error ? error.message : 'Error interno del servidor',
-      };
-      res.status(500).json(response);
-    }
-  }
-
-  // PUT /ordenes-compra/:id/completar
-  async completarOrden(req: Request, res: Response): Promise<void> {
-    try {
-      const id = parseInt(req.params['id'] || '0');
-      
-      if (isNaN(id)) {
-        const response: ApiResponse<null> = {
-          success: false,
-          error: 'ID de orden de compra inválido',
-        };
-        res.status(400).json(response);
-        return;
-      }
-
-      const ordenCompra = await this.ordenCompraService.completarOrden(id);
-      
-      if (!ordenCompra) {
-        const response: ApiResponse<null> = {
-          success: false,
-          error: 'Orden de compra no encontrada',
-        };
-        res.status(404).json(response);
-        return;
-      }
-
-      const response: ApiResponse<typeof ordenCompra> = {
-        success: true,
-        data: ordenCompra,
-        message: 'Orden de compra completada exitosamente',
-      };
-
-      res.status(200).json(response);
-    } catch (error) {
-      const response: ApiResponse<null> = {
-        success: false,
-        error: error instanceof Error ? error.message : 'Error interno del servidor',
-      };
-      res.status(400).json(response);
-    }
-  }
-
-  // PUT /ordenes-compra/:id/cancelar
-  async cancelarOrden(req: Request, res: Response): Promise<void> {
-    try {
-      const id = parseInt(req.params['id'] || '0');
-      
-      if (isNaN(id)) {
-        const response: ApiResponse<null> = {
-          success: false,
-          error: 'ID de orden de compra inválido',
-        };
-        res.status(400).json(response);
-        return;
-      }
-
-      const ordenCompra = await this.ordenCompraService.cancelarOrden(id);
-      
-      if (!ordenCompra) {
-        const response: ApiResponse<null> = {
-          success: false,
-          error: 'Orden de compra no encontrada',
-        };
-        res.status(404).json(response);
-        return;
-      }
-
-      const response: ApiResponse<typeof ordenCompra> = {
-        success: true,
-        data: ordenCompra,
-        message: 'Orden de compra cancelada exitosamente',
-      };
-
-      res.status(200).json(response);
-    } catch (error) {
-      const response: ApiResponse<null> = {
-        success: false,
-        error: error instanceof Error ? error.message : 'Error interno del servidor',
-      };
-      res.status(400).json(response);
-    }
-  }
-
-  // PUT /ordenes-compra/:id/reactivar
-  async reactivarOrden(req: Request, res: Response): Promise<void> {
-    try {
-      const id = parseInt(req.params['id'] || '0');
-      
-      if (isNaN(id)) {
-        const response: ApiResponse<null> = {
-          success: false,
-          error: 'ID de orden de compra inválido',
-        };
-        res.status(400).json(response);
-        return;
-      }
-
-      const ordenCompra = await this.ordenCompraService.reactivarOrden(id);
-      
-      if (!ordenCompra) {
-        const response: ApiResponse<null> = {
-          success: false,
-          error: 'Orden de compra no encontrada',
-        };
-        res.status(404).json(response);
-        return;
-      }
-
-      const response: ApiResponse<typeof ordenCompra> = {
-        success: true,
-        data: ordenCompra,
-        message: 'Orden de compra reactivada exitosamente',
-      };
-
-      res.status(200).json(response);
-    } catch (error) {
-      const response: ApiResponse<null> = {
-        success: false,
-        error: error instanceof Error ? error.message : 'Error interno del servidor',
-      };
-      res.status(400).json(response);
+      console.error('Error cambiando estado de orden de compra:', error);
+      res.status(400).json({ 
+        success: false, 
+        message: 'Error al cambiar el estado de la orden de compra',
+        error: error instanceof Error ? error.message : 'Error desconocido'
+      });
     }
   }
 } 

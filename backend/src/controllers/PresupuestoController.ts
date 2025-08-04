@@ -321,51 +321,67 @@ export class PresupuestoController {
   async cambiarEstado(req: Request, res: Response): Promise<void> {
     try {
       const id = parseInt(req.params['id'] || '0');
-      
-      if (isNaN(id)) {
-        const response: ApiResponse<null> = {
-          success: false,
-          error: 'ID de presupuesto inválido',
-        };
-        res.status(400).json(response);
-        return;
-      }
-
       const { estado } = req.body;
       
-      if (!estado || !['pendiente', 'aceptado', 'rechazado'].includes(estado)) {
-        const response: ApiResponse<null> = {
-          success: false,
-          error: 'Estado inválido. Debe ser: pendiente, aceptado o rechazado',
-        };
-        res.status(400).json(response);
+      if (!['pendiente', 'aceptado', 'rechazado', 'activo', 'concluido', 'finalizado'].includes(estado)) {
+        res.status(400).json({ 
+          success: false, 
+          message: 'Estado inválido' 
+        });
         return;
       }
 
       const presupuesto = await this.presupuestoService.cambiarEstado(id, estado);
       
       if (!presupuesto) {
-        const response: ApiResponse<null> = {
-          success: false,
-          error: 'Presupuesto no encontrado',
-        };
-        res.status(404).json(response);
+        res.status(404).json({ 
+          success: false, 
+          message: 'Presupuesto no encontrado' 
+        });
         return;
       }
 
-      const response: ApiResponse<typeof presupuesto> = {
-        success: true,
+      res.json({ 
+        success: true, 
         data: presupuesto,
-        message: 'Estado del presupuesto actualizado exitosamente',
-      };
-
-      res.status(200).json(response);
+        message: 'Estado del presupuesto cambiado exitosamente'
+      });
     } catch (error) {
-      const response: ApiResponse<null> = {
-        success: false,
-        error: error instanceof Error ? error.message : 'Error interno del servidor',
-      };
-      res.status(400).json(response);
+      console.error('Error cambiando estado del presupuesto:', error);
+      res.status(400).json({ 
+        success: false, 
+        message: 'Error al cambiar el estado del presupuesto',
+        error: error instanceof Error ? error.message : 'Error desconocido'
+      });
+    }
+  }
+
+  async iniciarActividad(req: Request, res: Response): Promise<void> {
+    try {
+      const id = parseInt(req.params['id'] || '0');
+      
+      const presupuesto = await this.presupuestoService.iniciarActividad(id);
+      
+      if (!presupuesto) {
+        res.status(404).json({ 
+          success: false, 
+          message: 'Presupuesto no encontrado' 
+        });
+        return;
+      }
+
+      res.json({ 
+        success: true, 
+        data: presupuesto,
+        message: 'Actividad iniciada exitosamente. Los equipos han sido marcados como ocupados.'
+      });
+    } catch (error) {
+      console.error('Error iniciando actividad:', error);
+      res.status(400).json({ 
+        success: false, 
+        message: 'Error al iniciar la actividad',
+        error: error instanceof Error ? error.message : 'Error desconocido'
+      });
     }
   }
 

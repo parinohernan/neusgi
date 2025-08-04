@@ -40,6 +40,16 @@ export class RemitoService implements IBaseService<Remito, CreateRemitoDto, Upda
     estado: Joi.string().valid('pendiente', 'entregado', 'cancelado').optional().messages({
       'any.only': 'El estado debe ser pendiente, entregado o cancelado',
     }),
+    conductorId: Joi.number().integer().positive().optional().messages({
+      'number.base': 'El ID del conductor debe ser un número',
+      'number.integer': 'El ID del conductor debe ser un número entero',
+      'number.positive': 'El ID del conductor debe ser positivo',
+    }),
+    equipoId: Joi.number().integer().positive().optional().messages({
+      'number.base': 'El ID del equipo debe ser un número',
+      'number.integer': 'El ID del equipo debe ser un número entero',
+      'number.positive': 'El ID del equipo debe ser positivo',
+    }),
   });
 
   private updateSchema = Joi.object({
@@ -67,6 +77,16 @@ export class RemitoService implements IBaseService<Remito, CreateRemitoDto, Upda
     }),
     estado: Joi.string().valid('pendiente', 'entregado', 'cancelado').optional().messages({
       'any.only': 'El estado debe ser pendiente, entregado o cancelado',
+    }),
+    conductorId: Joi.number().integer().positive().optional().messages({
+      'number.base': 'El ID del conductor debe ser un número',
+      'number.integer': 'El ID del conductor debe ser un número entero',
+      'number.positive': 'El ID del conductor debe ser positivo',
+    }),
+    equipoId: Joi.number().integer().positive().optional().messages({
+      'number.base': 'El ID del equipo debe ser un número',
+      'number.integer': 'El ID del equipo debe ser un número entero',
+      'number.positive': 'El ID del equipo debe ser positivo',
     }),
   });
 

@@ -37,11 +37,22 @@ export class PresupuestoRepository implements IBaseRepository<Presupuesto, Creat
       precioTotal: Number(item.precioTotal),
     })) || [];
 
+    // Procesar orden de compra si existe
+    let ordenCompra = null;
+    if (prismaPresupuesto.ordenCompra) {
+      ordenCompra = {
+        ...prismaPresupuesto.ordenCompra,
+        documentos: prismaPresupuesto.ordenCompra.documentos ? JSON.parse(prismaPresupuesto.ordenCompra.documentos) : [],
+        imagenes: prismaPresupuesto.ordenCompra.imagenes ? JSON.parse(prismaPresupuesto.ordenCompra.imagenes) : [],
+      };
+    }
+
     return {
       ...prismaPresupuesto,
       costo: Number(prismaPresupuesto.costo),
       equipos,
       items,
+      ordenCompra,
     };
   }
 
@@ -122,6 +133,20 @@ export class PresupuestoRepository implements IBaseRepository<Presupuesto, Creat
           items: {
             orderBy: { numero: 'asc' },
           },
+          ordenCompra: {
+            select: {
+              id: true,
+              fechaInicio: true,
+              fechaFin: true,
+              origen: true,
+              destino: true,
+              observaciones: true,
+              documentos: true,
+              imagenes: true,
+              estado: true,
+              creadoEn: true,
+            },
+          },
           usuario: {
             select: {
               id: true,
@@ -134,6 +159,8 @@ export class PresupuestoRepository implements IBaseRepository<Presupuesto, Creat
       }),
       this.prisma.presupuesto.count({ where }),
     ]);
+
+    console.log('Datos de presupuestos encontrados:', data.map((p: any) => ({ id: p.id, estado: p.estado, ordenCompra: p.ordenCompra })));
 
     return {
       data: data.map((presupuesto: any) => this.convertPrismaPresupuesto(presupuesto)),
@@ -202,6 +229,20 @@ export class PresupuestoRepository implements IBaseRepository<Presupuesto, Creat
             nombre: true,
             email: true,
             rol: true,
+          },
+        },
+        ordenCompra: {
+          select: {
+            id: true,
+            fechaInicio: true,
+            fechaFin: true,
+            origen: true,
+            destino: true,
+            observaciones: true,
+            documentos: true,
+            imagenes: true,
+            estado: true,
+            creadoEn: true,
           },
         },
       },
@@ -334,7 +375,7 @@ export class PresupuestoRepository implements IBaseRepository<Presupuesto, Creat
     return presupuestos.map((presupuesto: any) => this.convertPrismaPresupuesto(presupuesto));
   }
 
-  async findByEstado(estado: 'pendiente' | 'aceptado' | 'rechazado'): Promise<Presupuesto[]> {
+  async findByEstado(estado: 'pendiente' | 'aceptado' | 'rechazado' | 'activo' | 'concluido' | 'finalizado'): Promise<Presupuesto[]> {
     const presupuestos = await this.prisma.presupuesto.findMany({
       where: { estado },
       include: {
@@ -591,7 +632,7 @@ export class PresupuestoRepository implements IBaseRepository<Presupuesto, Creat
   }
 
   // Métodos específicos para presupuestos
-  async cambiarEstado(id: number, estado: 'pendiente' | 'aceptado' | 'rechazado'): Promise<Presupuesto | null> {
+  async cambiarEstado(id: number, estado: 'pendiente' | 'aceptado' | 'rechazado' | 'activo' | 'concluido' | 'finalizado'): Promise<Presupuesto | null> {
     return this.update(id, { estado });
   }
 

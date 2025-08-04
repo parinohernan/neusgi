@@ -663,6 +663,7 @@ export interface Factura extends BaseEntity {
   archivosAdjuntos?: string[]; // URLs de archivos adjuntos
   estado: 'pendiente' | 'pagada' | 'cancelada';
   creadoEn: Date;
+  items?: FacturaItem[];
 }
 
 export interface CreateFacturaDto {
@@ -678,6 +679,7 @@ export interface CreateFacturaDto {
   pdfPath?: string;
   archivosAdjuntos?: string[]; // URLs de archivos adjuntos
   estado?: 'pendiente' | 'pagada' | 'cancelada';
+  items?: CreateFacturaItemDto[];
 }
 
 export interface UpdateFacturaDto {
@@ -693,6 +695,41 @@ export interface UpdateFacturaDto {
   pdfPath?: string;
   archivosAdjuntos?: string[]; // URLs de archivos adjuntos
   estado?: 'pendiente' | 'pagada' | 'cancelada';
+  items?: CreateFacturaItemDto[];
+}
+
+// Tipos para FacturaItem
+export interface FacturaItem extends BaseEntity {
+  facturaId: number;
+  numero: number;
+  descripcion: string;
+  cantidad: number;
+  unidad: string;
+  precioUnitario: number;
+  precioTotal: number;
+  observaciones?: string;
+  creadoEn: Date;
+}
+
+export interface CreateFacturaItemDto {
+  facturaId: number;
+  numero: number;
+  descripcion: string;
+  cantidad: number;
+  unidad: string;
+  precioUnitario: number;
+  precioTotal: number;
+  observaciones?: string;
+}
+
+export interface UpdateFacturaItemDto {
+  numero?: number;
+  descripcion?: string;
+  cantidad?: number;
+  unidad?: string;
+  precioUnitario?: number;
+  precioTotal?: number;
+  observaciones?: string;
 }
 
 export interface FacturaFilters extends PaginationQuery {

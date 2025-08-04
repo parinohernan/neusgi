@@ -8,11 +8,16 @@ import {
   Edit, 
   Play, 
   FileText, 
-  Calendar
+  Calendar,
+  CheckCircle,
+  Award,
+  Receipt
 } from 'lucide-react';
 import { Sidebar } from '../../components/layout';
 import { NuevoParteDiarioModal } from '../../components/forms/NuevoParteDiarioModal';
 import { NuevoRemitoModal } from '../../components/forms/NuevoRemitoModal';
+import { NuevoCertificadoModal } from '../../components/forms/NuevoCertificadoModal';
+import { NuevaFacturaModal } from '../../components/forms/NuevaFacturaModal';
 import { presupuestoService } from '../../services/presupuestoService';
 import { useNotifications } from '../../hooks/useNotifications';
 import type { Presupuesto } from '../../types';
@@ -26,6 +31,8 @@ export const PresupuestosPage: React.FC = () => {
   const [estadoFilter, setEstadoFilter] = useState<string>('');
   const [showParteDiarioModal, setShowParteDiarioModal] = useState(false);
   const [showRemitoModal, setShowRemitoModal] = useState(false);
+  const [showCertificadoModal, setShowCertificadoModal] = useState(false);
+  const [showFacturaModal, setShowFacturaModal] = useState(false);
   const [selectedPresupuesto, setSelectedPresupuesto] = useState<Presupuesto | null>(null);
 
   useEffect(() => {
@@ -55,6 +62,10 @@ export const PresupuestosPage: React.FC = () => {
           await presupuestoService.iniciarActividad(presupuesto.id);
           success('Actividad iniciada exitosamente');
           break;
+        case 'concluir-actividad':
+          await presupuestoService.cambiarEstado(presupuesto.id, 'concluido');
+          success('Actividad concluida exitosamente');
+          break;
         case 'agregar-parte-diario':
           setSelectedPresupuesto(presupuesto);
           setShowParteDiarioModal(true);
@@ -62,6 +73,14 @@ export const PresupuestosPage: React.FC = () => {
         case 'agregar-remito':
           setSelectedPresupuesto(presupuesto);
           setShowRemitoModal(true);
+          return; // No recargar aquí
+        case 'cargar-certificado':
+          setSelectedPresupuesto(presupuesto);
+          setShowCertificadoModal(true);
+          return; // No recargar aquí
+        case 'facturar':
+          setSelectedPresupuesto(presupuesto);
+          setShowFacturaModal(true);
           return; // No recargar aquí
         default:
           return;
@@ -151,6 +170,28 @@ export const PresupuestosPage: React.FC = () => {
             label: 'Agregar Parte Diario',
             action: 'agregar-parte-diario',
             icon: Calendar,
+            always: false
+          },
+          {
+            label: 'Concluir Actividad',
+            action: 'concluir-actividad',
+            icon: CheckCircle,
+            always: false
+          }
+        );
+        break;
+      case 'concluido':
+        acciones.push(
+          {
+            label: 'Cargar Certificado',
+            action: 'cargar-certificado',
+            icon: Award,
+            always: false
+          },
+          {
+            label: 'Facturar',
+            action: 'facturar',
+            icon: Receipt,
             always: false
           }
         );
@@ -395,6 +436,21 @@ export const PresupuestosPage: React.FC = () => {
                             );
                           }
 
+                          if (accion.action === 'concluir-actividad') {
+                            return (
+                              <button
+                                key={accion.action}
+                                onClick={() => handleAction(presupuesto, accion.action)}
+                                className="button is-small is-info"
+                              >
+                                <span className="icon is-small">
+                                  <IconComponent size={16} />
+                                </span>
+                                <span>{accion.label}</span>
+                              </button>
+                            );
+                          }
+
                           if (accion.action === 'agregar-parte-diario') {
                             return (
                               <button
@@ -468,6 +524,28 @@ export const PresupuestosPage: React.FC = () => {
           setSelectedPresupuesto(null);
         }}
         presupuesto={selectedPresupuesto}
+        onSuccess={cargarPresupuestos}
+      />
+
+      {/* Modal de Certificado */}
+      <NuevoCertificadoModal
+        isOpen={showCertificadoModal}
+        onClose={() => {
+          setShowCertificadoModal(false);
+          setSelectedPresupuesto(null);
+        }}
+        ordenCompraId={selectedPresupuesto?.ordenCompra?.id || 0}
+        onSuccess={cargarPresupuestos}
+      />
+
+      {/* Modal de Factura */}
+      <NuevaFacturaModal
+        isOpen={showFacturaModal}
+        onClose={() => {
+          setShowFacturaModal(false);
+          setSelectedPresupuesto(null);
+        }}
+        presupuestoId={selectedPresupuesto?.id || 0}
         onSuccess={cargarPresupuestos}
       />
     </div>

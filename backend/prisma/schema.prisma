@@ -298,9 +298,27 @@ model Factura {
   cuentaCorriente  CuentaCorriente[]
   ordenCompra      OrdenCompra       @relation(fields: [ordenCompraId], references: [id])
   pagos            Pago[]
+  items            FacturaItem[]
 
   @@index([ordenCompraId], map: "facturas_orden_compra_id_fkey")
   @@map("facturas")
+}
+
+model FacturaItem {
+  id               Int      @id @default(autoincrement())
+  facturaId        Int      @map("factura_id")
+  numero           Int
+  descripcion      String   @db.Text
+  cantidad         Decimal  @db.Decimal(10, 2)
+  unidad           String   @db.VarChar(20)
+  precioUnitario   Decimal  @map("precio_unitario") @db.Decimal(12, 2)
+  precioTotal      Decimal  @map("precio_total") @db.Decimal(12, 2)
+  observaciones    String?  @db.Text
+  creadoEn         DateTime @default(now()) @map("creado_en")
+  factura          Factura  @relation(fields: [facturaId], references: [id], onDelete: Cascade)
+
+  @@index([facturaId], map: "facturas_items_factura_id_fkey")
+  @@map("facturas_items")
 }
 
 model Pago {

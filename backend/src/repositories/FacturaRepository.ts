@@ -14,6 +14,18 @@ export class FacturaRepository implements IBaseRepository<Factura, CreateFactura
     return {
       ...prismaFactura,
       archivosAdjuntos: prismaFactura.archivosAdjuntos ? JSON.parse(prismaFactura.archivosAdjuntos) : undefined,
+      items: prismaFactura.items ? prismaFactura.items.map((item: any) => ({
+        id: item.id,
+        facturaId: item.facturaId,
+        numero: item.numero,
+        descripcion: item.descripcion,
+        cantidad: Number(item.cantidad),
+        unidad: item.unidad,
+        precioUnitario: Number(item.precioUnitario),
+        precioTotal: Number(item.precioTotal),
+        observaciones: item.observaciones,
+        creadoEn: item.creadoEn,
+      })) : undefined,
     };
   }
 
@@ -143,6 +155,9 @@ export class FacturaRepository implements IBaseRepository<Factura, CreateFactura
             },
           },
         },
+        items: {
+          orderBy: { numero: 'asc' }
+        }
       },
     });
 

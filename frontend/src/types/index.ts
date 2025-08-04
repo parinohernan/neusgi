@@ -431,19 +431,130 @@ export interface UpdateRemitoDto {
   equipoId?: number;
 }
 
-export interface Factura {
-  id: string;
-  ordenCompraId: string;
-  number: string;
-  amount: number;
-  status: FacturaStatus;
-  issuedAt: string;
-  dueDate: string;
-  paidAt?: string;
-  createdAt: string;
-  updatedAt: string;
-  // Relaciones
+// Tipos para Certificado
+export interface Certificado {
+  id: number;
+  ordenCompraId: number;
+  tipo: 'seguro' | 'habilitacion' | 'otros';
+  codigo: string;
+  descripcion: string;
+  fechaVencimiento: Date;
+  pdfPath?: string;
+  archivosAdjuntos?: string[]; // URLs de archivos adjuntos
+  observaciones?: string;
+  estado: 'activo' | 'vencido' | 'cancelado';
+  creadoEn: Date;
   ordenCompra?: OrdenCompra;
+}
+
+export interface CreateCertificadoDto {
+  ordenCompraId: number;
+  tipo: 'seguro' | 'habilitacion' | 'otros';
+  codigo: string;
+  descripcion: string;
+  fechaVencimiento: Date;
+  pdfPath?: string;
+  archivosAdjuntos?: string[]; // URLs de archivos adjuntos
+  observaciones?: string;
+  estado?: 'activo' | 'vencido' | 'cancelado';
+}
+
+export interface UpdateCertificadoDto {
+  ordenCompraId?: number;
+  tipo?: 'seguro' | 'habilitacion' | 'otros';
+  codigo?: string;
+  descripcion?: string;
+  fechaVencimiento?: Date;
+  pdfPath?: string;
+  archivosAdjuntos?: string[]; // URLs de archivos adjuntos
+  observaciones?: string;
+  estado?: 'activo' | 'vencido' | 'cancelado';
+}
+
+export interface Factura {
+  id: number;
+  ordenCompraId: number;
+  numeroFactura: string;
+  fechaEmision: Date;
+  fechaVencimiento: Date;
+  monto: number;
+  montoPagado?: number;
+  saldoPendiente?: number;
+  concepto: string;
+  observaciones?: string;
+  pdfPath?: string;
+  archivosAdjuntos?: string[]; // URLs de archivos adjuntos
+  estado: 'pendiente' | 'pagada' | 'cancelada';
+  creadoEn: Date;
+  items?: FacturaItem[];
+  ordenCompra?: OrdenCompra;
+}
+
+export interface CreateFacturaDto {
+  ordenCompraId: number;
+  numeroFactura: string;
+  fechaEmision: Date;
+  fechaVencimiento: Date;
+  monto: number;
+  montoPagado?: number;
+  saldoPendiente?: number;
+  concepto: string;
+  observaciones?: string;
+  pdfPath?: string;
+  archivosAdjuntos?: string[]; // URLs de archivos adjuntos
+  estado?: 'pendiente' | 'pagada' | 'cancelada';
+  items?: CreateFacturaItemDto[];
+}
+
+export interface UpdateFacturaDto {
+  ordenCompraId?: number;
+  numeroFactura?: string;
+  fechaEmision?: Date;
+  fechaVencimiento?: Date;
+  monto?: number;
+  montoPagado?: number;
+  saldoPendiente?: number;
+  concepto?: string;
+  observaciones?: string;
+  pdfPath?: string;
+  archivosAdjuntos?: string[]; // URLs de archivos adjuntos
+  estado?: 'pendiente' | 'pagada' | 'cancelada';
+  items?: CreateFacturaItemDto[];
+}
+
+// Tipos para FacturaItem
+export interface FacturaItem {
+  id: number;
+  facturaId: number;
+  numero: number;
+  descripcion: string;
+  cantidad: number;
+  unidad: string;
+  precioUnitario: number;
+  precioTotal: number;
+  observaciones?: string;
+  creadoEn: Date;
+}
+
+export interface CreateFacturaItemDto {
+  facturaId: number;
+  numero: number;
+  descripcion: string;
+  cantidad: number;
+  unidad: string;
+  precioUnitario: number;
+  precioTotal: number;
+  observaciones?: string;
+}
+
+export interface UpdateFacturaItemDto {
+  numero?: number;
+  descripcion?: string;
+  cantidad?: number;
+  unidad?: string;
+  precioUnitario?: number;
+  precioTotal?: number;
+  observaciones?: string;
 }
 
 export interface Pago {
